@@ -206,7 +206,7 @@ def get_input_tracers(**kwargs):
         '** choose and list from [fo, ab, an, cc, ka, gb, py, ct, fa, gt, cabd, dp, hb, kfs ... ]'
         ,'** choose and list from [mg, si, na, ca, al, fe2, fe3, k, so4, no3 ... ]'
         ,'** choose and list from [pco2, po2, pnh3, pn2o, pch4]'
-        ,'** choose and list from [resp, fe2o2, omomb, ombto, pyfe3, amo2o, g2n0, g2n21, g2n22, g2fe3, g2so4, g2ch4, ch4o2]'
+        ,'** choose and list from [resp, fe2o2, omomb, ombto, pyfe3, amo2o, g2n0, g2n21, g2n22, g2fe3, g2so4, g2ch4, ch4o2, fe2gr, ch4pl, ch4eb]'
         ]
     
     sld_list.insert(0,'')

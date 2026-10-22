@@ -38,6 +38,13 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   4.99 - 0.5 log[Fe2+]. Its mineral dissolution/precipitation rate constant is set to zero, because as an
   ordinary mineral it would need aqueous Fe3+ (~1e-20 M at pH 7) and either stalled the solver or never formed.
   List `gr` as a tracked solid and `fe2gr` in `extrxns.in`.
+- Plant-mediated CH4 transport `ch4pl`: first order in dissolved CH4 above atmospheric equilibrium,
+  R = k(z) * poro * sat * 1e3 * KH * (pCH4 - 1.9e-6), with k(z) = k0 exp(-z/zroot) following root density
+  (k0 50 yr-1, zroot 0.1 m, provisional; the depth profile is applied in the main program after each
+  `coefs_v2` call). Half of the CH4 taken up is oxidised to CO2 in the rhizosphere (Pox = 0.5,
+  Walter and Heimann 2000) and half is emitted, so CH4 emitted via plants = 0.5 x the `ch4pl` flux.
+- CH4 ebullition `ch4eb`: R = k * poro * sat * 1e3 * KH * max(pCH4 - pthr, 0), k 100 yr-1, pthr 0.4 atm
+  (about the 500 uM bubble threshold of Walter and Heimann 2000), provisional. Ebullited CH4 leaves directly.
 
 ## Tests
 
@@ -58,13 +65,19 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   Adding `fe2gr` (`fe2o2,g2fe3,g2so4,g2ch4,ch4o2,fe2gr`) keeps pH at 6.56-6.89 for the whole 0.5 yr run
   (without it pH reaches ~11.7), with 3-22 mol m-3 green rust below the surface layer. CH4 production
   (0.15 mol m-2 yr-1, ~17 % oxidised) is barely changed. Run time ~4 min.
+  Adding `ch4pl,ch4eb`: of 0.152 mol m-2 yr-1 produced, 0.065 goes into plant transport (half emitted),
+  0.045 diffuses out of the top, 0.023 is oxidised aerobically and 0.020 is still accumulating; plants carry
+  ~42 % of the 0.077 mol m-2 yr-1 emitted. pCH4 peaks at 0.06 atm, so ebullition does not start. With the
+  threshold lowered to 0.03 atm as a code test, pCH4 is capped at 0.034 atm and ebullition takes 0.048.
+  CH4 balances close (residual ~1e-17); pH stays at 6.56-6.84.
 
 ## Known gaps (next steps)
 
 - The green rust pH-stat makes pH depend on green rust thermodynamics; its log K is uncertain by about
   a unit, which moves the buffered pH by ~0.5. Should be checked against paddy porewater pH-Fe2+ data.
-- CH4 leaves only by diffusion and advection; plant (aerenchyma) transport and ebullition, which carry
-  most paddy CH4 to the atmosphere, are not yet represented.
+- Plant transport carries only ~42 % of emitted CH4 in the test column, against the 60-90 % usually measured.
+  The column has no standing floodwater (which slows diffusive loss) and no rice growth curve, so k0, zroot and
+  a seasonal plant-growth factor need setting against field data. Root O2 release is not yet represented.
 
 - Siderite does not nucleate: SCEPTER's default precipitation rate scales with the amount of mineral
   already present (seed 1e-20 mol m-3), so it stays at the seed even at log omega ~2.7. Paddy

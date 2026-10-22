@@ -777,7 +777,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 18
+integer,parameter::nrxn_ext_all = 20
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1144,7 +1144,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
-    & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr'/)
+    & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1912,6 +1912,12 @@ stgas_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'pco2',d
 staq_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chraq_all,'fe2',dim=1)) = -1d0
 stsld_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = -2d0
 stsld_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
+! plant (aerenchyma) CH4 transport to the atmosphere; a fraction is oxidised in the rhizosphere by root O2 
+! (Pox = 0.5, Walter and Heimann 2000), so CH4 -> 0.5 CO2 in the soil and 0.5 CH4 emitted 
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0.5d0
+! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 
 ! define 1 when a reaction is sensitive to a speces 
 stgas_dext_all = 0d0
@@ -1982,6 +1988,9 @@ stgas_dext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'po2',d
 staq_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
+! plant transport and ebullition of CH4 
+stgas_dext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
 
 staq_ext = 0d0
@@ -3444,6 +3453,9 @@ call coefs_v2( 																					&
     & ksld_all,keqsld_all,krxn1_ext_all,krxn2_ext_all,											&! output
     & keqcec_all,keqiex_all 																	&! output 
     & ) 
+! root-density (exponential) profile for plant CH4 transport 
+krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) &
+    & *exp(-z/krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:))
 
 print_cb = .false. 
 ! print_cb = .true. 
@@ -4081,6 +4093,9 @@ call coefs_v2( 																					&
     & ksld_all,keqsld_all,krxn1_ext_all,krxn2_ext_all,											&! output
     & keqcec_all,keqiex_all 																	&! output 
     & ) 
+! root-density (exponential) profile for plant CH4 transport 
+krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) &
+    & *exp(-z/krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:))
     
 dbl_ref = 0d0   ! diffuse boundary at the top
 
@@ -4568,6 +4583,9 @@ do while (it<nt)
         & ksld_all,keqsld_all,krxn1_ext_all,krxn2_ext_all,											&! output
         & keqcec_all,keqiex_all 																	&! output 
         & ) 
+    ! root-density (exponential) profile for plant CH4 transport 
+    krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) &
+        & *exp(-z/krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:))
     
     do isps = 1, nsp_sld
         ksld(isps,:) = ksld_all(findloc(chrsld_all,chrsld(isps),dim=1),:)
@@ -9911,6 +9929,10 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 500d0 ! vmax, mol CH4 m
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 5d-6 ! half-saturation for CH4(aq), mol L^-1 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),:) = 1d4 ! rate per unit ln(omega), mol gr m^-3 yr^-1 
 krxn2_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),:) = 1d0 ! half-saturation for amfe3 (forward) and gr (reverse), mol m^-3 
+krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 50d0 ! plant transport rate constant at the surface, yr^-1 (provisional) 
+krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth of root density, m (used in the main program) 
+krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 100d0 ! ebullition rate constant, yr^-1 (provisional) 
+krxn2_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 0.4d0 ! pCH4 threshold for bubble formation, atm 
 
 
 endsubroutine coefs_v2
@@ -22182,6 +22204,34 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_sat*lnomg*km_tmp1/(amfe3x + km_tmp1)**2d0*merge(1d0,0d0,lnomg > 0d0)
             case('gr')
                 drxnext_dmsp = v_tmp*f_sat*lnomg*km_tmp1/(grx + km_tmp1)**2d0*merge(0d0,1d0,lnomg > 0d0)
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('ch4pl') 
+        ! plant-mediated CH4 transport: first order in dissolved CH4 above atmospheric equilibrium, with the rate 
+        ! constant following root density (set in the main program); rhizosphere oxidation fraction via stoichiometry 
+        kch4 = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) ! yr^-1 
+        rxn_ext = vmax*poro*sat*1d3*kch4*(pch4x - 1.9d-6)
+        
+        select case(trim(adjustl(sp_name)))
+            case('pch4')
+                drxnext_dmsp = vmax*poro*sat*1d3*kch4
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('ch4eb') 
+        ! CH4 ebullition: first order in dissolved CH4 above a pCH4 threshold (cf. Walter and Heimann 2000) 
+        kch4 = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),1) ! yr^-1 
+        km_tmp1 = krxn2_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),1) ! threshold, atm 
+        rxn_ext = v_tmp*poro*sat*1d3*kch4*max(pch4x - km_tmp1,0d0)
+        
+        select case(trim(adjustl(sp_name)))
+            case('pch4')
+                drxnext_dmsp = v_tmp*poro*sat*1d3*kch4*merge(1d0,0d0,pch4x > km_tmp1)
             case default
                 drxnext_dmsp = 0d0
         endselect 
