@@ -45,6 +45,12 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   Walter and Heimann 2000) and half is emitted, so CH4 emitted via plants = 0.5 x the `ch4pl` flux.
 - CH4 ebullition `ch4eb`: R = k * poro * sat * 1e3 * KH * max(pCH4 - pthr, 0), k 100 yr-1, pthr 0.4 atm
   (about the 500 uM bubble threshold of Walter and Heimann 2000), provisional. Ebullited CH4 leaves directly.
+- Iron monosulfide (`fes`, molar volume 20.4 cm3/mol) formed by `fe2fs`: Fe2+ + HS- -> FeS + H+,
+  log K 3.915 (FeS(ppt), phreeqc.dat). Rate = k * ln(omega) with omega = K [Fe2+][HS-]/[H+], limited by FeS
+  present when dissolving (k 1e3 mol m-3 yr-1, K 1 mol m-3, provisional). FeS is oxidised by `fesox`:
+  FeS + 2 O2 -> Fe2+ + SO42-, rate = k [FeS] [O2(aq)] with k 1e6 L mol-1 yr-1 (about a day at air
+  saturation, provisional). Like `gr`, FeS has no mineral rate law of its own. Track `fes` as a solid
+  (added automatically with `--ch4`) and list `fe2fs,fesox` in `extrxns.in`.
 
 ## Tests
 
@@ -70,6 +76,9 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   ~42 % of the 0.077 mol m-2 yr-1 emitted. pCH4 peaks at 0.06 atm, so ebullition does not start. With the
   threshold lowered to 0.03 atm as a code test, pCH4 is capped at 0.034 atm and ebullition takes 0.048.
   CH4 balances close (residual ~1e-17); pH stays at 6.56-6.84.
+  Adding `fe2fs,fesox`: all 0.14 mol m-2 yr-1 of sulfide from sulfate reduction precipitates as FeS
+  (0.06-0.46 mol m-3), free HS- falls from ~5e-5 M to ~5e-8 M, and 0.037 mol m-2 yr-1 of FeS is re-oxidised
+  near the surface, recycling sulfate. S balances close (residual ~4e-14); pH 6.55-6.79; run time ~6.5 min.
 
 ## Known gaps (next steps)
 
@@ -84,5 +93,5 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   porewaters are often siderite-supersaturated, so this may be acceptable, but a nucleation or
   seeded-precipitation option is worth testing against data. FeS is not defined.
 - Without exchange (no `--fe2buf`) the column still rises to pH ~12, so CEC must be on for paddy runs.
-- No FeS / pyrite formation from HS-, so HS- accumulates.
+- No pyrite formation from FeS (slow, years); FeS is the only sulfide sink.
 - Flood and drain cycling is not yet driven through the seasonal wetness forcing (`Wet_temp.in`).

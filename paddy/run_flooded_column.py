@@ -5,7 +5,8 @@
 # --fe2buf switches on cation exchange (10 cmol/kg on inrt, Fe2+ included) and lets siderite precipitate.
 # --ch4 implies --fe2buf and adds SO42-/HS- and CH4; list g2so4,g2ch4,ch4o2 in the reactions to use them.
 #   e.g. python3 paddy/run_flooded_column.py ch4 fe2o2,g2fe3,g2so4,g2ch4,ch4o2 0.5 --ch4
-#   add fe2gr for the green rust pH-stat and ch4pl,ch4eb for plant transport and ebullition of CH4
+#   add fe2gr for the green rust pH-stat, ch4pl,ch4eb for plant transport and ebullition of CH4,
+#   and fe2fs,fesox for FeS precipitation and oxidation
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
 import os,sys
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -30,7 +31,7 @@ spinup.run_a_scepter_run(
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='false',
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
-    sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []),
+    sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []),
