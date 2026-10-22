@@ -30,6 +30,14 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   so it follows the redox sequence. vmax 100 mol CH2O m-3 yr-1, provisional.
 - Aerobic CH4 oxidation `ch4o2` (CH4 + 2 O2 -> CO2 + 2 H2O): dual Monod in CH4(aq) (K 5e-6 mol L-1)
   and O2(aq) (K 2e-5 mol L-1), vmax 500 mol m-3 yr-1, provisional.
+- Hydroxy green rust (`gr`, Fe(II)Fe(III)2(OH)8) as a new solid, formed by the extra reaction `fe2gr`:
+  Fe2+ + 2 Fe(OH)3 (amfe3) -> Fe3(OH)8 + 2 H+, log K -9.98 (from Bourrie et al. 1999, log K(gr) 45.8 and
+  log K(Fe(OH)3) 13.02 per Fe). Rate = k * ln(omega) * f, with omega = K [Fe2+]/[H+]2, f = amfe3/(amfe3+K)
+  when forming and gr/(gr+K) when dissolving (k 1e4 mol m-3 yr-1, K 1 mol m-3, provisional). Being linear in
+  ln(omega) it acts as the Fe(OH)3-Fe2+ pH-stat seen in flooded soils (Ponnamperuma 1972): pH tends to
+  4.99 - 0.5 log[Fe2+]. Its mineral dissolution/precipitation rate constant is set to zero, because as an
+  ordinary mineral it would need aqueous Fe3+ (~1e-20 M at pH 7) and either stalled the solver or never formed.
+  List `gr` as a tracked solid and `fe2gr` in `extrxns.in`.
 
 ## Tests
 
@@ -46,24 +54,22 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   With `--ch4` (adds SO42-/HS-, CH4 and 0.2 mM CaSO4 irrigation water) and
   `fe2o2,g2fe3,g2so4,g2ch4,ch4o2`: sulfate falls from 0.2 mM to <1e-6 mM by 15 cm, CH4 builds to ~0.1 atm
   equivalent at depth, ~0.15 mol CH4 m-2 yr-1 is produced and ~12 % of it is oxidised in the top 5 cm.
-  Mass balances close for CH4, SO42-, Fe2+ and OM. But see the pH gap below.
+  Mass balances close for CH4, SO42-, Fe2+ and OM.
+  Adding `fe2gr` (`fe2o2,g2fe3,g2so4,g2ch4,ch4o2,fe2gr`) keeps pH at 6.56-6.89 for the whole 0.5 yr run
+  (without it pH reaches ~11.7), with 3-22 mol m-3 green rust below the surface layer. CH4 production
+  (0.15 mol m-2 yr-1, ~17 % oxidised) is barely changed. Run time ~4 min.
 
 ## Known gaps (next steps)
 
-- pH buffering is fragile. With 0.2 mM CaSO4 irrigation water the column goes to pH ~11.7 even with the
-  new reactions switched off (with 5e-6 M Ca and 2e-6 M SO42- it stays at 6.5-7.7). The cause is that all
-  3 wt% amfe3 is reducible and Fe(III) reduction makes 8 eq of alkalinity per mol CO2 with nothing to
-  stop it; in the low-Ca case the H+ released from exchange sites by Fe2+ happens to buffer it. The
-  mechanistic fix is a thermodynamic limitation factor on the respiration reactions
-  (Jin and Bethke 2005), so Fe(III) reduction slows as Fe2+ and pH rise (the Ponnamperuma Fe(OH)3-Fe2+
-  pH-stat). This is the next step.
+- The green rust pH-stat makes pH depend on green rust thermodynamics; its log K is uncertain by about
+  a unit, which moves the buffered pH by ~0.5. Should be checked against paddy porewater pH-Fe2+ data.
 - CH4 leaves only by diffusion and advection; plant (aerenchyma) transport and ebullition, which carry
   most paddy CH4 to the atmosphere, are not yet represented.
 
 - Siderite does not nucleate: SCEPTER's default precipitation rate scales with the amount of mineral
   already present (seed 1e-20 mol m-3), so it stays at the seed even at log omega ~2.7. Paddy
   porewaters are often siderite-supersaturated, so this may be acceptable, but a nucleation or
-  seeded-precipitation option is worth testing against data. Green rust and FeS are not defined.
+  seeded-precipitation option is worth testing against data. FeS is not defined.
 - Without exchange (no `--fe2buf`) the column still rises to pH ~12, so CEC must be on for paddy runs.
 - No FeS / pyrite formation from HS-, so HS- accumulates.
 - Flood and drain cycling is not yet driven through the seasonal wetness forcing (`Wet_temp.in`).

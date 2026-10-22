@@ -29,7 +29,7 @@ spinup.run_a_scepter_run(
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='false',
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
-    sld_list=['inrt','g2','amfe3'] + (['sid'] if fe2buf else []),
+    sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []),
