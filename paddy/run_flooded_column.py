@@ -7,6 +7,10 @@
 #   e.g. python3 paddy/run_flooded_column.py ch4 fe2o2,g2fe3,g2so4,g2ch4,ch4o2 0.5 --ch4
 #   add fe2gr for the green rust pH-stat, ch4pl,ch4eb for plant transport and ebullition of CH4,
 #   and fe2fs,fesox for FeS precipitation and oxidation
+# --awd drives alternate wetting and drying through the seasonal wetness forcing (Wet_temp.in): flooded for
+#   the first month, then repeated ~1 week drains (surface saturation 0.5, water table at 0.5 m) and ~2 week
+#   reflooding until mid-year, then drained fallow. --season uses the same forcing machinery but stays flooded
+#   (the control for --awd).
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
 import os,sys
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,15 +24,29 @@ rxns   = args[1].split(',') if args[1] != 'none' else []
 ttot   = float(args[2]) if len(args) > 2 else 0.5
 ch4    = '--ch4' in flags
 fe2buf = '--fe2buf' in flags or ch4
+awd    = '--awd' in flags
+season = awd or '--season' in flags
+
+def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=0.5,ramp=0.003):
+    # surface saturation through the year (linear interpolation between points, repeated every year)
+    t,v = [0.0],[1.0]
+    tc = t_flood
+    while tc + t_drain < t_end:
+        t += [tc, tc+ramp, tc+t_drain, tc+t_drain+ramp]
+        v += [1.0, s_dry, s_dry, 1.0]
+        tc += t_drain + t_reflood
+    t += [t_end, t_end+ramp, 0.99]
+    v += [1.0, s_dry, s_dry]
+    return [t, v if awd else [1.0]*len(v)]
 
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
     ztot=0.3,nz=30,ttot=ttot,temp=25,omrain=300,zom=0.15,poro=0.5,
     moistsrf=1.0,           # water saturation 1 throughout: flooded
-    zwater=1000,w=0,q=0.5,p=1e-5,nstep=10,rstrt='self',
+    zwater=0.5 if awd else 1000,w=0,q=0.5,p=1e-5,nstep=10,rstrt='self',
     # ---- switches.in ----
-    act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='false',
+    act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
     sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []),
@@ -48,4 +66,7 @@ spinup.run_a_scepter_run(
     sld_varlist_cec=[('inrt',10,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)],
     srcfile_2ndslds='./data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in',
     use_local_storage=False,exename_src='scepter_ex11',show_runtime_res=False,
+    # ---- seasonal forcing (only read when season is on) ----
+    moist_temp=awd_schedule(),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
+    dust_temp=[[0.0,0.99],[0,0]],
     )

@@ -72,26 +72,42 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   (without it pH reaches ~11.7), with 3-22 mol m-3 green rust below the surface layer. CH4 production
   (0.15 mol m-2 yr-1, ~17 % oxidised) is barely changed. Run time ~4 min.
   Adding `ch4pl,ch4eb`: of 0.152 mol m-2 yr-1 produced, 0.065 goes into plant transport (half emitted),
-  0.045 diffuses out of the top, 0.023 is oxidised aerobically and 0.020 is still accumulating; plants carry
-  ~42 % of the 0.077 mol m-2 yr-1 emitted. pCH4 peaks at 0.06 atm, so ebullition does not start. With the
+  0.045 leaves through the bottom of the column with the 0.5 m yr-1 infiltration (the `adv` column of
+  `flx_gas-pch4.txt`; an artefact of the shallow test column), 0.023 is oxidised aerobically and 0.020 is still
+  accumulating. Diffusion to the air through the saturated surface is negligible, so in this column all
+  emitted CH4 goes through plants (field: ~60-90 %, the rest by ebullition and diffusion). pCH4 peaks at 0.06 atm, so ebullition does not start. With the
   threshold lowered to 0.03 atm as a code test, pCH4 is capped at 0.034 atm and ebullition takes 0.048.
   CH4 balances close (residual ~1e-17); pH stays at 6.56-6.84.
   Adding `fe2fs,fesox`: all 0.14 mol m-2 yr-1 of sulfide from sulfate reduction precipitates as FeS
   (0.06-0.46 mol m-3), free HS- falls from ~5e-5 M to ~5e-8 M, and 0.037 mol m-2 yr-1 of FeS is re-oxidised
   near the surface, recycling sulfate. S balances close (residual ~4e-14); pH 6.55-6.79; run time ~6.5 min.
+- Flood/drain cycling (`--awd`): uses SCEPTER's seasonal forcing (`season` on, `Wet_temp.in` = surface
+  saturation, water table at 0.5 m). Flooded for 0.08 yr, then ~1 week drains to surface saturation 0.5 and
+  ~2 week refloods until 0.5 yr. `--season` runs the same machinery kept flooded, as the control.
+  Season-integrated (0-0.5 yr, all reactions on), control vs AWD, mol m-2:
+  CH4 produced 0.035 vs 0.029 (-16 %); emitted (half of plant transport; diffusion and ebullition ~0)
+  0.0069 vs 0.0042 (-39 %, in the 30-50 % range reported for AWD); aerobic CH4 oxidation 0.0049 vs 0.0057;
+  Fe(III) reduced 7.6 vs 6.9; FeS re-oxidised 0.018 vs 0.046, which recycles sulfate so sulfate reduction rises
+  (0.079 vs 0.100). pH 6.55-6.87 vs 6.56-7.00. Budgets close. Run time ~14 min each. To integrate, sum
+  each row of the `flx_*.txt` files times the time since the previous row.
 
 ## Known gaps (next steps)
 
 - The green rust pH-stat makes pH depend on green rust thermodynamics; its log K is uncertain by about
   a unit, which moves the buffered pH by ~0.5. Should be checked against paddy porewater pH-Fe2+ data.
-- Plant transport carries only ~42 % of emitted CH4 in the test column, against the 60-90 % usually measured.
-  The column has no standing floodwater (which slows diffusive loss) and no rice growth curve, so k0, zroot and
-  a seasonal plant-growth factor need setting against field data. Root O2 release is not yet represented.
+- CH4 production in the test column is far below field values (season-integrated emission ~0.007 mol m-2,
+  ~0.1 g CH4 m-2, against ~10-40 g m-2 per season in the field). The 3 wt% amorphous Fe(OH)3 pool is very
+  large and stays above the Fe(III) inhibition constant of methanogenesis (30 mol m-3), so most OM goes to
+  Fe(III) reduction. Reducible Fe(III), OM input and the inhibition constant need setting against field data.
+- No rice growth curve or root O2 release for plant transport; k0 and zroot need setting against field data.
 
 - Siderite does not nucleate: SCEPTER's default precipitation rate scales with the amount of mineral
   already present (seed 1e-20 mol m-3), so it stays at the seed even at log omega ~2.7. Paddy
   porewaters are often siderite-supersaturated, so this may be acceptable, but a nucleation or
-  seeded-precipitation option is worth testing against data. FeS is not defined.
+  seeded-precipitation option is worth testing against data.
 - Without exchange (no `--fe2buf`) the column still rises to pH ~12, so CEC must be on for paddy runs.
 - No pyrite formation from FeS (slow, years); FeS is the only sulfide sink.
-- Flood and drain cycling is not yet driven through the seasonal wetness forcing (`Wet_temp.in`).
+- Draining is represented only through the saturation profile: there is no standing floodwater layer, no
+  explicit water-table dynamics and no change in infiltration between flooded and drained periods.
+- N2O is not yet exercised: NO3-, nitrification and stepwise denitrification exist in SCEPTER but are not
+  switched on in the paddy column (no NH4+ either).
