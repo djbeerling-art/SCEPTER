@@ -20,6 +20,17 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   (log k -8.90 mol m-2 s-1, Ea 62.76 kJ/mol). It is allowed to precipitate in `data/2ndslds_paddy.in`
   and must also be listed as a tracked solid.
 
+- Sulfate reduction `g2so4` (2 CH2O + SO42- + H+ -> 2 CO2 + HS-): Monod in OM and SO42-, O2 and NO3-
+  inhibition as `g2fe3`. vmax 100 mol CH2O m-3 yr-1 and K(SO42-) 1e-4 mol L-1 (`krxn1`/`krxn2`), provisional.
+- New gas `pch4`: Henry constant 1.4e-3 mol L-1 atm-1 at 25 C with 1600 K temperature dependence (Sander 2015),
+  aqueous diffusion 1.49e-9 m2 s-1 at 15 C (Jahne et al. 1987), gas-phase diffusion as CO2.
+  The Python drivers now write pch4 = 1.9e-6 atm to `atm.in` by default.
+- Methanogenesis `g2ch4` (2 CH2O -> CH4 + CO2, acetoclastic and hydrogenotrophic lumped): Monod in OM,
+  inhibited by O2, NO3-, SO42- (constant = K(SO42-) of `g2so4`) and amorphous Fe(III) (`krxn2`, 30 mol m-3),
+  so it follows the redox sequence. vmax 100 mol CH2O m-3 yr-1, provisional.
+- Aerobic CH4 oxidation `ch4o2` (CH4 + 2 O2 -> CO2 + 2 H2O): dual Monod in CH4(aq) (K 5e-6 mol L-1)
+  and O2(aq) (K 2e-5 mol L-1), vmax 500 mol m-3 yr-1, provisional.
+
 ## Tests
 
 - `compare_ex11_phreeqc.py`: checks the cation-exchange benchmark against PHREEQC example 11
@@ -32,13 +43,27 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   With `--fe2buf` (CEC 10 cmol/kg on `inrt`, Na/K/Mg added, siderite tracked), pH stays at 6.5-7.8
   instead of ~12: Fe2+ takes 25-37 % of the exchange sites and displaces Ca and Mg into solution.
   Fe2+ mass balance closes (residual ~2e-9 mol m-2 yr-1).
+  With `--ch4` (adds SO42-/HS-, CH4 and 0.2 mM CaSO4 irrigation water) and
+  `fe2o2,g2fe3,g2so4,g2ch4,ch4o2`: sulfate falls from 0.2 mM to <1e-6 mM by 15 cm, CH4 builds to ~0.1 atm
+  equivalent at depth, ~0.15 mol CH4 m-2 yr-1 is produced and ~12 % of it is oxidised in the top 5 cm.
+  Mass balances close for CH4, SO42-, Fe2+ and OM. But see the pH gap below.
 
 ## Known gaps (next steps)
+
+- pH buffering is fragile. With 0.2 mM CaSO4 irrigation water the column goes to pH ~11.7 even with the
+  new reactions switched off (with 5e-6 M Ca and 2e-6 M SO42- it stays at 6.5-7.7). The cause is that all
+  3 wt% amfe3 is reducible and Fe(III) reduction makes 8 eq of alkalinity per mol CO2 with nothing to
+  stop it; in the low-Ca case the H+ released from exchange sites by Fe2+ happens to buffer it. The
+  mechanistic fix is a thermodynamic limitation factor on the respiration reactions
+  (Jin and Bethke 2005), so Fe(III) reduction slows as Fe2+ and pH rise (the Ponnamperuma Fe(OH)3-Fe2+
+  pH-stat). This is the next step.
+- CH4 leaves only by diffusion and advection; plant (aerenchyma) transport and ebullition, which carry
+  most paddy CH4 to the atmosphere, are not yet represented.
 
 - Siderite does not nucleate: SCEPTER's default precipitation rate scales with the amount of mineral
   already present (seed 1e-20 mol m-3), so it stays at the seed even at log omega ~2.7. Paddy
   porewaters are often siderite-supersaturated, so this may be acceptable, but a nucleation or
   seeded-precipitation option is worth testing against data. Green rust and FeS are not defined.
 - Without exchange (no `--fe2buf`) the column still rises to pH ~12, so CEC must be on for paddy runs.
-- No sulfate reduction, methanogenesis, CH4 gas or CH4 oxidation yet.
+- No FeS / pyrite formation from HS-, so HS- accumulates.
 - Flood and drain cycling is not yet driven through the seasonal wetness forcing (`Wet_temp.in`).

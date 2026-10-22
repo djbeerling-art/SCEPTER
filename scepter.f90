@@ -771,11 +771,11 @@ integer,parameter::nsp_aq_all = 19
 integer ::nsp_aq_cnst != nsp_aq_all - nsp_aq
 integer,intent(in)::nsp_gas != 2
 integer,parameter::nsp_gas_ph = 3
-integer,parameter::nsp_gas_all = 4
+integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 14
+integer,parameter::nrxn_ext_all = 17
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1140,9 +1140,9 @@ chrsld_all = (/'fo   ','ab   ','an   ','cc   ','ka   ','gb   ','py   ','ct   ','
     & ,'inrt '/)
 chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','k    ','no3  ','oxa  ' &
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
-chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o '/)
+chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
-    & ,'g2k  ','g2ca ','g2mg ','g2fe3'/)
+    & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1887,6 +1887,21 @@ stsld_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'amfe3',
 staq_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chraq_all,'fe2',dim=1)) = 4d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+! dissimilatory sulfate reduction by OM (2 CH2O  +  SO42-  +  H+  ->  2 CO2  +  HS-  +  2 H2O) 
+stsld_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0 ! values relative to CH2O
+staq_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'so4',dim=1)) = -0.5d0
+staq_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'hs',dim=1)) = 0.5d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+! methanogenesis from OM (2 CH2O  ->  CH4  +  CO2) 
+stsld_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0 ! values relative to CH2O
+stgas_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 0.5d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0.5d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+! aerobic CH4 oxidation (CH4  +  2 O2  ->  CO2  +  2 H2O) 
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = -2d0
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 
 ! define 1 when a reaction is sensitive to a speces 
 stgas_dext_all = 0d0
@@ -1939,6 +1954,20 @@ stsld_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'g2',di
 stsld_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
+! dissimilatory sulfate reduction by OM 
+stsld_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'so4',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
+! methanogenesis from OM 
+stsld_dext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chraq_all,'so4',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
+! aerobic CH4 oxidation 
+stgas_dext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
 
 staq_ext = 0d0
@@ -4581,6 +4610,8 @@ do while (it<nt)
                 khgasi(ispg) = khnh3i
             case('pn2o')  
                 khgasi(ispg) = kn2o
+            case('pch4')  
+                khgasi(ispg) = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
         endselect 
     enddo
     
@@ -9058,6 +9089,11 @@ dgasg_all(findloc(chrgas_all,'pnh3',dim=1)) = 0.1978d0*((tc+tempk_0)/(0d0+tempk_
 dgasa_all(findloc(chrgas_all,'pn2o',dim=1)) = k_arrhenius(4.89d-02    , 15d0+tempk_0, tc+tempk_0, 20.33417d0, rg)
 dgasg_all(findloc(chrgas_all,'pn2o',dim=1)) = k_arrhenius(441.504d0   , 15d0+tempk_0, tc+tempk_0, 4.18d0    , rg)
 
+! assuming the same diffusion as CO2 diffusion (e.g., Pritchard and Currie, 1982) for gaseous CH4 
+! CH4(aq) diffusion 1.49e-9 m2 s-1 at 15 C (Jahne et al. 1987) 
+dgasa_all(findloc(chrgas_all,'pch4',dim=1)) = k_arrhenius(4.70d-02    , 15d0+tempk_0, tc+tempk_0, 18.36d0, rg)
+dgasg_all(findloc(chrgas_all,'pch4',dim=1)) = k_arrhenius(441.504d0   , 15d0+tempk_0, tc+tempk_0, 4.18d0    , rg)
+
 
 #ifdef AMD_benchmark
 dgasa_all=2.4d-9*sec2yr ! sec2yr converting m2/s to m2/yr
@@ -9097,6 +9133,9 @@ keqgas_h(findloc(chrgas_all,'pnh3',dim=1),ieqgas_h1) = &
 
 keqgas_h(findloc(chrgas_all,'pn2o',dim=1),ieqgas_h0) = &
     & k_arrhenius(0.033928709d0, tempk_0+15.0d0, tempk_0+tc, -22.21661d0, rg) ! ! N2O solubility from Weiss & Price 1980 MC assuming 0 salinity
+
+keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0) = &
+    & k_arrhenius(1.4d-3, tempk_0+25.0d0, tempk_0+tc, -13.30d0, rg) ! CH4 solubility, mol L-1 atm-1, d(ln kH)/d(1/T) = 1600 K (Sander 2015)
 
     
 keqaq_c     = 0d0
@@ -9848,6 +9887,14 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'g2mg',dim=1),:) = ksld_all(findloc(chrsld_
 ! (order of magnitude from Fe2+ accumulation of ~10-50 mmol/kg within 2-4 weeks of flooding, e.g. Yao et al. 1999)
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 200d0 ! vmax, mol CH2O m^-3 yr^-1 
 krxn2_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 100d0 ! half-saturation for amfe3, mol m^-3 
+
+! sulfate reduction, methanogenesis and CH4 oxidation: provisional values to be calibrated against paddy data 
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),:) = 100d0 ! vmax, mol CH2O m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),:) = 1d-4 ! half-saturation for SO42-, mol L^-1 
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),:) = 100d0 ! vmax, mol CH2O m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),:) = 30d0 ! inhibition constant for amfe3, mol m^-3 
+krxn1_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 500d0 ! vmax, mol CH4 m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 5d-6 ! half-saturation for CH4(aq), mol L^-1 
 
 
 endsubroutine coefs_v2
@@ -20909,12 +20956,12 @@ real(kind=8),intent(in)::rho_grain,kw,rg,tempk_0,tc
 real(kind=8),dimension(nsp_sld,nz),intent(in):: hr
 
 ! local variables
-real(kind=8):: po2th,fe2th,mwtom,g1th,g2th,g3th,mvpy,fe3th,knh3,k1nh3,ko2,v_tmp,km_tmp1,km_tmp2,km_tmp3  &
+real(kind=8):: po2th,fe2th,mwtom,g1th,g2th,g3th,mvpy,fe3th,knh3,k1nh3,ko2,v_tmp,km_tmp1,km_tmp2,km_tmp3,kch4  &
     & ,kn2o,k1fe2,k1fe2co3,k1fe2hco3,k1fe2so4,kco2,k1,k2
 real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,ombx &
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
-    & ,vmax_tmp,z_dum,amfe3x
+    & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
 real(kind=8),dimension(nsp_gas_all,nz)::mgasx_loc
@@ -21038,11 +21085,13 @@ po2x    = mgasx_loc(findloc(chrgas_all,'po2',dim=1),:)
 pco2x   = mgasx_loc(findloc(chrgas_all,'pco2',dim=1),:)
 pnh3x   = mgasx_loc(findloc(chrgas_all,'pnh3',dim=1),:)
 pn2ox   = mgasx_loc(findloc(chrgas_all,'pn2o',dim=1),:)
+pch4x   = mgasx_loc(findloc(chrgas_all,'pch4',dim=1),:)
 
 oxax    = maqx_loc(findloc(chraq_all,'oxa',dim=1),:)    *maqft_loc(findloc(chraq_all,'oxa',dim=1),:)
 fe2x    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe2',dim=1),:)
 fe3x    = maqx_loc(findloc(chraq_all,'fe3',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe3',dim=1),:)
 no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:)    *maqft_loc(findloc(chraq_all,'no3',dim=1),:)
+so4x    = maqx_loc(findloc(chraq_all,'so4',dim=1),:) ! dissolved sulfate as solved for (maqft_loc for so4 is not a total/free ratio)
 fe2f    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)
 
 omx     = msldx_loc(findloc(chrsld_all,'om',dim=1),:)
@@ -21991,6 +22040,86 @@ select case(trim(adjustl(rxn_name)))
                     & *vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0 &
                     & *min(2d0*sat,1d0) &
                     & )
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('g2so4') 
+        ! dissimilatory sulfate reduction by OM (2 CH2O  +  SO42-  +  H+  ->  2 CO2  +  HS-  +  2 H2O) 
+        ! Monod in OM and SO42- with O2 and NO3- inhibition; OM and inhibition constants as g2fe3 
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ! mol CH2O m^-3 yr^-1
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ! half-saturation for SO42-, mol L-1
+        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
+        f_g2  = g2x/(g2x + km_tmp1 )
+        f_ea  = so4x/(so4x + km_tmp2 )
+        f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
+        f_no3 = vmax_tmp/(no3x + vmax_tmp )
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_g2*f_ea*f_o2*f_no3*f_sat
+        
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_ea*f_o2*f_no3*f_sat
+            case('so4')
+                drxnext_dmsp = v_tmp*f_g2*km_tmp2/(so4x + km_tmp2 )**2d0*f_o2*f_no3*f_sat
+            case('po2')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_no3*f_sat
+            case('no3')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*f_o2*vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0*f_sat
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('g2ch4') 
+        ! methanogenesis from OM (2 CH2O  ->  CH4  +  CO2), lumping acetoclastic and hydrogenotrophic pathways 
+        ! inhibited by O2, NO3-, SO42- and amorphous Fe(III) so that it follows the redox sequence 
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),1) ! mol CH2O m^-3 yr^-1
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),1) ! amfe3 inhibition, mol m-3
+        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
+        f_g2  = g2x/(g2x + km_tmp1 )
+        f_fe3 = km_tmp2/(amfe3x + km_tmp2 )
+        f_so4 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) &
+            & /(so4x + krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ) ! SO42- inhibition = half-saturation of g2so4
+        f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
+        f_no3 = vmax_tmp/(no3x + vmax_tmp )
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_g2*f_fe3*f_so4*f_o2*f_no3*f_sat
+        
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_fe3*f_so4*f_o2*f_no3*f_sat
+            case('amfe3')
+                drxnext_dmsp = v_tmp*f_g2*km_tmp2*(-1d0)/(amfe3x + km_tmp2 )**2d0*f_so4*f_o2*f_no3*f_sat
+            case('so4')
+                drxnext_dmsp = v_tmp*f_g2*f_fe3*(-1d0)*f_so4**2d0/krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) &
+                    & *f_o2*f_no3*f_sat
+            case('po2')
+                drxnext_dmsp = v_tmp*f_g2*f_fe3*f_so4*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_no3*f_sat
+            case('no3')
+                drxnext_dmsp = v_tmp*f_g2*f_fe3*f_so4*f_o2*vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0*f_sat
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('ch4o2') 
+        ! aerobic CH4 oxidation (CH4  +  2 O2  ->  CO2  +  2 H2O): dual Monod in dissolved CH4 and O2 
+        kch4 = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),1) ! mol CH4 m^-3 yr^-1
+        km_tmp1 = krxn2_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),1) ! half-saturation for CH4(aq), mol L-1
+        km_tmp2 = 2d-5 ! half-saturation for O2(aq), mol L-1 
+        f_ea  = kch4*pch4x/(kch4*pch4x + km_tmp1 )
+        f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
+        rxn_ext = v_tmp*f_ea*f_o2
+        
+        select case(trim(adjustl(sp_name)))
+            case('pch4')
+                drxnext_dmsp = v_tmp*km_tmp1*kch4/(kch4*pch4x + km_tmp1 )**2d0*f_o2
+            case('po2')
+                drxnext_dmsp = v_tmp*f_ea*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -23057,6 +23186,11 @@ if (precalc_all) then
                 case('pn2o')
                     khgas(ispg,:) = kn2o ! previous value; should not change through iterations 
                     khgasx(ispg,:) = kn2o
+            
+                    dkhgas_dpro(ispg,:) = 0d0
+                case('pch4')
+                    khgas(ispg,:) = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0) ! previous value; should not change through iterations 
+                    khgasx(ispg,:) = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
             
                     dkhgas_dpro(ispg,:) = 0d0
             endselect 
@@ -34236,6 +34370,9 @@ do ispg = 1, nsp_gas_all
         case('pn2o')
             khgas(ispg,:) = kn2o ! previous value; should not change through iterations 
             khgasx(ispg,:) = kn2o
+        case('pch4')
+            khgas(ispg,:) = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0) ! previous value; should not change through iterations 
+            khgasx(ispg,:) = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
     endselect 
 
 enddo 
