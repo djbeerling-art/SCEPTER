@@ -773,7 +773,7 @@ integer,parameter::nsp_gas_all = 4
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 13
+integer,parameter::nrxn_ext_all = 14
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1140,7 +1140,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
-    & ,'g2k  ','g2ca ','g2mg '/)
+    & ,'g2k  ','g2ca ','g2mg ','g2fe3'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1876,6 +1876,12 @@ stgas_ext_all(findloc(chrrxn_ext_all,'oxao2',dim=1), findloc(chrgas_all,'po2',di
 staq_ext_all(findloc(chrrxn_ext_all,'g2k',dim=1), findloc(chraq_all,'k',dim=1)) = -1d0 
 staq_ext_all(findloc(chrrxn_ext_all,'g2ca',dim=1), findloc(chraq_all,'ca',dim=1)) = -1d0 
 staq_ext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chraq_all,'mg',dim=1)) = -1d0 
+! dissimilatory Fe(III) reduction by OM (CH2O  +  4 Fe(OH)3  +  8 H+  ->  CO2  +  4 Fe2+  +  11 H2O) 
+stsld_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0 ! values relative to CH2O
+stsld_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = -4d0
+staq_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chraq_all,'fe2',dim=1)) = 4d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
 
 ! define 1 when a reaction is sensitive to a speces 
 stgas_dext_all = 0d0
@@ -1923,6 +1929,11 @@ stgas_dext_all(findloc(chrrxn_ext_all,'g2ca',dim=1), findloc(chrgas_all,'po2',di
 staq_dext_all(findloc(chrrxn_ext_all,'g2ca',dim=1), findloc(chraq_all,'ca',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+! dissimilatory Fe(III) reduction by OM 
+stsld_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
 
 staq_ext = 0d0
@@ -9814,6 +9825,11 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'pyfe3',dim=1),:) = &
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2k',dim=1),:) = ksld_all(findloc(chrsld_all,'g2',dim=1),:)
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2ca',dim=1),:) = ksld_all(findloc(chrsld_all,'g2',dim=1),:)
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2mg',dim=1),:) = ksld_all(findloc(chrsld_all,'g2',dim=1),:)
+
+! dissimilatory Fe(III) reduction by OM: provisional values to be calibrated against paddy incubations 
+! (order of magnitude from Fe2+ accumulation of ~10-50 mmol/kg within 2-4 weeks of flooding, e.g. Yao et al. 1999)
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 200d0 ! vmax, mol CH2O m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 100d0 ! half-saturation for amfe3, mol m^-3 
 
 
 endsubroutine coefs_v2
@@ -20857,7 +20873,7 @@ real(kind=8):: po2th,fe2th,mwtom,g1th,g2th,g3th,mvpy,fe3th,knh3,k1nh3,ko2,v_tmp,
 real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,ombx &
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
-    & ,vmax_tmp,z_dum
+    & ,vmax_tmp,z_dum,amfe3x
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
 real(kind=8),dimension(nsp_gas_all,nz)::mgasx_loc
@@ -20994,6 +21010,7 @@ g1x     = msldx_loc(findloc(chrsld_all,'g1',dim=1),:)
 g2x     = msldx_loc(findloc(chrsld_all,'g2',dim=1),:)
 g3x     = msldx_loc(findloc(chrsld_all,'g3',dim=1),:)
 pyx     = msldx_loc(findloc(chrsld_all,'py',dim=1),:)
+amfe3x  = msldx_loc(findloc(chrsld_all,'amfe3',dim=1),:)
 
 
 nh4x = pnh3x*knh3*prox/k1nh3
@@ -21878,6 +21895,64 @@ select case(trim(adjustl(rxn_name)))
                         endif 
                 endselect 
         
+        
+    case('g2fe3') 
+        ! dissimilatory Fe(III) reduction by OM (CH2O  +  4 Fe(OH)3  +  8 H+  ->  CO2  +  4 Fe2+  +  11 H2O) 
+        ! Monod in OM and amorphous Fe(III) with O2 and NO3- inhibition; OM and inhibition constants follow g2n21 (Maggi et al. 2008)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),1) ! mol CH2O m^-3 yr^-1
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),1) ! half-saturation for amfe3, mol m-3
+        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (taken as the NO3- half-saturation of g2n21)
+        rxn_ext = ( &
+            & v_tmp &
+            & *g2x/(g2x + km_tmp1 ) &
+            & *amfe3x/(amfe3x + km_tmp2 ) &
+            & *km_tmp3/(po2x*ko2 + km_tmp3 ) &
+            & *vmax_tmp/(no3x + vmax_tmp ) &
+            & *min(2d0*sat,1d0) &
+            & )
+            
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = ( &
+                    & v_tmp &
+                    & *km_tmp1/(g2x + km_tmp1 )**2d0 &
+                    & *amfe3x/(amfe3x + km_tmp2 ) &
+                    & *km_tmp3/(po2x*ko2 + km_tmp3 ) &
+                    & *vmax_tmp/(no3x + vmax_tmp ) &
+                    & *min(2d0*sat,1d0) &
+                    & )
+            case('amfe3')
+                drxnext_dmsp = ( &
+                    & v_tmp &
+                    & *g2x/(g2x + km_tmp1 ) &
+                    & *km_tmp2/(amfe3x + km_tmp2 )**2d0 &
+                    & *km_tmp3/(po2x*ko2 + km_tmp3 ) &
+                    & *vmax_tmp/(no3x + vmax_tmp ) &
+                    & *min(2d0*sat,1d0) &
+                    & )
+            case('po2')
+                drxnext_dmsp = ( &
+                    & v_tmp &
+                    & *g2x/(g2x + km_tmp1 ) &
+                    & *amfe3x/(amfe3x + km_tmp2 ) &
+                    & *km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0 * ko2 &
+                    & *vmax_tmp/(no3x + vmax_tmp ) &
+                    & *min(2d0*sat,1d0) &
+                    & )
+            case('no3')
+                drxnext_dmsp = ( &
+                    & v_tmp &
+                    & *g2x/(g2x + km_tmp1 ) &
+                    & *amfe3x/(amfe3x + km_tmp2 ) &
+                    & *km_tmp3/(po2x*ko2 + km_tmp3 ) &
+                    & *vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0 &
+                    & *min(2d0*sat,1d0) &
+                    & )
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
         
     case default 
         rxn_ext = 0d0
