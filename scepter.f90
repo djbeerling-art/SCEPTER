@@ -207,6 +207,7 @@ real(kind=8),parameter :: mvg2 = 30d0/1.5d0 ! cm3/mol; assumed to be same as mvo
 real(kind=8),parameter :: mvg3 = 30d0/1.5d0 ! cm3/mol; assumed to be same as mvom
 real(kind=8),parameter :: mvphsi = 25.739d0 ! cm3/mol; molar volume of phytolith silica taken as cristobalite (SiO2); Robie et al. 1978
 real(kind=8),parameter :: mvarg = 34.15d0 ! cm3/mol; molar volume of aragonite; Robie et al. 1978
+real(kind=8),parameter :: mvsid = 29.378d0 ! cm3/mol; molar volume of siderite (FeCO3); Robie et al. 1978
 real(kind=8),parameter :: mvdlm = 64.34d0 ! cm3/mol; molar volume of dolomite; Robie et al. 1978
 real(kind=8),parameter :: mvhm = 30.274d0 ! cm3/mol; molar volume of hematite; Robie et al. 1978
 real(kind=8),parameter :: mvill = 139.35d0 ! cm3/mol; molar volume of illite (K0.6Mg0.25Al2.3Si3.5O10(OH)2); Wolery and Jove-Colon 2004
@@ -327,6 +328,7 @@ real(kind=8),parameter :: mwtg2 = 30d0 ! g/mol; formula weight of CH2O
 real(kind=8),parameter :: mwtg3 = 30d0 ! g/mol; formula weight of CH2O
 real(kind=8),parameter :: mwtphsi = 60.085d0 ! g/mol; formula weight of phytolith silica
 real(kind=8),parameter :: mwtarg = 100.089d0 ! g/mol; formula weight of aragonite
+real(kind=8),parameter :: mwtsid = 115.856d0 ! g/mol; formula weight of siderite (FeCO3)
 real(kind=8),parameter :: mwtdlm = 184.403d0 ! g/mol; formula weight of dolomite
 real(kind=8),parameter :: mwthm = 159.692d0 ! g/mol; formula weight of hematite
 real(kind=8),parameter :: mwtill = 383.90053d0 ! g/mol; formula weight of Ill calculated from atmoic weight
@@ -761,7 +763,7 @@ integer nsp_sld_2 != 25
 ! integer,parameter::nsp_sld_2 = 20 ! removing all carbonate from secondary minerals
 ! integer,parameter::nsp_sld_2 = 11 ! removing all base-catio bearers from secondary minerals
 ! #endif 
-integer,parameter::nsp_sld_all = 86
+integer,parameter::nsp_sld_all = 87
 integer ::nsp_sld_cnst != nsp_sld_all - nsp_sld
 integer,intent(in)::nsp_aq != 5
 integer,parameter::nsp_aq_ph = 19
@@ -964,7 +966,7 @@ real(kind=8),dimension(nsp_sld_all,nsp_aq_all):: logkhaq_all,logkhaq_all_def
 real(kind=8),dimension(nsp_sld_all):: beta_all,beta_all_def
 ! real(kind=8),parameter :: c1_gamma_max = 20d0 ! "alpha" above which fH deppendence is ignored  
 real(kind=8),parameter :: c1_gamma_max = 50d0 ! "alpha" above which fH deppendence is ignored  
-integer,parameter::nsp_aqex = 5 ! exchangeable species
+integer,parameter::nsp_aqex = 6 ! exchangeable species
 character(5),dimension(nsp_aqex)::chraqex
 real(kind=8),dimension(nsp_aqex,5 + nrxn_ext + nsp_sld,nz)::flx_aqex
 real(kind=8),dimension(nsp_aqex,5 + nrxn_ext + nsp_sld)::int_flx_aqex
@@ -1134,7 +1136,7 @@ chrsld_all = (/'fo   ','ab   ','an   ','cc   ','ka   ','gb   ','py   ','ct   ','
     & ,'nasp ','mgsp ','fe2o ','mgo  ','k2o  ','cao  ','na2o ','al2o3','gbas ','cbas ','ep   ','clch ' &
     & ,'sdn  ','cdr  ','leu  ','amal ','amfe3','fbas ','olvn ','mgn  ','ilmn ','anat ','jrs  ' &
     & ,'g1   ','g2   ','g3   ','amnt ','kcl  ','gac  ','mesmh','ims  ','teas ','naoh ','naglp','cacl2' &
-    & ,'nacl ','sio2 ','caso4' &
+    & ,'nacl ','sio2 ','caso4','sid  ' &
     & ,'inrt '/)
 chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','k    ','no3  ','oxa  ' &
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
@@ -1191,7 +1193,7 @@ chraq_ph   = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_ph = (/'pco2 ','pnh3 ','po2  '/)
 
 chrco2sp = (/'co2g ','co2aq','hco3 ','co3  ','DIC  ','ALK  '/)
-chraqex  = (/'na   ','k    ','ca   ','mg   ','al   '/)
+chraqex  = (/'na   ','k    ','ca   ','mg   ','al   ','fe2  '/)
 
 if (nsp_aq_cnst .ne. 0) then 
     do ispa = 1, nsp_aq_cnst
@@ -1239,14 +1241,14 @@ mv_all = (/mvfo,mvab,mvan,mvcc,mvka,mvgb,mvpy,mvct,mvfa,mvgt,mvcabd,mvdp,mvhb,mv
     & ,mvkbd,mvmgbd,mvnabd,mvmscv,mvplgp,mvantp,mvagt,mvjd,mvwls,mvphsi,mvsplt,mvcasp,mvksp,mvnasp,mvmgsp &
     & ,mvfe2o,mvmgo,mvk2o,mvcao,mvna2o,mval2o3,mvgbas,mvcbas,mvep,mvclch,mvsdn,mvcdr,mvleu,mvamal,mvamfe3 &
 	& ,mvfbas,mvolvn,mvmgn,mvilmn,mvanat,mvjrs &
-    & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4  &
+    & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4,mvsid  &
     & ,mvinrt/)
 mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,mwtdp,mwthb,mwtkfs,mwtom,mwtomb,mwtamsi &
     & ,mwtarg,mwtdlm,mwthm,mwtill,mwtanl,mwtnph,mwtqtz,mwtgps,mwttm,mwtla,mwtby,mwtolg,mwtand,mwtcpx,mwten,mwtfer,mwtopx &
     & ,mwtkbd,mwtmgbd,mwtnabd,mwtmscv,mwtplgp,mwtantp,mwtagt,mwtjd,mwtwls,mwtphsi,mwtsplt,mwtcasp,mwtksp,mwtnasp,mwtmgsp &
     & ,mwtfe2o,mwtmgo,mwtk2o,mwtcao,mwtna2o,mwtal2o3,mwtgbas,mwtcbas,mwtep,mwtclch,mwtsdn,mwtcdr,mwtleu,mwtamal,mwtamfe3 &
 	& ,mwtfbas,mwtolvn,mwtmgn,mwtilmn,mwtanat,mwtjrs &
-    & ,mwtg1,mwtg2,mwtg3,mwtamnt,mwtkcl,mwtgac,mwtmesmh,mwtims,mwtteas,mwtnaoh,mwtnaglp,mwtcacl2,mwtnacl,mwtsio2,mwtcaso4 &
+    & ,mwtg1,mwtg2,mwtg3,mwtamnt,mwtkcl,mwtgac,mwtmesmh,mwtims,mwtteas,mwtnaoh,mwtnaglp,mwtcacl2,mwtnacl,mwtsio2,mwtcaso4,mwtsid &
     & ,mwtinrt/)
 
 do isps = 1, nsp_sld 
@@ -1658,6 +1660,9 @@ staq_all(findloc(chrsld_all,'qtz',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0
 ! Aragonite (CaCO3)
 staq_all(findloc(chrsld_all,'arg',dim=1), findloc(chraq_all,'ca',dim=1)) = 1d0
 stgas_all(findloc(chrsld_all,'arg',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+! Siderite (FeCO3)
+staq_all(findloc(chrsld_all,'sid',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
+stgas_all(findloc(chrsld_all,'sid',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! Dolomite (CaMg(CO3)2)
 staq_all(findloc(chrsld_all,'dlm',dim=1), findloc(chraq_all,'ca',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'dlm',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
@@ -2217,6 +2222,9 @@ do isps=1,nsp_sld_all
                     logkhaq_all_def(isps,ispa) = 10.47d0
                 case('mg')
                     logkhaq_all_def(isps,ispa) = 10.786d0
+                case('fe2')
+                    ! from log KMg\Na = 0.30 and log KFe\Na = 0.22 per exchange site (Appelo and Postma 2005; phreeqc.dat MgX2 0.6, FeX2 0.44)
+                    logkhaq_all_def(isps,ispa) = 10.944d0
                 case('al')
                     logkhaq_all_def(isps,ispa) = 16.47d0
             endselect
@@ -8615,6 +8623,8 @@ do i =1,nsld_cec
         logkhaq(findloc(chrsld_all,chr_tmp,dim=1),findloc(chraq_all,'ca',dim=1)) = val_tmp2(3) ! Ca
         logkhaq(findloc(chrsld_all,chr_tmp,dim=1),findloc(chraq_all,'mg',dim=1)) = val_tmp2(4) ! Mg
         logkhaq(findloc(chrsld_all,chr_tmp,dim=1),findloc(chraq_all,'al',dim=1)) = val_tmp2(5) ! Al
+        ! Fe2+ is not read from cec.in: its selectivity is tied to the Mg value read (Appelo and Postma 2005)
+        logkhaq(findloc(chrsld_all,chr_tmp,dim=1),findloc(chraq_all,'fe2',dim=1)) = val_tmp2(4) + 0.158d0 ! Fe2+
         beta(findloc(chrsld_all,chr_tmp,dim=1)) = val_tmp3
     endif 
 enddo 
@@ -9603,6 +9613,14 @@ do isps = 1, nsp_sld_all
                         keqiex_all(isps,ispa) = 10d0**(1.014d0)
                         keqiex_all(isps,ispa) = 10d0**(0.614d0)
                     endif 
+
+                case('fe2')
+                    if (cec_pH_depend(isps)) then
+                        ! Fe++(aq) + 2X-H = X2-Fe + 2H+ (same form as Mg++)
+                        keqiex_all(isps,ispa) = 10d0**(-logkhaq_all(isps,ispa))
+                    else 
+                        keqiex_all(isps,ispa) = 10d0**(0.456d0) ! Mg value lowered by 0.158 (Appelo and Postma 2005)
+                    endif 
                 
                 case('ca')
                     if (cec_pH_depend(isps)) then
@@ -10311,6 +10329,22 @@ select case(trim(adjustl(mineral)))
             case default 
                 dkin_dmsp = 0d0
         endselect 
+
+    case('sid')
+        ! neutral mechanism only, from Palandri and Kharaka, 2004 (acid and carbonate mechanisms not included)
+        mh = 0d0
+        moh = 0d0
+        kinn_ref = 10d0**(-8.90d0)*sec2yr
+        kinh_ref = 0d0
+        kinoh_ref = 0d0
+        ean = 62.76d0
+        eah = 0d0
+        eaoh = 0d0
+        tc_ref = 25d0
+        kin = ( & 
+            & k_arrhenius(kinn_ref,tc_ref+tempk_0,tc+tempk_0,ean,rg) &
+            & ) 
+        dkin_dmsp = 0d0
 
     case('dlm') ! for disordered dolomite
         mh = 0.500d0
@@ -11347,6 +11381,13 @@ select case(trim(adjustl(mineral)))
 #ifdef AMD_benchmark 
 		therm = 10d0**(-8.48d0) ! Mayer et al. 2015
 #endif 
+    case('sid')
+        ! FeCO3 = Fe2+ + CO32-
+        therm_ref = 10d0**(-10.89d0)
+        ha = -10.38d0
+        tc_ref = 25d0
+        ! from phreeqc.dat (log_k -10.89, delta_h -2.48 kcal/mol)
+        therm = k_arrhenius(therm_ref,tc_ref+tempk_0,tc+tempk_0,ha,rg)
     case('arg')
         ! CaCO3 = Ca2+ + CO32-
         therm_ref = 10d0**(-8.3d0)
@@ -16187,7 +16228,7 @@ select case(trim(adjustl(mineral)))
         if (.not.act_ON) domega_dios_loc = 0d0
         if (act_ON)      domega_dios_loc = domega_dios_loc*omega
         
-    case('cc','arg','dlm') ! carbonates
+    case('cc','arg','dlm','sid') ! carbonates
         keq_tmp = keqsld_all(findloc(chrsld_all,mineral,dim=1))
         ss_pco2 = stgas_all(findloc(chrsld_all,mineral,dim=1),findloc(chrgas_all,'pco2',dim=1))
         omega = 1d0
@@ -20006,7 +20047,7 @@ do isps = 1, nsp_sld_all
             do ispa=1,nsp_aq_all
                 selectcase(trim(adjustl(chraq_all(ispa))))
                     ! case('na','k','mg','ca')
-                    case('na','k','mg','ca','al')
+                    case('na','k','mg','ca','al','fe2')
                         a = a - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(x/prox)**base_charge(ispa)*gamma**base_charge(ispa)
                         da = da - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(1d0/prox)**base_charge(ispa) &
                             &   *base_charge(ispa)*x**(base_charge(ispa)-1d0)*gamma**base_charge(ispa) &
@@ -20023,7 +20064,7 @@ do isps = 1, nsp_sld_all
         else 
             do ispa=1,nsp_aq_all
                 selectcase(trim(adjustl(chraq_all(ispa))))
-                    case('na','k','mg','ca','al')
+                    case('na','k','mg','ca','al','fe2')
                         a = a - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*x**base_charge(ispa)
                         da = da - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*base_charge(ispa)*x**(base_charge(ispa)-1d0)
                         da_dmaqf(ispa,:) = da_dmaqf(ispa,:) - fact*keqiex_all(isps,ispa)*1d0*x**base_charge(ispa)
@@ -20135,7 +20176,7 @@ do isps = 1, nsp_sld_all
 			if (cec_pH_depend(isps)) then 
 				do ispa=1,nsp_aq_all
 					selectcase(trim(adjustl(chraq_all(ispa))))
-						case('na','k','mg','ca','al')
+						case('na','k','mg','ca','al','fe2')
 							a = a - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(x/prox)**base_charge(ispa)*gamma**base_charge(ispa)
 							da = da - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(1d0/prox)**base_charge(ispa) &
 								&   *base_charge(ispa)*x**(base_charge(ispa)-1d0)*gamma**base_charge(ispa) &
@@ -20154,7 +20195,7 @@ do isps = 1, nsp_sld_all
 			else 
 				do ispa=1,nsp_aq_all
 					selectcase(trim(adjustl(chraq_all(ispa))))
-						case('na','k','mg','ca','al')
+						case('na','k','mg','ca','al','fe2')
 							a = a - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*x**base_charge(ispa)
 							da = da - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*base_charge(ispa)*x**(base_charge(ispa)-1d0)
 							da_dmaqf(ispa,:) = da_dmaqf(ispa,:) - fact*keqiex_all(isps,ispa)*1d0*x**base_charge(ispa)
@@ -20208,7 +20249,7 @@ do isps = 1, nsp_sld_all
         ! print *,'prox',prox
 		! do ispa=1,nsp_aq_all
 			! selectcase(trim(adjustl(chraq_all(ispa))))
-				! case('na','k','mg','ca','al')
+				! case('na','k','mg','ca','al','fe2')
 					! print*,chraq_all(ispa), maqf_loc(ispa,:)
 				! case default 
 			! endselect
@@ -20302,7 +20343,7 @@ dmaqfads_sld_dmsld = 0d0
 
 do ispa=1,nsp_aq_all
     selectcase(trim(adjustl(chraq_all(ispa))))
-        case('na','k','mg','ca','al')
+        case('na','k','mg','ca','al','fe2')
             do isps=1,nsp_sld_all
                 
                 if (keqcec_all(isps) == 0d0) cycle
@@ -20532,7 +20573,7 @@ do isps = 1, nsp_sld_all
     if (cec_pH_depend(isps)) then 
         do ispa=1,nsp_aq_all
             selectcase(trim(adjustl(chraq_all(ispa))))
-                case('na','k','mg','ca','al')
+                case('na','k','mg','ca','al','fe2')
                     ord = nint(base_charge(ispa))
                     c(1+ord,:) = c(1+ord,:) - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(1d0/prox)**ord
                 case default 
@@ -20542,7 +20583,7 @@ do isps = 1, nsp_sld_all
     else 
         do ispa=1,nsp_aq_all
             selectcase(trim(adjustl(chraq_all(ispa))))
-                case('na','k','mg','ca','al')
+                case('na','k','mg','ca','al','fe2')
                     ord = nint(base_charge(ispa))
                     c(1+ord,:) = c(1+ord,:) - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)
                 case default 
@@ -20649,7 +20690,7 @@ do isps = 1, nsp_sld_all
     if (cec_pH_depend(isps)) then 
         do ispa=1,nsp_aq_all
             selectcase(trim(adjustl(chraq_all(ispa))))
-                case('na','k','mg','ca','al')
+                case('na','k','mg','ca','al','fe2')
                     a = a - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(x/prox)**base_charge(ispa)
                     da = da - keqiex_all(isps,ispa)* maqf_loc(ispa,:)*(1d0/prox)**base_charge(ispa) &
                         & *base_charge(ispa)*x**(base_charge(ispa)-1d0)
@@ -20663,7 +20704,7 @@ do isps = 1, nsp_sld_all
     else 
         do ispa=1,nsp_aq_all
             selectcase(trim(adjustl(chraq_all(ispa))))
-                case('na','k','mg','ca','al')
+                case('na','k','mg','ca','al','fe2')
                     a = a - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*x**base_charge(ispa)
                     da = da - fact*keqiex_all(isps,ispa)* maqf_loc(ispa,:)*base_charge(ispa)*x**(base_charge(ispa)-1d0)
                     da_dmaqf(ispa,:) = da_dmaqf(ispa,:) - fact*keqiex_all(isps,ispa)*1d0*x**base_charge(ispa)
@@ -20715,7 +20756,7 @@ dmaqfads_sld_dmsld = 0d0
 
 do ispa=1,nsp_aq_all
     selectcase(trim(adjustl(chraq_all(ispa))))
-        case('na','k','mg','ca','al')
+        case('na','k','mg','ca','al','fe2')
             do isps=1,nsp_sld_all
                 
                 if (keqcec_all(isps) == 0d0) cycle
@@ -30922,7 +30963,7 @@ endif
     ! safe_mode = .false.
 ! endif 
 select case(trim(adjustl(chrsp)))
-    case('cc','dlm','arg','gps')
+    case('cc','dlm','arg','gps','sid')
         safe_mode = .false.
     case default
         safe_mode = .true.
