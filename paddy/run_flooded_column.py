@@ -25,6 +25,10 @@ ttot   = float(args[2]) if len(args) > 2 else 0.5
 ch4    = '--ch4' in flags
 fe2buf = '--fe2buf' in flags or ch4
 awd    = '--awd' in flags
+# optional --fe3=<wt fraction of amfe3, default 0.03> and --om=<OM input g C m-2 yr-1, default 300>
+opt    = dict(a[2:].split('=') for a in flags if '=' in a)
+fe3wt  = float(opt.get('fe3',0.03))
+omin   = float(opt.get('om',300))
 season = awd or '--season' in flags
 
 def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=0.5,ramp=0.003):
@@ -42,7 +46,7 @@ def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=0.5,ra
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
-    ztot=0.3,nz=30,ttot=ttot,temp=25,omrain=300,zom=0.15,poro=0.5,
+    ztot=0.3,nz=30,ttot=ttot,temp=25,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=1.0,           # water saturation 1 throughout: flooded
     zwater=0.5 if awd else 1000,w=0,q=0.5,p=1e-5,nstep=10,rstrt='self',
     # ---- switches.in ----
@@ -55,7 +59,7 @@ spinup.run_a_scepter_run(
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []),
     exrxn_list=rxns,
     # ---- boundary values ----
-    pr_list=[('inrt',0.97),('amfe3',0.03)],
+    pr_list=[('inrt',1-fe3wt),('amfe3',fe3wt)],
     # rain inputs are free (primary) species with -Drain_input_as_primary:
     # free Fe3+ must be near Fe(OH)3 equilibrium, otherwise hydrolysis makes total Fe(III) huge
     rain_list=[('ca',2.05e-4 if ch4 else 5e-6),('fe3',1e-21),('fe2',1e-10)]
