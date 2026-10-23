@@ -51,8 +51,34 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   FeS + 2 O2 -> Fe2+ + SO42-, rate = k [FeS] [O2(aq)] with k 1e6 L mol-1 yr-1 (about a day at air
   saturation, provisional). Like `gr`, FeS has no mineral rate law of its own. Track `fes` as a solid
   (added automatically with `--ch4`) and list `fe2fs,fesox` in `extrxns.in`.
+- N2O reduction for paddies `g2n2p` (2 N2O + CH2O -> 2 N2 + CO2): Monod in OM and N2O(aq) (K 5 uM, the
+  micromolar affinity of soil N2O reductase), inhibited by O2 (2.52e-5 M), by NO3- (1 mM: the N2O/(N2O+N2)
+  ratio rises mainly at millimolar nitrate) and by low pH through 1/(1 + (H+/H50)^2) with pH50 = 6.0 (`krxn2`).
+  vmax `krxn1` (default as Maggi et al. 2008; calibrated 300 mol m-3 yr-1, below). Listed with `amo2o,g2n21`.
+- Plant-mediated N2O transport `n2opl`: as `ch4pl` (same root-density profile), with the CH4 conductance scaled
+  by the ratio of gas diffusivities in air (`krxn1` = 0.76) and no rhizosphere loss.
+- Urea (`urea`, CO(NH2)2 + H2O -> 2 NH3 + CO2, NH3/NH4+ carried as `pnh3`) as a new solid that decays with a
+  5-day turnover at 25 C (Q10 2). Supplied with the OM input; driver option `--nfert=<kg N/ha>`.
+- Floodwater gas exchange. SCEPTER closes the top boundary to dissolved gases and lets gases leave only
+  through soil air, so a fully saturated column had no surface exchange at all (no O2 in, no CO2, CH4 or
+  N2O out except by leaching). `gasa_diff` now adds a transfer velocity across standing water, read from
+  `floodwater.in` (header line, then the value in m/yr; default 0 keeps the upstream behaviour). It is
+  weighted by (sat(1) - 0.9)/0.1, so it acts only while the surface is flooded. The driver writes 36.5 m/yr
+  (0.1 m/d, about the diffusive boundary layer at the soil surface; `--kfw`).
+- Run-time rate constants: `krxn_ext.in` in the run directory (header line, then `name krxn1 krxn2`; -999 keeps
+  the default) overrides `krxn1_ext_all`/`krxn2_ext_all` at the end of `coefs_v2`. Driver option `--k=<file>`.
+  `g2n21`/`g2n0` now take their vmax from `krxn1_ext_all` too (same default).
+- Bug fix in `calc_rxn_ext_dev_3`: `maqft_loc` for NO3- is the total concentration, not a total/free ratio
+  (as for SO42-), so `no3x = maqx*maqft` squared nitrate and made denitrification and every NO3- inhibition
+  term ~1e4 times too weak. `no3x` is now `maqx_loc`.
+- `makefile_paddy`: as `makefile_ex11` but without `-Ddisp_cnst`. That flag (needed for the PHREEQC ex11
+  benchmark) gives every aqueous and gas species the same diffusivity, 0.066 m2/yr, which made gas-phase
+  diffusion ~1e4 times too slow: drained soil stayed anoxic and made methane. Paddy runs use `scepter_paddy`.
 
 ## Tests
+
+The column tests below up to the AWD sensitivity used the ex11 build (constant diffusivity for all species,
+see `makefile_paddy`), so their numbers are superseded by the calibration runs at the end.
 
 - `compare_ex11_phreeqc.py`: checks the cation-exchange benchmark against PHREEQC example 11
   (via phreeqpython). Outlet Na, K, Ca, Cl agree with PHREEQC to within about 0.06 mM (RMSE under 0.015 mM).
@@ -96,14 +122,38 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   ~10 % of the OM added is respired, so the remaining gap points to the provisional methanogenesis/OM rate
   constants (vmax, K_OM) rather than a missing process.
 
+- Calibration against field data (`calib_metrics.py <run dir> [days] [kg N/ha]`). Protocol: a 3-yr drained
+  fallow spin-up (`--fallow`, surface saturation 0.5, water table 0.5 m; aerobic reactions only, plus `amo2o` for
+  N runs) builds the labile OM stock (g2 80-175 mol m-3) and leaves the soil oxic; then a 113-day season
+  (IPCC 2019 default length) restarts from it (`--rstrt=<tag>`), with 0.5 wt% amorphous Fe(OH)3 and
+  300 g C m-2 yr-1 OM input. Fitted constants (`--k=paddy/krxn_calibrated.in`): vmax 300 mol CH2O m-3 yr-1 for g2fe3, g2so4, g2ch4
+  (and g2n21, g2n2p in N runs), Fe(III) inhibition of methanogenesis 5 mol m-3, plant transport k0 300 yr-1.
+  Safe AWD (`--awd`): drains to a water table at 15 cm and surface saturation 0.6 (`--zdry`, `--sdry`).
+
+  | Metric | Flooded | AWD | Field target |
+  |---|---|---|---|
+  | CH4 emission, kg CH4 ha-1 d-1 | 1.17 | 0.64 | 1.19 (IPCC 2019 default) |
+  | AWD / flooded CH4 | | 0.55 | 0.55 (IPCC multiple drainage) |
+  | Plant share of CH4 emission | 70 % | 63 % | 60-90 % |
+  | CH4 onset (10 % of peak rate) | 21 d | 16 d | 1-3 weeks |
+  | Peak porewater CH4 / Fe2+, mM | 0.82 / 1.2 | 0.86 / 1.1 | 0.1-1 / 0.5-3 |
+  | N2O EF (120 kg N/ha urea, minus no-fertiliser run) | 0.37 % | 2.2 % | 0.3 % / 0.5 % (IPCC) |
+  | N2O background, kg N/ha/season | 0.95 | 3.3 | ~0.2-1 |
+
+  With N on, CH4 is 1.14 kg/ha/d flooded and 0.58 AWD (ratio 0.51). 84-97 % of N2O made by denitrification is
+  reduced to N2 when flooded. About 31 % of urea N volatilises as NH3 (field 10-40 %).
+
 ## Known gaps (next steps)
 
 - The green rust pH-stat makes pH depend on green rust thermodynamics; its log K is uncertain by about
   a unit, which moves the buffered pH by ~0.5. Should be checked against paddy porewater pH-Fe2+ data.
-- CH4 production in the test column is far below field values (season-integrated emission ~0.007 mol m-2,
-  ~0.1 g CH4 m-2, against ~10-40 g m-2 per season in the field). The 3 wt% amorphous Fe(OH)3 pool is very
-  large and stays above the Fe(III) inhibition constant of methanogenesis (30 mol m-3), so most OM goes to
-  Fe(III) reduction. Reducible Fe(III), OM input and the inhibition constant need setting against field data.
+- The calibration fits one site-type (0.5 wt% Fe(III), 300 g C) to global-default IPCC factors; it needs
+  testing against site time series (CH4 flux, porewater Fe2+/CH4) and the ERW-in-rice datasets.
+- N2O under AWD is ~4x too high (EF 2.2 % vs 0.5 %) and the flooded background is at the top of the field
+  range. Likely causes: no nitrifier N2O pathway or NO/N2O partitioning, N2O reductase recovery after reflooding,
+  and the nitrate built up in the fallow spin-up.
+- The fallow spin-up is not at steady state (3 yr) and has no crop; with the N species it accumulates 1-1.5 mM
+  nitrate and acidifies to pH ~5.9.
 - No rice growth curve or root O2 release for plant transport; k0 and zroot need setting against field data.
 
 - Siderite does not nucleate: SCEPTER's default precipitation rate scales with the amount of mineral
@@ -112,7 +162,5 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   seeded-precipitation option is worth testing against data.
 - Without exchange (no `--fe2buf`) the column still rises to pH ~12, so CEC must be on for paddy runs.
 - No pyrite formation from FeS (slow, years); FeS is the only sulfide sink.
-- Draining is represented only through the saturation profile: there is no standing floodwater layer, no
-  explicit water-table dynamics and no change in infiltration between flooded and drained periods.
-- N2O is not yet exercised: NO3-, nitrification and stepwise denitrification exist in SCEPTER but are not
-  switched on in the paddy column (no NH4+ either).
+- Draining is represented through the saturation profile and the floodwater transfer velocity: there is no
+  explicit floodwater layer or water-table dynamics, and no change in infiltration between flooded and drained periods.

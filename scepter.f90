@@ -210,6 +210,7 @@ real(kind=8),parameter :: mvarg = 34.15d0 ! cm3/mol; molar volume of aragonite; 
 real(kind=8),parameter :: mvsid = 29.378d0 ! cm3/mol; molar volume of siderite (FeCO3); Robie et al. 1978
 real(kind=8),parameter :: mvgr = 101.2d0 ! cm3/mol; hydroxy green rust Fe3(OH)8 from formula weight and an assumed density of 3.0 g/cm3
 real(kind=8),parameter :: mvfes = 20.4d0 ! cm3/mol; amorphous FeS / mackinawite from formula weight and a density of 4.3 g/cm3
+real(kind=8),parameter :: mvurea = 60.056d0/1.32d0 ! cm3/mol; urea CO(NH2)2, density 1.32 g/cm3
 real(kind=8),parameter :: mvdlm = 64.34d0 ! cm3/mol; molar volume of dolomite; Robie et al. 1978
 real(kind=8),parameter :: mvhm = 30.274d0 ! cm3/mol; molar volume of hematite; Robie et al. 1978
 real(kind=8),parameter :: mvill = 139.35d0 ! cm3/mol; molar volume of illite (K0.6Mg0.25Al2.3Si3.5O10(OH)2); Wolery and Jove-Colon 2004
@@ -333,6 +334,7 @@ real(kind=8),parameter :: mwtarg = 100.089d0 ! g/mol; formula weight of aragonit
 real(kind=8),parameter :: mwtsid = 115.856d0 ! g/mol; formula weight of siderite (FeCO3)
 real(kind=8),parameter :: mwtgr = 303.59d0 ! g/mol; formula weight of hydroxy green rust Fe3(OH)8
 real(kind=8),parameter :: mwtfes = 87.911d0 ! g/mol; formula weight of FeS
+real(kind=8),parameter :: mwturea = 60.056d0 ! g/mol; formula weight of urea
 real(kind=8),parameter :: mwtdlm = 184.403d0 ! g/mol; formula weight of dolomite
 real(kind=8),parameter :: mwthm = 159.692d0 ! g/mol; formula weight of hematite
 real(kind=8),parameter :: mwtill = 383.90053d0 ! g/mol; formula weight of Ill calculated from atmoic weight
@@ -767,7 +769,7 @@ integer nsp_sld_2 != 25
 ! integer,parameter::nsp_sld_2 = 20 ! removing all carbonate from secondary minerals
 ! integer,parameter::nsp_sld_2 = 11 ! removing all base-catio bearers from secondary minerals
 ! #endif 
-integer,parameter::nsp_sld_all = 89
+integer,parameter::nsp_sld_all = 90
 integer ::nsp_sld_cnst != nsp_sld_all - nsp_sld
 integer,intent(in)::nsp_aq != 5
 integer,parameter::nsp_aq_ph = 19
@@ -779,7 +781,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 22
+integer,parameter::nrxn_ext_all = 24
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1140,13 +1142,14 @@ chrsld_all = (/'fo   ','ab   ','an   ','cc   ','ka   ','gb   ','py   ','ct   ','
     & ,'nasp ','mgsp ','fe2o ','mgo  ','k2o  ','cao  ','na2o ','al2o3','gbas ','cbas ','ep   ','clch ' &
     & ,'sdn  ','cdr  ','leu  ','amal ','amfe3','fbas ','olvn ','mgn  ','ilmn ','anat ','jrs  ' &
     & ,'g1   ','g2   ','g3   ','amnt ','kcl  ','gac  ','mesmh','ims  ','teas ','naoh ','naglp','cacl2' &
-    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ' &
+    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ','urea ' &
     & ,'inrt '/)
 chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','k    ','no3  ','oxa  ' &
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
-    & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox'/)
+    & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
+    & ,'n2opl'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1245,7 +1248,8 @@ mv_all = (/mvfo,mvab,mvan,mvcc,mvka,mvgb,mvpy,mvct,mvfa,mvgt,mvcabd,mvdp,mvhb,mv
     & ,mvkbd,mvmgbd,mvnabd,mvmscv,mvplgp,mvantp,mvagt,mvjd,mvwls,mvphsi,mvsplt,mvcasp,mvksp,mvnasp,mvmgsp &
     & ,mvfe2o,mvmgo,mvk2o,mvcao,mvna2o,mval2o3,mvgbas,mvcbas,mvep,mvclch,mvsdn,mvcdr,mvleu,mvamal,mvamfe3 &
 	& ,mvfbas,mvolvn,mvmgn,mvilmn,mvanat,mvjrs &
-    & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4,mvsid,mvgr,mvfes  &
+    & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4,mvsid,mvgr,mvfes &
+    & ,mvurea &
     & ,mvinrt/)
 mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,mwtdp,mwthb,mwtkfs,mwtom,mwtomb,mwtamsi &
     & ,mwtarg,mwtdlm,mwthm,mwtill,mwtanl,mwtnph,mwtqtz,mwtgps,mwttm,mwtla,mwtby,mwtolg,mwtand,mwtcpx,mwten,mwtfer,mwtopx &
@@ -1253,7 +1257,7 @@ mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,
     & ,mwtfe2o,mwtmgo,mwtk2o,mwtcao,mwtna2o,mwtal2o3,mwtgbas,mwtcbas,mwtep,mwtclch,mwtsdn,mwtcdr,mwtleu,mwtamal,mwtamfe3 &
 	& ,mwtfbas,mwtolvn,mwtmgn,mwtilmn,mwtanat,mwtjrs &
     & ,mwtg1,mwtg2,mwtg3,mwtamnt,mwtkcl,mwtgac,mwtmesmh,mwtims,mwtteas,mwtnaoh,mwtnaglp,mwtcacl2,mwtnacl,mwtsio2,mwtcaso4,mwtsid &
-    & ,mwtgr,mwtfes &
+    & ,mwtgr,mwtfes,mwturea &
     & ,mwtinrt/)
 
 do isps = 1, nsp_sld 
@@ -1674,6 +1678,9 @@ staq_all(findloc(chrsld_all,'gr',dim=1), findloc(chraq_all,'fe3',dim=1)) = 2d0
 ! FeS + H+ = Fe2+ + HS- (formed and dissolved only through the extra reactions fe2fs and fesox)
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'hs',dim=1)) = 1d0
+! urea hydrolysis (CO(NH2)2  +  H2O  ->  2 NH3  +  CO2); NH3/NH4+ is carried as pnh3 (paddy N fertiliser)
+stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = 2d0
+stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! Dolomite (CaMg(CO3)2)
 staq_all(findloc(chrsld_all,'dlm',dim=1), findloc(chraq_all,'ca',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'dlm',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
@@ -1932,6 +1939,12 @@ stsld_ext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrsld_all,'fes',di
 stgas_ext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrgas_all,'po2',dim=1)) = -2d0
 staq_ext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 staq_ext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chraq_all,'so4',dim=1)) = 1d0
+! paddy N2O reduction (2 N2O  +  CH2O  ->  2 N2  +  CO2  +  H2O): as g2n22 but O2- and pH-sensitive N2O reductase 
+stsld_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'pn2o',dim=1)) = -2d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+stgas_ext_all(findloc(chrrxn_ext_all,'n2opl',dim=1), findloc(chrgas_all,'pn2o',dim=1)) = -1d0 ! plant-mediated N2O transport
 
 ! define 1 when a reaction is sensitive to a speces 
 stgas_dext_all = 0d0
@@ -2011,6 +2024,12 @@ staq_dext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1), findloc(chraq_all,'hs',dim=
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1), findloc(chrsld_all,'fes',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrsld_all,'fes',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+! paddy N2O reduction 
+stsld_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'pn2o',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'n2opl',dim=1), findloc(chrgas_all,'pn2o',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2mg',dim=1), findloc(chraq_all,'mg',dim=1)) = 1d0
 
 staq_ext = 0d0
@@ -2212,7 +2231,7 @@ fkin   = 1d0
 
 do isps = 1, nsp_sld
     select case(trim(adjustl(chrsld(isps))))
-        case('g1','g2','g3','amnt','inrt','kcl','gac','mesmh','ims','teas','naoh','naglp','cacl2','nacl')
+        case('g1','g2','g3','amnt','inrt','kcl','gac','mesmh','ims','teas','naoh','naglp','cacl2','nacl','urea')
             precstyle(isps) = 'decay'
         case('cc','arg','dlm') ! added to change solubility 
             precstyle(isps) = 'def'
@@ -4969,7 +4988,7 @@ do while (it<nt)
                         ! & *exp(-z/zsupp_plant)/zsupp_plant
                     msldsupp(isps,:) = msldsupp(isps,:) &
                         & + plant_rain/12d0*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
-                case('amnt','cc')
+                case('amnt','cc','urea')
                     msldsupp(isps,:) = msldsupp(isps,:) &
                         & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
                 case default
@@ -4980,7 +4999,7 @@ do while (it<nt)
                 case('g1','g2','g3')
                     msldsupp(isps,1) = msldsupp(isps,1) &
                         & + plant_rain/12d0*rfrc_sld_plant(isps)/dz(1) ! when plant_rain is in g_C/m2/yr
-                case('amnt','cc')
+                case('amnt','cc','urea')
                     msldsupp(isps,1) = msldsupp(isps,1) &
                         & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)/dz(1) ! when plant_rain is in g_(isps)/m2/yr
                 case default
@@ -9956,9 +9975,65 @@ krxn2_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 0.4d0 ! pCH4 threshold 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1),:) = 1d3 ! rate per unit ln(omega), mol FeS m^-3 yr^-1 (provisional) 
 krxn2_ext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1),:) = 1d0 ! half-saturation for FeS (dissolution), mol m^-3 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fesox',dim=1),:) = 1d6 ! FeS oxidation, L mol^-1 yr^-1 (provisional; ~1 day at air saturation) 
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1),:) = 1.23d-7*60d0*60d0*24d0*365d0 ! vmax as g2n22 (Maggi et al. 2008), yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1),:) = 6.0d0 ! pH of half-maximal N2O reductase activity (cf. Bakken et al. 2012) 
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2n21',dim=1),:) = 1.23d-7*60d0*60d0*24d0*365d0 ! vmax (Maggi et al. 2008), mol m-3 yr-1
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2n0',dim=1),:) = 1.23d-7*60d0*60d0*24d0*365d0 ! vmax (Maggi et al. 2008), mol m-3 yr-1
+krxn1_ext_all(findloc(chrrxn_ext_all,'n2opl',dim=1),:) = 0.76d0 ! plant N2O conductance relative to CH4 (ratio of
+    ! diffusivities in air, 0.16/0.21 cm2 s-1); the root-density profile is that of ch4pl
 
+
+
+! optional run-time override of extra-reaction constants (for calibration without recompiling) 
+call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
 
 endsubroutine coefs_v2
+
+!**************************************************************************************************************************************
+subroutine read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
+! reads ./krxn_ext.in if present: a header line, then lines of  <rxn name> <krxn1> <krxn2>;
+! a value of -999 keeps the default. The file is read once and the values are applied on every call.
+implicit none
+integer,intent(in)::nz,nrxn_ext_all
+character(5),dimension(nrxn_ext_all),intent(in)::chrrxn_ext_all
+real(kind=8),dimension(nrxn_ext_all,nz),intent(inout)::krxn1_ext_all,krxn2_ext_all
+integer,parameter::nmax = 100
+character(5),dimension(nmax),save::name_ov
+real(kind=8),dimension(nmax),save::k1_ov,k2_ov
+integer,save::nov = -1
+logical::exist_file
+integer::ios,iov,irxn
+character(5)::name_tmp
+real(kind=8)::k1_tmp,k2_tmp
+
+if (nov < 0) then 
+    nov = 0
+    inquire(file='./krxn_ext.in',exist=exist_file)
+    if (exist_file) then 
+        open(987,file='./krxn_ext.in',status='old',action='read')
+        read(987,'()')
+        do 
+            read(987,*,iostat=ios) name_tmp,k1_tmp,k2_tmp
+            if (ios /= 0) exit 
+            if (nov >= nmax) exit 
+            nov = nov + 1
+            name_ov(nov) = name_tmp
+            k1_ov(nov) = k1_tmp
+            k2_ov(nov) = k2_tmp
+            print *,'krxn_ext override: ',name_tmp,k1_tmp,k2_tmp
+        enddo 
+        close(987)
+    endif 
+endif 
+
+do iov = 1, nov
+    irxn = findloc(chrrxn_ext_all,name_ov(iov),dim=1)
+    if (irxn < 1) cycle 
+    if (k1_ov(iov) /= -999d0) krxn1_ext_all(irxn,:) = k1_ov(iov)
+    if (k2_ov(iov) /= -999d0) krxn2_ext_all(irxn,:) = k2_ov(iov)
+enddo 
+
+endsubroutine read_krxn_ext_override
 
 !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 !xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -11374,6 +11449,13 @@ select case(trim(adjustl(mineral)))
         kin = k_q10(kref,tc,tc_ref,q10)
         ! kin = kref
         dkin_dmsp = 0d0
+    case('urea')
+        ! urea hydrolysis by soil urease: half-life of a few days in flooded rice soils; turnover time 5 days at 25 C
+        kref = 365d0/5d0/2d0 ! at 15 C, with Q10 = 2
+        tc_ref = 15d0
+        q10 = 2d0
+        kin = k_q10(kref,tc,tc_ref,q10)
+        dkin_dmsp = 0d0
     case('inrt','fes')
         kin =0d0
         dkin_dmsp = 0d0
@@ -12133,7 +12215,7 @@ select case(trim(adjustl(mineral)))
         therm = 0.121d0 ! mo2 Michaelis, Davidson et al. (2012)
     case('amnt')
         therm = 0.121d0 ! mo2 Michaelis for fertilizer
-    case('gac','mesmh','ims','teas','naoh','naglp')
+    case('gac','mesmh','ims','teas','naoh','naglp','urea')
         therm = 1d0 ! reacting in any case
     case('inrt')
         therm = 1d0 ! not reacting in any case
@@ -16666,7 +16748,7 @@ select case(trim(adjustl(mineral)))
             & - po2x*(-1d0)/(po2x+mo2_tmp)**2d0*merge(0d0,1d0,po2x < po2th*thon) &
             & )
     
-    case('gac','mesmh','ims','teas','naoh','naglp') ! reacting in any case
+    case('gac','mesmh','ims','teas','naoh','naglp','urea') ! reacting in any case
         omega = 0d0
     
     case('inrt','fes') ! not reacting in any case (fes: only through extra reactions)
@@ -21175,7 +21257,7 @@ pch4x   = mgasx_loc(findloc(chrgas_all,'pch4',dim=1),:)
 oxax    = maqx_loc(findloc(chraq_all,'oxa',dim=1),:)    *maqft_loc(findloc(chraq_all,'oxa',dim=1),:)
 fe2x    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe2',dim=1),:)
 fe3x    = maqx_loc(findloc(chraq_all,'fe3',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe3',dim=1),:)
-no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:)    *maqft_loc(findloc(chraq_all,'no3',dim=1),:)
+no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:) ! as so4: maqft_loc for no3 is the total itself, not a total/free ratio
 so4x    = maqx_loc(findloc(chraq_all,'so4',dim=1),:) ! dissolved sulfate as solved for (maqft_loc for so4 is not a total/free ratio)
 fe2f    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)
 
@@ -21630,7 +21712,7 @@ select case(trim(adjustl(rxn_name)))
         
         select case(trim(adjustl(scheme)))
             case('maggi08')
-                v_tmp = 1.23d-7*60d0*60d0*24d0*365d0
+                v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,trim(adjustl(rxn_name)),dim=1),1) ! default 1.23d-7*sec2yr (coefs_v2)
                 km_tmp1 = 10d-5 * 1d6 ! mol L-1 converted to mol m-3
                 km_tmp2 = 11.3d-5
                 km_tmp3 = 2.52d-5
@@ -22249,6 +22331,20 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = 0d0
         endselect 
         
+    case('n2opl') 
+        ! plant-mediated N2O transport through aerenchyma (cf. Yan et al. 2000): as ch4pl, with the CH4 conductance
+        ! (which includes the root-density profile) scaled by the ratio of gas diffusivities; no rhizosphere loss
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) &
+            & *krxn1_ext_all(findloc(chrrxn_ext_all,'n2opl',dim=1),1) ! yr^-1 
+        rxn_ext = vmax*poro*sat*1d3*kn2o*(pn2ox - 3.3d-7)
+        
+        select case(trim(adjustl(sp_name)))
+            case('pn2o')
+                drxnext_dmsp = vmax*poro*sat*1d3*kn2o
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
     case('ch4eb') 
         ! CH4 ebullition: first order in dissolved CH4 above a pCH4 threshold (cf. Walter and Heimann 2000) 
         kch4 = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
@@ -22298,6 +22394,38 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*ko2*po2x
             case('po2')
                 drxnext_dmsp = v_tmp*fesx*ko2
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('g2n2p') 
+        ! N2O reduction for paddies (2 N2O  +  CH2O  ->  2 N2  +  CO2  +  H2O): Monod in OM and N2O(aq) as g2n22, inhibited 
+        ! by NO3- (as g2n22) and by O2 (N2O reductase is the most O2-sensitive denitrification enzyme), with a logistic pH 
+        ! factor 1/(1 + (H+/H50)^2) so that low pH impairs N2O reduction and raises the N2O/(N2O+N2) product ratio 
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1),1) ! yr^-1 
+        km_tmp3 = 10d0**(-krxn2_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1),1)) ! H50, mol L-1 
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n22) 
+        km_tmp2 = 5d-6 ! half-saturation for N2O(aq), mol L-1: soil N2O reductase has um-level affinity (order 1-10 uM) 
+        vmax_tmp = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n22 and g2n21) 
+        f_g2  = g2x/(g2x + km_tmp1 )
+        f_ea  = kn2o*pn2ox/(kn2o*pn2ox + km_tmp2 )
+        f_no3 = 1d-3/(no3x + 1d-3 ) ! NO3- inhibition, mol L-1: N2O/(N2O+N2) rises mainly at mM NO3- (Blackmer and Bremner 1978)
+        f_o2  = vmax_tmp/(po2x*ko2 + vmax_tmp )
+        f_so4 = 1d0/(1d0 + (prox/km_tmp3)**2d0) ! pH factor 
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_g2*f_ea*f_no3*f_o2*f_so4*f_sat
+        
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_ea*f_no3*f_o2*f_so4*f_sat
+            case('pn2o')
+                drxnext_dmsp = v_tmp*f_g2*kn2o*km_tmp2/(kn2o*pn2ox + km_tmp2 )**2d0*f_no3*f_o2*f_so4*f_sat
+            case('no3')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*(-1d-3)/(no3x + 1d-3 )**2d0*f_o2*f_so4*f_sat
+            case('po2')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*f_no3*(-vmax_tmp*ko2)/(po2x*ko2 + vmax_tmp )**2d0*f_so4*f_sat
+            case('pro')
+                drxnext_dmsp = rxn_ext*(-2d0*prox/km_tmp3**2d0)/(1d0 + (prox/km_tmp3)**2d0)
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -29301,6 +29429,13 @@ integer i_c,i_p,i_n ! 1 -- iz, 2 -- iz + 1, 3 -- iz - 1
 data i_c,i_p,i_n/1,2,3/
 
 logical ghost_node
+! paddy floodwater exchange: transfer velocity [m yr-1] across standing water between the topmost (saturated)
+! layer and the atmosphere, read once from ./floodwater.in (header line, then the value); 0 (default) keeps the
+! closed top boundary for dissolved gases. It is weighted by w = (sat(1)-0.9)/0.1 (0 to 1), so it only acts
+! while the surface is flooded; gas-phase diffusion takes over once the surface drains.
+real(kind=8),save::kfw = -1d0
+real(kind=8)::wfw
+logical::exist_fw,fw_open
 
 ! ghost_node = .true.
 ghost_node = .false.
@@ -29340,6 +29475,20 @@ ghost_node = .false.
 ! & *dt_nrm &
 
 
+if (kfw < 0d0) then 
+    kfw = 0d0
+    inquire(file='./floodwater.in',exist=exist_fw)
+    if (exist_fw) then 
+        open(986,file='./floodwater.in',status='old',action='read')
+        read(986,'()')
+        read(986,*) kfw
+        close(986)
+        print *,'floodwater gas exchange, transfer velocity [m/yr]: ',kfw
+    endif 
+endif 
+wfw = min(1d0,max(0d0,(sat(1)-0.9d0)/0.1d0))
+fw_open = aq_diff_close .and. kfw*wfw > 0d0
+
 fgasa_dif = 0d0
 dfgasadif_dmaq = 0d0
 dfgasadif_dmgas = 0d0
@@ -29369,6 +29518,7 @@ do ispg=1,nsp_gas
 	
 	edif_p = edif_p/dz_p
 	edif_n = edif_n/dz_n
+	if (fw_open) edif_n(1) = 1d3*kfw*wfw ! floodwater transfer replaces the half-cell diffusion at the top
 	
 	
 	caq_tmp = 0d0
@@ -29384,7 +29534,7 @@ do ispg=1,nsp_gas
 	
 	if (ghost_node) caq_tmp_n(1) = 2d0*mgasfti(ispg) - mgasft(ispg,1)
 	
-	if (aq_diff_close) caq_tmp_n(1) = caq_tmp(1) ! making the flux at the top 0
+	if (aq_diff_close .and. .not. fw_open) caq_tmp_n(1) = caq_tmp(1) ! making the flux at the top 0
 	
 	dcaq_dpro = dmgasft_dpro(ispg,:)
 	dcaq_dios = dmgasft_dios(ispg,:)
@@ -29405,7 +29555,7 @@ do ispg=1,nsp_gas
 		dfgasadif_dios(ispg,1,i_c) = dfgasadif_dios(ispg,1,i_c) + edif_n(1)*( dcaq_dios(1) )/dz(1)  
 	endif 
 	
-	if (aq_diff_close) then 
+	if (aq_diff_close .and. .not. fw_open) then 
 		! dfgasadif_dpro(ispg,1,i_c) = dfgasadif_dpro(ispg,1,i_c) - edif_n(1)*( dcaq_dpro(1) )/dz(1) ! making flux 0 
 		! dfgasadif_dios(ispg,1,i_c) = dfgasadif_dios(ispg,1,i_c) - edif_n(1)*( dcaq_dios(1) )/dz(1) ! making flux 0 
 		dfgasadif_dpro(ispg,1,i_c) = 0d0 ! making flux 0 
@@ -29422,7 +29572,7 @@ do ispg=1,nsp_gas
 			dfgasadif_dmaq(ispg,ispa,1,i_c) = dfgasadif_dmaq(ispg,ispa,1,i_c) + edif_n(1)*( dcaq_dmaq(1) )/dz(1) 
 		endif 
 		
-		if (aq_diff_close) then 
+		if (aq_diff_close .and. .not. fw_open) then 
 			! dfgasadif_dmaq(ispg,ispa,1,i_c) = dfgasadif_dmaq(ispg,ispa,1,i_c) - edif_n(1)*( dcaq_dmaq(1) )/dz(1) ! making flux 0 
 			dfgasadif_dmaq(ispg,ispa,1,i_c) = 0d0 ! making flux 0 
 		endif 
@@ -29438,7 +29588,7 @@ do ispg=1,nsp_gas
 			dfgasadif_dmgas(ispg,ispg2,1,i_c) = dfgasadif_dmgas(ispg,ispg2,1,i_c) + edif_n(1)*( dcaq_dmgas(1) )/dz(1) 
 		endif 
 		
-		if (aq_diff_close) then 
+		if (aq_diff_close .and. .not. fw_open) then 
 			! dfgasadif_dmgas(ispg,ispg2,1,i_c) = dfgasadif_dmgas(ispg,ispg2,1,i_c) - edif_n(1)*( dcaq_dmgas(1) )/dz(1) ! making flux 0 
 			dfgasadif_dmgas(ispg,ispg2,1,i_c) = 0d0 ! making flux 0 
 		endif 
