@@ -28,6 +28,11 @@
 #   particle radius 10 um) over the first 0.01 yr, mixed into the top 0.15 m, and tracks Si, Al and the secondary
 #   minerals calcite, kaolinite, gibbsite and amorphous silica. --basalt=0 tracks the same species without
 #   applying basalt (for spin-ups and controls, so restarts carry the same species).
+#   --basfe3=<wt fraction> adds Fe(III) oxide (as amfe3) to the basalt, for its Fe2O3 and oxidised grain surfaces;
+#   --basmgn=<wt fraction> adds magnetite. --rock=<name> takes the mineralogy from data/dust_<name>.in instead
+#   (e.g. Hillhouse: labradorite, augite, olivine, analcime; Oregon, Tichum: other basalts; Tawau: Malaysian andesite).
+#   Magnetite is not allowed to precipitate (data/2ndslds_paddy.in): it would take over from green rust and lock up
+#   reducible soil Fe(III).
 # --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
 #   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
@@ -54,9 +59,20 @@ fallow = '--fallow' in flags
 nfert  = float(opt.get('nfert',0))
 zdry   = float(opt.get('zdry',0.15))
 bas    = 'basalt' in opt
+basfe3 = float(opt.get('basfe3',0))     # Fe(III) oxide in the basalt (as amfe3), wt fraction
 bas_t  = float(opt.get('basalt',0))
-bas_min = {'fo':0.12,'ab':0.172,'an':0.258,'fa':0.05,'dp':0.189,'kfs':0.06}
-bas_min = {k:v/sum(bas_min.values()) for k,v in bas_min.items()}
+rock   = opt.get('rock','')
+basmgn = float(opt.get('basmgn',0))     # magnetite in the basalt, wt fraction
+if rock:   # a characterised rock from data/dust_<rock>.in
+    bas_min = {}
+    for l in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'data',f'dust_{rock}.in')).readlines()[1:]:
+        w = l.split()
+        if len(w) >= 2 and float(w[1]) > 0: bas_min[w[0]] = float(w[1])
+else:      # default: data/dust_basalt.in without hornblende
+    bas_min = {'fo':0.12,'ab':0.172,'an':0.258,'fa':0.05,'dp':0.189,'kfs':0.06}
+bas_min = {k:v/sum(bas_min.values())*(1-basfe3-basmgn) for k,v in bas_min.items()}
+if basfe3 > 0: bas_min['amfe3'] = basfe3
+if basmgn > 0: bas_min['mgn'] = basmgn
 t_app  = 0.01                        # application period, yr
 fdust  = bas_t*100/t_app             # t/ha -> g m-2, spread over t_app
 sdry   = float(opt.get('sdry',0.6))
@@ -95,7 +111,7 @@ spinup.run_a_scepter_run(
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
     sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
-        + (list(bas_min) + ['cc','ka','gb','amsi'] if bas else []),
+        + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
