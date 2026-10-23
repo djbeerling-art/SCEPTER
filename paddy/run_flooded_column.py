@@ -28,6 +28,8 @@
 #   particle radius 10 um) over the first 0.01 yr, mixed into the top 0.15 m, and tracks Si, Al and the secondary
 #   minerals calcite, kaolinite, gibbsite and amorphous silica. --basalt=0 tracks the same species without
 #   applying basalt (for spin-ups and controls, so restarts carry the same species).
+# --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
+#   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
 import os,sys,shutil
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -58,6 +60,7 @@ bas_min = {k:v/sum(bas_min.values()) for k,v in bas_min.items()}
 t_app  = 0.01                        # application period, yr
 fdust  = bas_t*100/t_app             # t/ha -> g m-2, spread over t_app
 sdry   = float(opt.get('sdry',0.6))
+kaol   = float(opt.get('kaol',0))       # soil kaolinite, wt fraction
 # urea [g m-2 yr-1] as a fraction of the OM input [g C m-2 yr-1]; applied at a constant rate (the run is one season)
 urea_frac = nfert/10*60.056/28.014/0.31/omin
 
@@ -98,7 +101,7 @@ spinup.run_a_scepter_run(
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
     exrxn_list=rxns,
     # ---- boundary values ----
-    pr_list=[('inrt',1-fe3wt),('amfe3',fe3wt)],
+    pr_list=[('inrt',1-fe3wt-kaol),('amfe3',fe3wt)] + ([('ka',kaol)] if kaol > 0 else []),
     # rain inputs are free (primary) species with -Drain_input_as_primary:
     # free Fe3+ must be near Fe(OH)3 equilibrium, otherwise hydrolysis makes total Fe(III) huge
     rain_list=[('ca',2.05e-4 if ch4 else 5e-6),('fe3',1e-21),('fe2',1e-10)]
