@@ -35,6 +35,14 @@
 #   reducible soil Fe(III).
 # --refsoil (with --basalt=0 or a dose, so Si is tracked): reference paddy soil with CEC 15 cmol/kg, 1 wt% phytolith
 #   (amorphous) silica and river-type irrigation water (with Cl-), so porewater Ca, Mg and Si reach typical paddy levels.
+# --feoh2 tracks FeO (llnl.dat) as a proxy for Fe(OH)2, a sink for Fe2+ and alkalinity once Fe(III) oxide is used up.
+# --gt=<wt fraction> puts goethite in the soil as a slowly reducible Fe(III) pool (list g2gt in the reactions);
+#   --gt0 tracks goethite without adding it.
+#   Goethite and hematite are not allowed to precipitate (data/2ndslds_paddy.in): otherwise the soil ferrihydrite ripens
+#   into goethite within a few years of spin-up, whereas in paddy soils it is stabilised by OM and Si and renewed by
+#   Fe2+ reoxidation every drainage.
+# --nucl=<solid>:<seed mol m-3>[,...] lets the named solids nucleate: precipitation scales with amount + seed (precnucl.in;
+#   SCEPTER precstyle 'seed', one seed for all, the largest listed), e.g. --nucl=sid:1 for kinetic siderite.
 # --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
 #   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
@@ -54,6 +62,7 @@ awd    = '--awd' in flags
 # optional --fe3=<wt fraction of amfe3, default 0.03> and --om=<OM input g C m-2 yr-1, default 300>
 opt    = dict(a[2:].split('=') for a in flags if '=' in a)
 fe3wt  = float(opt.get('fe3',0.03))
+gtwt   = float(opt.get('gt',0))       # goethite, wt fraction (slowly reducible Fe(III): list g2gt)
 omin   = float(opt.get('om',300))
 season = awd or '--season' in flags
 nitro  = '--n' in flags
@@ -102,6 +111,10 @@ rundir = os.path.join(outdir,f'paddy/flood_{tag}')
 os.makedirs(rundir,exist_ok=True)
 if os.path.exists(os.path.join(rundir,'krxn_ext.in')): os.remove(os.path.join(rundir,'krxn_ext.in'))
 if 'k' in opt: shutil.copy(opt['k'],os.path.join(rundir,'krxn_ext.in'))
+if os.path.exists(os.path.join(rundir,'precnucl.in')): os.remove(os.path.join(rundir,'precnucl.in'))
+if 'nucl' in opt:
+    with open(os.path.join(rundir,'precnucl.in'),'w') as f:
+        f.write('solid fkin\n' + ''.join('%s %s\n' % tuple(x.split(':')) for x in opt['nucl'].split(',')))
 with open(os.path.join(rundir,'floodwater.in'),'w') as f:
     f.write('transfer velocity [m/yr]\n%s\n' % opt.get('kfw','36.5'))
 
@@ -117,13 +130,13 @@ spinup.run_a_scepter_run(
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
     sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
-        + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []),
+        + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []) + (['cl'] if ref else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
     exrxn_list=rxns,
     # ---- boundary values ----
-    pr_list=[('inrt',1-fe3wt-kaol-amsiwt),('amfe3',fe3wt)] + ([('ka',kaol)] if kaol > 0 else []) + ([('amsi',amsiwt)] if amsiwt > 0 else []),
+    pr_list=[('inrt',1-fe3wt-kaol-amsiwt-gtwt),('amfe3',fe3wt)] + ([('gt',gtwt)] if gtwt > 0 else []) + ([('ka',kaol)] if kaol > 0 else []) + ([('amsi',amsiwt)] if amsiwt > 0 else []),
     # rain inputs are free (primary) species with -Drain_input_as_primary:
     # free Fe3+ must be near Fe(OH)3 equilibrium, otherwise hydrolysis makes total Fe(III) huge
     # --refsoil: river-type irrigation water (Ca 0.5, Mg 0.2, Na 0.3, K 0.05, Si 0.2, SO4 0.2, Cl 1.15 mM), pH ~7.6 at

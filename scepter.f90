@@ -781,7 +781,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 25
+integer,parameter::nrxn_ext_all = 26
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1149,7 +1149,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr '/)
+    & ,'n2opl','g2gr ','g2gt '/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1911,6 +1911,12 @@ stsld_ext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrsld_all,'gr',dim
 staq_ext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chraq_all,'fe2',dim=1)) = 6d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+! microbial reduction of crystalline Fe(III) (goethite): CH2O  +  4 FeOOH  +  8 H+  ->  CO2  +  4 Fe2+  +  6 H2O
+stsld_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrsld_all,'gt',dim=1)) = -4d0
+staq_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chraq_all,'fe2',dim=1)) = 4d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
 ! dissimilatory sulfate reduction by OM (2 CH2O  +  SO42-  +  H+  ->  2 CO2  +  HS-  +  2 H2O) 
 stsld_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0 ! values relative to CH2O
 staq_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'so4',dim=1)) = -0.5d0
@@ -2009,6 +2015,10 @@ stsld_dext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrsld_all,'amfe3'
 stsld_dext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrsld_all,'gt',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
 ! dissimilatory sulfate reduction by OM 
 stsld_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'g2so4',dim=1), findloc(chraq_all,'so4',dim=1)) = 1d0
@@ -2268,6 +2278,9 @@ do isps = 1, nsp_sld
             ! fkin(isps,:) = 0.01d0
     endselect
 enddo 
+
+! paddy: optional ./precnucl.in lets named phases (e.g. siderite) nucleate without a pre-existing mass
+call read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
 
 #ifdef redox_TST_ON
 
@@ -9972,6 +9985,10 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'g2mg',dim=1),:) = ksld_all(findloc(chrsld_
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 200d0 ! vmax, mol CH2O m^-3 yr^-1 
 krxn2_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),:) = 100d0 ! half-saturation for amfe3, mol m^-3 
 krxn2_ext_all(findloc(chrrxn_ext_all,'g2gr ',dim=1),:) = 1d0 ! bioavailable fraction of green-rust Fe(III) (0-1); vmax and half-saturation as g2fe3
+! goethite (crystalline Fe(III)) is reduced 1-2 orders of magnitude more slowly than ferrihydrite (e.g. Roden 2003, 2006);
+! it keeps Fe(III) reduction going after the amorphous pool is used up and does not inhibit methanogenesis
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),:) = 10d0 ! vmax, mol CH2O m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),:) = 100d0 ! half-saturation for gt, mol m^-3 
 
 ! sulfate reduction, methanogenesis and CH4 oxidation: provisional values to be calibrated against paddy data 
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),:) = 100d0 ! vmax, mol CH2O m^-3 yr^-1 
@@ -10003,6 +10020,61 @@ call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_e
 
 endsubroutine coefs_v2
 
+!**************************************************************************************************************************************
+subroutine read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
+! reads ./precnucl.in if present: a header line, then lines of  <solid name> <seed, mol m-3>.
+! Each named solid gets precstyle 'seed': precipitation rate scales with (amount present + seed) instead of the amount
+! present alone, so new phases such as siderite can nucleate while staying kinetic; one seed (the largest listed) is
+! used for all of them (read_precnucl_seed). fkin is left unchanged.
+implicit none
+integer,intent(in)::nsp_sld,nz
+character(5),dimension(nsp_sld),intent(in)::chrsld
+character(10),dimension(nsp_sld),intent(inout)::precstyle
+real(kind=8),dimension(nsp_sld,nz),intent(inout)::fkin
+logical::exist_file
+integer::ios,isps
+character(5)::name_tmp
+real(kind=8)::f_tmp
+
+inquire(file='./precnucl.in',exist=exist_file)
+if (.not. exist_file) return
+open(988,file='./precnucl.in',status='old',action='read')
+read(988,'()')
+do 
+    read(988,*,iostat=ios) name_tmp,f_tmp
+    if (ios /= 0) exit 
+    isps = findloc(chrsld,name_tmp,dim=1)
+    if (isps < 1) cycle 
+    precstyle(isps) = 'seed'
+    print *,'precnucl: ',name_tmp,f_tmp
+enddo 
+close(988)
+
+endsubroutine read_precnucl
+!**************************************************************************************************************************************
+subroutine read_precnucl_seed(msld_seed)
+! the largest seed listed in ./precnucl.in (see read_precnucl), mol m-3; unchanged if the file is absent
+implicit none
+real(kind=8),intent(inout)::msld_seed
+logical::exist_file
+integer::ios
+character(5)::name_tmp
+real(kind=8)::f_tmp,seed_max
+
+inquire(file='./precnucl.in',exist=exist_file)
+if (.not. exist_file) return
+seed_max = 0d0
+open(988,file='./precnucl.in',status='old',action='read')
+read(988,'()')
+do 
+    read(988,*,iostat=ios) name_tmp,f_tmp
+    if (ios /= 0) exit 
+    seed_max = max(seed_max,f_tmp)
+enddo 
+close(988)
+if (seed_max > 0d0) msld_seed = seed_max
+
+endsubroutine read_precnucl_seed
 !**************************************************************************************************************************************
 subroutine read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
 ! reads ./krxn_ext.in if present: a header line, then lines of  <rxn name> <krxn1> <krxn2>;
@@ -21144,7 +21216,7 @@ real(kind=8):: po2th,fe2th,mwtom,g1th,g2th,g3th,mvpy,fe3th,knh3,k1nh3,ko2,v_tmp,
 real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,ombx &
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
-    & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr &
+    & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx &
     & ,fesx,hsfr
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
@@ -21287,6 +21359,7 @@ pyx     = msldx_loc(findloc(chrsld_all,'py',dim=1),:)
 amfe3x  = msldx_loc(findloc(chrsld_all,'amfe3',dim=1),:)
 grx     = msldx_loc(findloc(chrsld_all,'gr',dim=1),:)
 fesx    = msldx_loc(findloc(chrsld_all,'fes',dim=1),:)
+gtx     = msldx_loc(findloc(chrsld_all,'gt',dim=1),:)
 
 
 nh4x = pnh3x*knh3*prox/k1nh3
@@ -22212,6 +22285,34 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_g2*f_gr/f_ea*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_no3*f_sat
             case('no3')
                 drxnext_dmsp = v_tmp*f_g2*f_gr/f_ea*f_o2*vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0*f_sat
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('g2gt ') 
+        ! microbial reduction of goethite by OM (CH2O  +  4 FeOOH  +  8 H+  ->  CO2  +  4 Fe2+  +  6 H2O), as g2fe3 but
+        ! with its own (slower) vmax and a Monod term in goethite only
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),1) ! mol CH2O m^-3 yr^-1
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),1) ! half-saturation for gt, mol m-3
+        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
+        f_g2  = g2x/(g2x + km_tmp1 )
+        f_ea  = gtx/(gtx + km_tmp2 )
+        f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
+        f_no3 = vmax_tmp/(no3x + vmax_tmp )
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_g2*f_ea*f_o2*f_no3*f_sat
+        
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_ea*f_o2*f_no3*f_sat
+            case('gt')
+                drxnext_dmsp = v_tmp*f_g2*km_tmp2/(gtx + km_tmp2 )**2d0*f_o2*f_no3*f_sat
+            case('po2')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_no3*f_sat
+            case('no3')
+                drxnext_dmsp = v_tmp*f_g2*f_ea*f_o2*vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0*f_sat
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -23146,6 +23247,7 @@ if (aq_close) gas_close = .true.
 if (aq_close) aq_diff_close = .true.
 
 msld_seed = 1d-20
+call read_precnucl_seed(msld_seed) ! paddy: seed for phases listed in ./precnucl.in
 
 ! flx_tol = tol*fact_tol*(z(nz)+0.5d0*dz(nz))
 ! flx_tol = 1d-4
@@ -27225,6 +27327,7 @@ implicit none
 
 integer,intent(in)::nz,nsp_sld,nsp_aq,nsp_gas
 real(kind=8),intent(in)::msld_seed,dt,poroi
+real(kind=8),dimension(nz)::mseed
 real(kind=8),dimension(nz),intent(in)::poro,sat,dz
 real(kind=8),dimension(nsp_sld,nz),intent(in)::hr
 real(kind=8),dimension(nsp_sld),intent(in)::mv,msldth,msldi
@@ -27433,9 +27536,10 @@ do isps = 1,nsp_sld
             enddo 
             
             
-        case('seed')
+        case('seed') ! seed only on the precipitation side (omega > 1), so an absent phase cannot dissolve
+            mseed = msld_seed*merge(1d0,0d0,omega(isps,:) > 1d0)
             rxnsld(isps,:) = ( &
-                & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(1d0-omega(isps,:)) &
+                & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
                 & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
                 & )
         
@@ -27445,33 +27549,33 @@ do isps = 1,nsp_sld
                 & )
 				
 			drxnsld_dpro(isps,:) = ( &
-				& + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(-domega_dpro(isps,:)) &
+				& + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(-domega_dpro(isps,:)) &
 				& *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
-				& + dksld_dpro(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(1d0-omega(isps,:)) &
+				& + dksld_dpro(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
 				& *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
 				& )
 				
 			drxnsld_dios(isps,:) = ( &
-				& + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(-domega_dios(isps,:)) &
+				& + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(-domega_dios(isps,:)) &
 				& *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
-				& + dksld_dios(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(1d0-omega(isps,:)) &
+				& + dksld_dios(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
 				& *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
 				& )
             
             do ispa = 1, nsp_aq
                 drxnsld_dmaq(isps,ispa,:) = ( &
-                    & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(-domega_dmaq(isps,ispa,:)) &
+                    & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(-domega_dmaq(isps,ispa,:)) &
                     & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
-                    & + dksld_dmaq(isps,ispa,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(1d0-omega(isps,:)) &
+                    & + dksld_dmaq(isps,ispa,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
                     & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
                     & )
             enddo 
             
             do ispg = 1, nsp_gas
                 drxnsld_dmgas(isps,ispg,:) = ( &
-                    & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(-domega_dmgas(isps,ispg,:)) &
+                    & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(-domega_dmgas(isps,ispg,:)) &
                     & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
-                    & + dksld_dmgas(isps,ispg,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+msld_seed)*(1d0-omega(isps,:)) &
+                    & + dksld_dmgas(isps,ispg,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
                     & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &
                     & )
             enddo 
