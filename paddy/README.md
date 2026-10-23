@@ -90,6 +90,11 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
   Fe(III) reduced 7.6 vs 6.9; FeS re-oxidised 0.018 vs 0.046, which recycles sulfate so sulfate reduction rises
   (0.079 vs 0.100). pH 6.55-6.87 vs 6.56-7.00. Budgets close. Run time ~14 min each. To integrate, sum
   each row of the `flx_*.txt` files times the time since the previous row.
+- CH4 magnitude sensitivity (`--fe3=<wt fraction>`, `--om=<g C m-2 yr-1>`, flooded 0.5 yr, all reactions):
+  season CH4 emission 0.11 g m-2 (base: 3 wt% amfe3, 300 g C), 0.36 (1 wt%), 0.28 (600 g C), 1.0 (1 wt% + 600 g C),
+  4.5 g m-2 (0.3 wt% + 600 g C; ebullition starts). Field: ~10-40 g m-2 per season. Even in the last case only
+  ~10 % of the OM added is respired, so the remaining gap points to the provisional methanogenesis/OM rate
+  constants (vmax, K_OM) rather than a missing process.
 
 ## Known gaps (next steps)
 
