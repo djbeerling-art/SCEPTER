@@ -33,6 +33,8 @@
 #   (e.g. Hillhouse: labradorite, augite, olivine, analcime; Oregon, Tichum: other basalts; Tawau: Malaysian andesite).
 #   Magnetite is not allowed to precipitate (data/2ndslds_paddy.in): it would take over from green rust and lock up
 #   reducible soil Fe(III).
+# --refsoil (with --basalt=0 or a dose, so Si is tracked): reference paddy soil with CEC 15 cmol/kg, 1 wt% phytolith
+#   (amorphous) silica and river-type irrigation water (with Cl-), so porewater Ca, Mg and Si reach typical paddy levels.
 # --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
 #   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
@@ -71,12 +73,16 @@ if rock:   # a characterised rock from data/dust_<rock>.in
 else:      # default: data/dust_basalt.in without hornblende
     bas_min = {'fo':0.12,'ab':0.172,'an':0.258,'fa':0.05,'dp':0.189,'kfs':0.06}
 bas_min = {k:v/sum(bas_min.values())*(1-basfe3-basmgn) for k,v in bas_min.items()}
+if '--light' in flags: bas_min = {}   # controls/calibration: Si, Al and secondary minerals only (faster; not restart-compatible with dosed runs)
 if basfe3 > 0: bas_min['amfe3'] = basfe3
 if basmgn > 0: bas_min['mgn'] = basmgn
 t_app  = 0.01                        # application period, yr
 fdust  = bas_t*100/t_app             # t/ha -> g m-2, spread over t_app
 sdry   = float(opt.get('sdry',0.6))
 kaol   = float(opt.get('kaol',0))       # soil kaolinite, wt fraction
+ref    = '--refsoil' in flags         # reference paddy soil: CEC 15, phytolith Si, river-type irrigation water
+cec    = 15 if ref else 10              # cmol/kg
+amsiwt = 0.01 if ref else 0            # amorphous (phytolith) silica, wt fraction
 # urea [g m-2 yr-1] as a fraction of the OM input [g C m-2 yr-1]; applied at a constant rate (the run is one season)
 urea_frac = nfert/10*60.056/28.014/0.31/omin
 
@@ -113,20 +119,22 @@ spinup.run_a_scepter_run(
     sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
         + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
-        + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []),
+        + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []) + (['cl'] if ref else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
     exrxn_list=rxns,
     # ---- boundary values ----
-    pr_list=[('inrt',1-fe3wt-kaol),('amfe3',fe3wt)] + ([('ka',kaol)] if kaol > 0 else []),
+    pr_list=[('inrt',1-fe3wt-kaol-amsiwt),('amfe3',fe3wt)] + ([('ka',kaol)] if kaol > 0 else []) + ([('amsi',amsiwt)] if amsiwt > 0 else []),
     # rain inputs are free (primary) species with -Drain_input_as_primary:
     # free Fe3+ must be near Fe(OH)3 equilibrium, otherwise hydrolysis makes total Fe(III) huge
-    rain_list=[('ca',2.05e-4 if ch4 else 5e-6),('fe3',1e-21),('fe2',1e-10)]
-        + ([('si',1e-4),('al',1e-12)] if bas else [])
-        + ([('mg',2e-6),('na',1e-5),('k',2e-6)] if fe2buf else [])
+    # --refsoil: river-type irrigation water (Ca 0.5, Mg 0.2, Na 0.3, K 0.05, Si 0.2, SO4 0.2, Cl 1.15 mM), pH ~7.6 at
+    # atmospheric pCO2; free Fe3+ and Al3+ lowered to near Fe(OH)3 and gibbsite equilibrium at that pH
+    rain_list=[('ca',(5e-4 if ref else 2.05e-4) if ch4 else 5e-6),('fe3',1e-27 if ref else 1e-21),('fe2',1e-10)]
+        + ([('si',2e-4 if ref else 1e-4),('al',1e-15 if ref else 1e-12)] if bas else [])
+        + ([('mg',2e-4),('na',3e-4),('k',5e-5),('cl',1.15e-3)] if ref else [('mg',2e-6),('na',1e-5),('k',2e-6)] if fe2buf else [])
         + ([('so4',2e-4),('hs',1e-12)] if ch4 else []) + ([('no3',1e-6)] if nitro else []),  # irrigation water ~0.2 mM SO42-, balanced by Ca above
     atm_list=[('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',3.3e-7 if nitro else 1e-50),('pch4',1.9e-6)],
     # cec [cmol/kg], log KH\\X for Na, K, Ca, Mg, Al, beta; Fe2+ follows Mg (+0.158) in the code
-    sld_varlist_cec=[('inrt',10,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []),
+    sld_varlist_cec=[('inrt',cec,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []),
     srcfile_2ndslds='./data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in',
     use_local_storage=False,exename_src='scepter_paddy',show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----

@@ -11608,10 +11608,12 @@ select case(trim(adjustl(mineral)))
         therm = 10d0**(45.8d0 - 2d0*13.02d0)
     case('sid')
         ! FeCO3 = Fe2+ + CO32-
-        therm_ref = 10d0**(-10.89d0)
+        therm_ref = 10d0**(-10.89d0 + 1d0)
         ha = -10.38d0
         tc_ref = 25d0
-        ! from phreeqc.dat (log_k -10.89, delta_h -2.48 kcal/mol)
+        ! from phreeqc.dat (log_k -10.89, delta_h -2.48 kcal/mol), raised by 1 log unit as an apparent solubility:
+        ! siderite nucleation is slow, and anoxic soil and sediment porewaters typically stay ~1-2 log units
+        ! supersaturated; at the crystalline value siderite capped Fe2+ and drew down pCO2 in flooded runs
         therm = k_arrhenius(therm_ref,tc_ref+tempk_0,tc+tempk_0,ha,rg)
     case('arg')
         ! CaCO3 = Ca2+ + CO32-
