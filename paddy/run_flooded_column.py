@@ -41,6 +41,8 @@
 # --prad=<m> sets the rock particle radius (default 1e-5 m); --zmix=<m> the depth the rock is mixed into (default
 #   0.15 m); --q=<m/yr> the downward water flux (default 0.5; ~0 for closed batch incubations). A rock file may list
 #   'inrt' for its unreactive fraction (glass, clays), which then stays in the dose instead of being renormalised away.
+# --ch4ph=<pK1>:<pK2>:<pHref> makes methanogenesis pH dependent, rate x g(pH)/g(pHref) with
+#   g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (ch4ph.in); e.g. 6.2:7.9:6.5 peaks near pH 7 and keeps the calibration at pH 6.5.
 # --nz=<n> sets the number of grid cells over the 0.3 m column (default 30); a restart needs a spin-up with the same nz.
 #   Goethite and hematite are not allowed to precipitate (data/2ndslds_paddy.in): otherwise the soil ferrihydrite ripens
 #   into goethite within a few years of spin-up, whereas in paddy soils it is stabilised by OM and Si and renewed by
@@ -125,6 +127,9 @@ if 'nucl' in opt:
     with open(os.path.join(rundir,'precnucl.in'),'w') as f:
         f.write('solid fkin\n' + ''.join('%s %s\n' % tuple(x.split(':')) for x in opt['nucl'].split(',')))
 if os.path.exists(os.path.join(rundir,'grlogk.in')): os.remove(os.path.join(rundir,'grlogk.in'))
+if os.path.exists(os.path.join(rundir,'ch4ph.in')): os.remove(os.path.join(rundir,'ch4ph.in'))
+if 'ch4ph' in opt:
+    with open(os.path.join(rundir,'ch4ph.in'),'w') as f: f.write('pK1 pK2 pHref\n%s\n' % opt['ch4ph'].replace(':',' '))
 if 'grlogk' in opt:
     with open(os.path.join(rundir,'grlogk.in'),'w') as f: f.write('log K\n%s\n' % opt['grlogk'])
 with open(os.path.join(rundir,'floodwater.in'),'w') as f:

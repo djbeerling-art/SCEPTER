@@ -783,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 28
+integer,parameter::nrxn_ext_all = 29
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1151,7 +1151,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2'/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 '/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1946,6 +1946,11 @@ stsld_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',
 ! (Pox = 0.5, Walter and Heimann 2000), so CH4 -> 0.5 CO2 in the soil and 0.5 CH4 emitted 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0.5d0
+! aerobic respiration of labile OM (CH2O  +  O2  ->  CO2), consumes the O2 left in the soil after flooding
+stsld_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
 ! rice root respiration: CO2 released into the rooted soil (carbon from the plant, not from soil OM)
 stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
@@ -1995,6 +2000,8 @@ stsld_dext_all(findloc(chrrxn_ext_all,'g2n0',dim=1), findloc(chrsld_all,'g2',dim
 ! first of 2 step denitrification (2 NO3-  +  2 CH2O  +  2 H+  ->  N2O  +  2 CO2  +  3 H2O) 
 staq_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 ! 2nd of 2 step denitrification (2 N2O  +  CH2O  ->  2 N2  +  CO2  +  H2O) 
 staq_dext_all(findloc(chrrxn_ext_all,'g2n22',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
@@ -10019,6 +10026,8 @@ krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth
 ! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
 ! respiration); distributed with the root density profile of ch4pl
 krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+krxn1_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 300d0 ! vmax, mol CH2O m^-3 yr^-1 (as the anaerobic pathways)
+krxn2_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 5d-6 ! half-saturation for O2(aq), mol L-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 100d0 ! ebullition rate constant, yr^-1 (provisional) 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 0.4d0 ! pCH4 threshold for bubble formation, atm 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1),:) = 1d3 ! rate per unit ln(omega), mol FeS m^-3 yr^-1 (provisional) 
@@ -10063,6 +10072,47 @@ if (.not. read_done) then
 endif 
 grlogk = grlogk_save
 endfunction grlogk_f
+!**************************************************************************************************************************************
+subroutine ch4ph_f(nz,prox,f_ph,df_ph)
+! pH response of methanogenesis, f = g(pH)/g(pHref) with g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (bell curve, as
+! for an enzyme with two ionisable groups); df_ph = df/d[H+]. Parameters pK1 pK2 pHref from ./ch4ph.in (a header line,
+! then the three values), read once; without the file f = 1 (no pH dependence)
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::prox
+real(kind=8),dimension(nz),intent(out)::f_ph,df_ph
+real(kind=8),save::a1 = 0d0,a2 = 0d0,gref = 1d0
+logical,save::read_done = .false.,on = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::pk1,pk2,phref
+real(kind=8),dimension(nz)::g
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./ch4ph.in',exist=exist_file)
+    if (exist_file) then 
+        open(987,file='./ch4ph.in',status='old',action='read')
+        read(987,'()')
+        read(987,*,iostat=ios) pk1,pk2,phref
+        close(987)
+        if (ios == 0) then 
+            on = .true.
+            a1 = 10d0**pk1
+            a2 = 10d0**(-pk2)
+            gref = 1d0/(1d0 + a1*10d0**(-phref) + a2/10d0**(-phref))
+            print *,'methanogenesis pH response pK1, pK2, pHref: ',pk1,pk2,phref
+        endif 
+    endif 
+endif 
+if (.not. on) then 
+    f_ph = 1d0
+    df_ph = 0d0
+    return
+endif 
+g = 1d0/(1d0 + a1*prox + a2/prox)
+f_ph = g/gref
+df_ph = -(a1 - a2/prox**2d0)*g**2d0/gref
+endsubroutine ch4ph_f
 !**************************************************************************************************************************************
 subroutine read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
 ! reads ./precnucl.in if present: a header line, then lines of  <solid name> <seed, mol m-3>.
@@ -21260,7 +21310,7 @@ real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,om
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
     & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx,fe2adx,sfr,sad &
-    & ,fesx,hsfr
+    & ,fesx,hsfr,f_ph,df_ph
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
 real(kind=8),dimension(nsp_gas_all,nz)::mgasx_loc
@@ -22403,7 +22453,8 @@ select case(trim(adjustl(rxn_name)))
             & /(so4x + krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ) ! SO42- inhibition = half-saturation of g2so4
         f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
         f_no3 = vmax_tmp/(no3x + vmax_tmp )
-        f_sat = min(2d0*sat,1d0)
+        call ch4ph_f(nz,prox,f_ph,df_ph) ! pH response of methanogens (1 unless ./ch4ph.in)
+        f_sat = min(2d0*sat,1d0)*f_ph
         rxn_ext = v_tmp*f_g2*f_fe3*f_so4*f_o2*f_no3*f_sat
         
         select case(trim(adjustl(sp_name)))
@@ -22420,6 +22471,8 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_g2*f_fe3*f_so4*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_no3*f_sat
             case('no3')
                 drxnext_dmsp = v_tmp*f_g2*f_fe3*f_so4*f_o2*vmax_tmp*(-1d0)/(no3x + vmax_tmp )**2d0*f_sat
+            case('pro')
+                drxnext_dmsp = v_tmp*f_g2*f_fe3*f_so4*f_o2*f_no3*min(2d0*sat,1d0)*df_ph
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -22495,6 +22548,24 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_sat*( f_fe3*(-1d0/sfr - 1d0/sad) &
                     & - lnomg*km_tmp1/(sfr + km_tmp1)**2d0*merge(1d0,0d0,lnomg > 0d0) &
                     & + lnomg*km_tmp1/(sad + km_tmp1)**2d0*merge(0d0,1d0,lnomg > 0d0) )
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('g2o2') 
+        ! aerobic respiration of labile OM (CH2O  +  O2  ->  CO2): Monod in OM (as g2n21) and dissolved O2 
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),1) ! mol CH2O m^-3 yr^-1
+        km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),1) ! half-saturation for O2(aq), mol L-1
+        f_g2  = g2x/(g2x + km_tmp1 )
+        f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
+        rxn_ext = v_tmp*f_g2*f_o2
+        
+        select case(trim(adjustl(sp_name)))
+            case('g2')
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_o2
+            case('po2')
+                drxnext_dmsp = v_tmp*f_g2*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0
             case default
                 drxnext_dmsp = 0d0
         endselect 
