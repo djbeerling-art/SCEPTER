@@ -43,6 +43,8 @@
 #   'inrt' for its unreactive fraction (glass, clays), which then stays in the dose instead of being renormalised away.
 # --ch4ph=<pK1>:<pK2>:<pHref> makes methanogenesis pH dependent, rate x g(pH)/g(pHref) with
 #   g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (ch4ph.in); e.g. 6.2:7.9:6.5 peaks near pH 7 and keeps the calibration at pH 6.5.
+# --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
+#   drain to --zdry/--sdry; typical practice 7-14 d); AWD cycles stop at the final drain.
 # --nz=<n> sets the number of grid cells over the 0.3 m column (default 30); a restart needs a spin-up with the same nz.
 #   Goethite and hematite are not allowed to precipitate (data/2ndslds_paddy.in): otherwise the soil ferrihydrite ripens
 #   into goethite within a few years of spin-up, whereas in paddy soils it is stabilised by OM and Si and renewed by
@@ -106,6 +108,8 @@ amsiwt = 0.01 if ref else 0            # amorphous (phytolith) silica, wt fracti
 # urea [g m-2 yr-1] as a fraction of the OM input [g C m-2 yr-1]; applied at a constant rate (the run is one season)
 urea_frac = nfert/10*60.056/28.014/0.31/omin
 
+phd = float(opt.get('phd',0))   # pre-harvest drain: days before the end of the 113-day season
+
 def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=sdry,ramp=0.003):
     # surface saturation through the year (linear interpolation between points, repeated every year)
     t,v = [0.0],[1.0]
@@ -116,7 +120,9 @@ def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=sdry,r
         tc += t_drain + t_reflood
     t += [t_end, t_end+ramp, 0.99]
     v += [1.0, s_dry, s_dry]
-    return [t, v if awd else [1.0]*len(v)]
+    if awd: return [t, v]
+    if phd > 0: return [[0.0, t_end, t_end+ramp, 0.99], [1.0, 1.0, s_dry, s_dry]]   # flooded, then the final drain
+    return [t, [1.0]*len(v)]
 
 rundir = os.path.join(outdir,f'paddy/flood_{tag}')
 os.makedirs(rundir,exist_ok=True)
@@ -140,7 +146,7 @@ spinup.run_a_scepter_run(
     # ---- frame.in ----
     ztot=0.3,nz=int(opt.get('nz','30')),ttot=ttot,temp=25,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=0.5 if fallow else 1.0,  # water saturation 1 throughout: flooded
-    zwater=zdry if awd else (0.5 if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
+    zwater=zdry if (awd or phd > 0) else (0.5 if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
@@ -168,7 +174,7 @@ spinup.run_a_scepter_run(
     srcfile_2ndslds='./data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in',
     use_local_storage=False,exename_src='scepter_paddy',show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----
-    moist_temp=awd_schedule(),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
+    moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
     dust_temp=[[0.0,t_app,t_app+1e-4,0.99],[fdust,fdust,0,0]],
     # non-seasonal runs (fallow spin-ups) get no basalt
     sld_varlist_dust=list(bas_min.items()) if bas else [],zdust=float(opt.get('zmix','0.15')),
