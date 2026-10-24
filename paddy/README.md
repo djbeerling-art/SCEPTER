@@ -156,7 +156,8 @@ see `makefile_paddy`), so their numbers are superseded by the calibration runs a
 
   (* 15-cell grid, `--nz=15`, with its own 15-cell spin-ups `sgt12_450n15`, `sgt08_300n15`; this grid gives ~6 %
   less CH4 than 30 cells at Ki 10 and runs ~3x faster, ~50 min per season, so it is the production grid.)
-  At Ki 7 the two soils average 1.20 kg/ha/d (IPCC 1.19), with pH 6.5-6.6, porewater Fe2+ 0.6-2.5 mM and pCO2
+  With aerobic respiration of labile OM (`g2o2`) listed, Ki 6.5 gives 1.24 and 1.17 kg/ha/d (mean 1.21; Ki 6: 1.18, 1.11),
+  so `krxn_calibrated.in` uses Ki 6.5 and production runs list `g2o2`. Without g2o2: at Ki 7 the two soils average 1.20 kg/ha/d (IPCC 1.19), with pH 6.5-6.6, porewater Fe2+ 0.6-2.5 mM and pCO2
   0.07-0.27 atm through the season, plant share 61-67 %. Still off: CH4 onset 34-50 d (field 1-3 weeks) and
   the flooded N2O EF 0.4-0.7 % (IPCC 0.3 %).
 
