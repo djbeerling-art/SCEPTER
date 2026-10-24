@@ -1,0 +1,9 @@
+name krxn1 krxn2  (calibrated 2026-10-24 against IPCC 2019 rice CH4 (1.19 kg/ha/d); reference soil, 15-cell grid, g2o2 listed, --phd=14 --ch4ph=6.2:7.9:6.5; see README)
+g2ch4 300 9
+g2fe3 300 -999
+g2so4 300 -999
+ch4pl 300 -999
+g2n21 300 -999
+g2n2p 300 -999
+g2gr -999 0.02
+rtco2 30 -999

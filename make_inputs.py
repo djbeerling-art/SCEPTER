@@ -205,8 +205,8 @@ def get_input_tracers(**kwargs):
     notes = [
         '** choose and list from [fo, ab, an, cc, ka, gb, py, ct, fa, gt, cabd, dp, hb, kfs ... ]'
         ,'** choose and list from [mg, si, na, ca, al, fe2, fe3, k, so4, no3 ... ]'
-        ,'** choose and list from [pco2, po2, pnh3, pn2o]'
-        ,'** choose and list from [resp, fe2o2, omomb, ombto, pyfe3, amo2o, g2n0, g2n21, g2n22]'
+        ,'** choose and list from [pco2, po2, pnh3, pn2o, pch4]'
+        ,'** choose and list from [resp, fe2o2, omomb, ombto, pyfe3, amo2o, g2n0, g2n21, g2n22, g2fe3, g2so4, g2ch4, ch4o2, fe2gr, ch4pl, ch4eb, fe2fs, fesox, g2n2p, n2opl, g2gr, g2gt, fe2sp, rtco2, g2o2]'
         ]
     
     sld_list.insert(0,'')
@@ -260,7 +260,7 @@ def get_input_tracer_bounds(**kwargs):
     runname     = kwargs.get('runname',     'test_input')
     pr_list     = kwargs.get('pr_list',     [])
     rain_list   = kwargs.get('rain_list',   []) 
-    atm_list    = kwargs.get('atm_list',    [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)]) 
+    atm_list    = kwargs.get('atm_list',    [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)]) 
     
     notes = [
         '** parent rock wt fraction (e.g., "ab      0.2" in one line and "ka     0.001" in the next) (if not specified assumed 1e-20)'
@@ -621,7 +621,7 @@ def main():
         )
     pr_list = [('inrt',1.0)]
     rain_list = [('ca',5.0e-6)]
-    atm_list = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)]
+    atm_list = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)]
     get_input_tracer_bounds(
         outdir=outdir
         ,runname=runname

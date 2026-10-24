@@ -56,7 +56,7 @@ def run_a_scepter_run(
     # ---- boundary values ----    
     pr_list             = kwargs.get('pr_list',             [('inrt',1.0)])
     rain_list           = kwargs.get('rain_list',           [('ca',5.0e-6)])
-    atm_list            = kwargs.get('atm_list',            [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)])
+    atm_list            = kwargs.get('atm_list',            [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)])
     # ---- sopecify solid phase properties ----    
     sld_varlist_psdpr   = kwargs.get('sld_varlist_psdpr',   [])
     sld_varlist_dust    = kwargs.get('sld_varlist_dust',    [])
@@ -357,7 +357,7 @@ def test_richards():
     # ---- boundary values ----    
     pr_list             = [('inrt',1.0)]
     rain_list           = [('ca',ca)]
-    atm_list            = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)]
+    atm_list            = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)]
     # ---- sopecify solid phase properties ----    
     sld_varlist_dust    = []
     sld_varlist_cec     = [('inrt', cec, logkhna, logkhk, logkhca, logkhmg, logkhal, alpha), ('g2', cec, logkhna, logkhk, logkhca, logkhmg, logkhal, alpha)]
