@@ -38,6 +38,10 @@
 # --feoh2 tracks FeO (llnl.dat) as a proxy for Fe(OH)2, a sink for Fe2+ and alkalinity once Fe(III) oxide is used up.
 # --gt=<wt fraction> puts goethite in the soil as a slowly reducible Fe(III) pool (list g2gt in the reactions);
 #   --gt0 tracks goethite without adding it.
+# --prad=<m> sets the rock particle radius (default 1e-5 m); --zmix=<m> the depth the rock is mixed into (default
+#   0.15 m); --q=<m/yr> the downward water flux (default 0.5; ~0 for closed batch incubations). A rock file may list
+#   'inrt' for its unreactive fraction (glass, clays), which then stays in the dose instead of being renormalised away.
+# --nz=<n> sets the number of grid cells over the 0.3 m column (default 30); a restart needs a spin-up with the same nz.
 #   Goethite and hematite are not allowed to precipitate (data/2ndslds_paddy.in): otherwise the soil ferrihydrite ripens
 #   into goethite within a few years of spin-up, whereas in paddy soils it is stabilised by OM and Si and renewed by
 #   Fe2+ reoxidation every drainage.
@@ -129,16 +133,16 @@ with open(os.path.join(rundir,'floodwater.in'),'w') as f:
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
-    ztot=0.3,nz=30,ttot=ttot,temp=25,omrain=omin,zom=0.15,poro=0.5,
+    ztot=0.3,nz=int(opt.get('nz','30')),ttot=ttot,temp=25,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=0.5 if fallow else 1.0,  # water saturation 1 throughout: flooded
-    zwater=zdry if awd else (0.5 if fallow else 1000),w=0,q=0.5,p=1e-5,nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
+    zwater=zdry if awd else (0.5 if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
     sld_list=['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags else ['sid','gr']) if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
-        + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []),
+        + ([m for m in bas_min if m not in ('amfe3','inrt')] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []) + (['cl'] if ref else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
@@ -162,5 +166,5 @@ spinup.run_a_scepter_run(
     moist_temp=awd_schedule(),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
     dust_temp=[[0.0,t_app,t_app+1e-4,0.99],[fdust,fdust,0,0]],
     # non-seasonal runs (fallow spin-ups) get no basalt
-    sld_varlist_dust=list(bas_min.items()) if bas else [],zdust=0.15,
+    sld_varlist_dust=list(bas_min.items()) if bas else [],zdust=float(opt.get('zmix','0.15')),
     )

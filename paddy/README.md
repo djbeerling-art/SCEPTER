@@ -143,6 +143,23 @@ see `makefile_paddy`), so their numbers are superseded by the calibration runs a
   With N on, CH4 is 1.14 kg/ha/d flooded and 0.58 AWD (ratio 0.51). 84-97 % of N2O made by denitrification is
   reduced to N2 when flooded. About 31 % of urea N volatilises as NH3 (field 10-40 %).
 
+- Recalibration on the reference paddy soil (2026-10-24; `krxn_calibrated.in` now holds this set). Reference soil
+  (`--refsoil`, CEC 15, 2 wt% goethite `--gt=0.02`, green rust with 2 % bioavailable Fe(III), rice root respiration
+  30 mol C m-2 yr-1, no siderite nucleation), spin-ups `sgt12_450` (1.2 wt% amfe3, 450 g C) and `sgt08_300`
+  (0.8 wt%, 300 g C), 120 kg N/ha urea. Only the Fe(III) inhibition constant of methanogenesis (g2ch4 krxn2) was
+  fitted; season CH4 rises almost linearly with it:
+
+  | g2ch4 Ki (mol m-3) | 5 | 6.5 | 7 | 8 | 10 | 13 | 16 |
+  |---|---|---|---|---|---|---|---|
+  | CH4, kg/ha/d, 1.2 % Fe soil | 1.04 | 1.18* | 1.24* | 1.44 | 1.66 | 1.93 | 2.16 |
+  | CH4, kg/ha/d, 0.8 % Fe soil | | 1.11* | 1.16* | 1.34 | 1.53 | 1.77 | |
+
+  (* 15-cell grid, `--nz=15`, with its own 15-cell spin-ups `sgt12_450n15`, `sgt08_300n15`; this grid gives ~6 %
+  less CH4 than 30 cells at Ki 10 and runs ~3x faster, ~50 min per season, so it is the production grid.)
+  At Ki 7 the two soils average 1.20 kg/ha/d (IPCC 1.19), with pH 6.5-6.6, porewater Fe2+ 0.6-2.5 mM and pCO2
+  0.07-0.27 atm through the season, plant share 61-67 %. Still off: CH4 onset 34-50 d (field 1-3 weeks) and
+  the flooded N2O EF 0.4-0.7 % (IPCC 0.3 %).
+
 ## Known gaps (next steps)
 
 - The green rust pH-stat makes pH depend on green rust thermodynamics; its log K is uncertain by about
