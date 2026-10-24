@@ -43,6 +43,11 @@
 #   Fe2+ reoxidation every drainage.
 # --nucl=<solid>:<seed mol m-3>[,...] lets the named solids nucleate: precipitation scales with amount + seed (precnucl.in;
 #   SCEPTER precstyle 'seed', one seed for all, the largest listed), e.g. --nucl=sid:1 for kinetic siderite.
+# --fe2sorb tracks Fe(II) sorbed on ferrihydrite (fe2ad) instead of green rust: list fe2sp in the reactions in place
+#   of fe2gr and g2gr (weak sites 0.2 per Fe, log K -11.55 for >FeOH + Fe2+ + H2O = >FeOFeOH + 2 H+, Appelo et al. 2002;
+#   krxn2 of fe2sp overrides the log K).
+# --grlogk=<log K> overrides the green rust formation constant of fe2gr (Fe2+ + 2 Fe(OH)3 = Fe3(OH)8 + 2 H+; default
+#   -9.98, Bourrie et al. 1999): the pH-stat sets porewater Fe2+ = 10^(log K + 2 pH).
 # --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
 #   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
@@ -115,6 +120,9 @@ if os.path.exists(os.path.join(rundir,'precnucl.in')): os.remove(os.path.join(ru
 if 'nucl' in opt:
     with open(os.path.join(rundir,'precnucl.in'),'w') as f:
         f.write('solid fkin\n' + ''.join('%s %s\n' % tuple(x.split(':')) for x in opt['nucl'].split(',')))
+if os.path.exists(os.path.join(rundir,'grlogk.in')): os.remove(os.path.join(rundir,'grlogk.in'))
+if 'grlogk' in opt:
+    with open(os.path.join(rundir,'grlogk.in'),'w') as f: f.write('log K\n%s\n' % opt['grlogk'])
 with open(os.path.join(rundir,'floodwater.in'),'w') as f:
     f.write('transfer velocity [m/yr]\n%s\n' % opt.get('kfw','36.5'))
 
@@ -129,7 +137,7 @@ spinup.run_a_scepter_run(
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
     psd_bulk='false',psd_full='false',
     # ---- tracers ----
-    sld_list=['inrt','g2','amfe3'] + (['sid','gr'] if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
+    sld_list=['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags else ['sid','gr']) if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
         + ([m for m in bas_min if m != 'amfe3'] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []),
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []) + (['cl'] if ref else []),

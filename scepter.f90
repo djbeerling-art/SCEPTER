@@ -210,6 +210,7 @@ real(kind=8),parameter :: mvarg = 34.15d0 ! cm3/mol; molar volume of aragonite; 
 real(kind=8),parameter :: mvsid = 29.378d0 ! cm3/mol; molar volume of siderite (FeCO3); Robie et al. 1978
 real(kind=8),parameter :: mvgr = 101.2d0 ! cm3/mol; hydroxy green rust Fe3(OH)8 from formula weight and an assumed density of 3.0 g/cm3
 real(kind=8),parameter :: mvfes = 20.4d0 ! cm3/mol; amorphous FeS / mackinawite from formula weight and a density of 4.3 g/cm3
+real(kind=8),parameter :: mvfe2ad = 26.4d0 ! cm3/mol; Fe(II) sorbed on Fe(III) oxide (as Fe(OH)2, density 3.4 g/cm3)
 real(kind=8),parameter :: mvurea = 60.056d0/1.32d0 ! cm3/mol; urea CO(NH2)2, density 1.32 g/cm3
 real(kind=8),parameter :: mvdlm = 64.34d0 ! cm3/mol; molar volume of dolomite; Robie et al. 1978
 real(kind=8),parameter :: mvhm = 30.274d0 ! cm3/mol; molar volume of hematite; Robie et al. 1978
@@ -334,6 +335,7 @@ real(kind=8),parameter :: mwtarg = 100.089d0 ! g/mol; formula weight of aragonit
 real(kind=8),parameter :: mwtsid = 115.856d0 ! g/mol; formula weight of siderite (FeCO3)
 real(kind=8),parameter :: mwtgr = 303.59d0 ! g/mol; formula weight of hydroxy green rust Fe3(OH)8
 real(kind=8),parameter :: mwtfes = 87.911d0 ! g/mol; formula weight of FeS
+real(kind=8),parameter :: mwtfe2ad = 89.86d0 ! g/mol; Fe(II) sorbed on Fe(III) oxide, counted as Fe(OH)2
 real(kind=8),parameter :: mwturea = 60.056d0 ! g/mol; formula weight of urea
 real(kind=8),parameter :: mwtdlm = 184.403d0 ! g/mol; formula weight of dolomite
 real(kind=8),parameter :: mwthm = 159.692d0 ! g/mol; formula weight of hematite
@@ -769,7 +771,7 @@ integer nsp_sld_2 != 25
 ! integer,parameter::nsp_sld_2 = 20 ! removing all carbonate from secondary minerals
 ! integer,parameter::nsp_sld_2 = 11 ! removing all base-catio bearers from secondary minerals
 ! #endif 
-integer,parameter::nsp_sld_all = 90
+integer,parameter::nsp_sld_all = 91
 integer ::nsp_sld_cnst != nsp_sld_all - nsp_sld
 integer,intent(in)::nsp_aq != 5
 integer,parameter::nsp_aq_ph = 19
@@ -781,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 26
+integer,parameter::nrxn_ext_all = 28
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1142,14 +1144,14 @@ chrsld_all = (/'fo   ','ab   ','an   ','cc   ','ka   ','gb   ','py   ','ct   ','
     & ,'nasp ','mgsp ','fe2o ','mgo  ','k2o  ','cao  ','na2o ','al2o3','gbas ','cbas ','ep   ','clch ' &
     & ,'sdn  ','cdr  ','leu  ','amal ','amfe3','fbas ','olvn ','mgn  ','ilmn ','anat ','jrs  ' &
     & ,'g1   ','g2   ','g3   ','amnt ','kcl  ','gac  ','mesmh','ims  ','teas ','naoh ','naglp','cacl2' &
-    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ','urea ' &
+    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ','urea ','fe2ad' &
     & ,'inrt '/)
 chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','k    ','no3  ','oxa  ' &
     & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt '/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1249,7 +1251,7 @@ mv_all = (/mvfo,mvab,mvan,mvcc,mvka,mvgb,mvpy,mvct,mvfa,mvgt,mvcabd,mvdp,mvhb,mv
     & ,mvfe2o,mvmgo,mvk2o,mvcao,mvna2o,mval2o3,mvgbas,mvcbas,mvep,mvclch,mvsdn,mvcdr,mvleu,mvamal,mvamfe3 &
 	& ,mvfbas,mvolvn,mvmgn,mvilmn,mvanat,mvjrs &
     & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4,mvsid,mvgr,mvfes &
-    & ,mvurea &
+    & ,mvurea,mvfe2ad &
     & ,mvinrt/)
 mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,mwtdp,mwthb,mwtkfs,mwtom,mwtomb,mwtamsi &
     & ,mwtarg,mwtdlm,mwthm,mwtill,mwtanl,mwtnph,mwtqtz,mwtgps,mwttm,mwtla,mwtby,mwtolg,mwtand,mwtcpx,mwten,mwtfer,mwtopx &
@@ -1257,7 +1259,7 @@ mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,
     & ,mwtfe2o,mwtmgo,mwtk2o,mwtcao,mwtna2o,mwtal2o3,mwtgbas,mwtcbas,mwtep,mwtclch,mwtsdn,mwtcdr,mwtleu,mwtamal,mwtamfe3 &
 	& ,mwtfbas,mwtolvn,mwtmgn,mwtilmn,mwtanat,mwtjrs &
     & ,mwtg1,mwtg2,mwtg3,mwtamnt,mwtkcl,mwtgac,mwtmesmh,mwtims,mwtteas,mwtnaoh,mwtnaglp,mwtcacl2,mwtnacl,mwtsio2,mwtcaso4,mwtsid &
-    & ,mwtgr,mwtfes,mwturea &
+    & ,mwtgr,mwtfes,mwturea,mwtfe2ad &
     & ,mwtinrt/)
 
 do isps = 1, nsp_sld 
@@ -1678,6 +1680,7 @@ staq_all(findloc(chrsld_all,'gr',dim=1), findloc(chraq_all,'fe3',dim=1)) = 2d0
 ! FeS + H+ = Fe2+ + HS- (formed and dissolved only through the extra reactions fe2fs and fesox)
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'hs',dim=1)) = 1d0
+staq_all(findloc(chrsld_all,'fe2ad',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 ! urea hydrolysis (CO(NH2)2  +  H2O  ->  2 NH3  +  CO2); NH3/NH4+ is carried as pnh3 (paddy N fertiliser)
 stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = 2d0
 stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
@@ -1936,10 +1939,15 @@ stgas_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'pco2',d
 staq_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chraq_all,'fe2',dim=1)) = -1d0
 stsld_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = -2d0
 stsld_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
+! Fe(II) sorption on Fe(III) oxide surface sites (alternative to green rust): Fe2+ + >FeOH + H2O = >FeOFeOH + 2 H+
+staq_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chraq_all,'fe2',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',dim=1)) = 1d0
 ! plant (aerenchyma) CH4 transport to the atmosphere; a fraction is oxidised in the rhizosphere by root O2 
 ! (Pox = 0.5, Walter and Heimann 2000), so CH4 -> 0.5 CO2 in the soil and 0.5 CH4 emitted 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0.5d0
+! rice root respiration: CO2 released into the rooted soil (carbon from the plant, not from soil OM)
+stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 ! FeS precipitation/dissolution (Fe2+  +  HS-  ->  FeS  +  H+) 
@@ -2038,6 +2046,9 @@ stgas_dext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1), findloc(chrgas_all,'po2',d
 staq_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',dim=1)) = 1d0
 ! plant transport and ebullition of CH4 
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
@@ -9999,8 +10010,15 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 500d0 ! vmax, mol CH4 m
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4o2',dim=1),:) = 5d-6 ! half-saturation for CH4(aq), mol L^-1 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),:) = 1d4 ! rate per unit ln(omega), mol gr m^-3 yr^-1 
 krxn2_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),:) = 1d0 ! half-saturation for amfe3 (forward) and gr (reverse), mol m^-3 
+! Fe(II) sorption on ferrihydrite weak sites (0.2 mol sites per mol Fe, Dzombak and Morel 1990), log K of
+! >FeOH + Fe2+ + H2O = >FeOFeOH + 2 H+ from Appelo et al. 2002; rate linear in ln(omega) as fe2gr
+krxn1_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),:) = 1d4 ! rate per unit ln(omega), mol m^-3 yr^-1 
+krxn2_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),:) = -11.55d0 ! log K 
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 50d0 ! plant transport rate constant at the surface, yr^-1 (provisional) 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth of root density, m (used in the main program) 
+! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
+! respiration); distributed with the root density profile of ch4pl
+krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 100d0 ! ebullition rate constant, yr^-1 (provisional) 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 0.4d0 ! pCH4 threshold for bubble formation, atm 
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1),:) = 1d3 ! rate per unit ln(omega), mol FeS m^-3 yr^-1 (provisional) 
@@ -10020,6 +10038,31 @@ call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_e
 
 endsubroutine coefs_v2
 
+!**************************************************************************************************************************************
+function grlogk_f() result(grlogk)
+! log K of green rust formation on Fe(III) oxide (Fe2+ + 2 Fe(OH)3 = Fe3(OH)8 + 2 H+) used by fe2gr:
+! -9.98 (Bourrie et al. 1999), or the value in ./grlogk.in (a header line, then the value), read once
+implicit none
+real(kind=8)::grlogk
+real(kind=8),save::grlogk_save = -9.98d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./grlogk.in',exist=exist_file)
+    if (exist_file) then 
+        open(989,file='./grlogk.in',status='old',action='read')
+        read(989,'()')
+        read(989,*,iostat=ios) v_tmp
+        if (ios == 0) grlogk_save = v_tmp
+        close(989)
+        print *,'green rust log K: ',grlogk_save
+    endif 
+endif 
+grlogk = grlogk_save
+endfunction grlogk_f
 !**************************************************************************************************************************************
 subroutine read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
 ! reads ./precnucl.in if present: a header line, then lines of  <solid name> <seed, mol m-3>.
@@ -11542,7 +11585,7 @@ select case(trim(adjustl(mineral)))
         q10 = 2d0
         kin = k_q10(kref,tc,tc_ref,q10)
         dkin_dmsp = 0d0
-    case('inrt','fes')
+    case('inrt','fes','fe2ad')
         kin =0d0
         dkin_dmsp = 0d0
     case default 
@@ -12307,8 +12350,8 @@ select case(trim(adjustl(mineral)))
         therm = 1d0 ! reacting in any case
     case('inrt')
         therm = 1d0 ! not reacting in any case
-    case('fes')
-        therm = 1d0 ! FeS reacts only through the extra reactions fe2fs and fesox
+    case('fes','fe2ad')
+        therm = 1d0 ! FeS reacts only through the extra reactions fe2fs and fesox; sorbed Fe(II) only through fe2sp
     case default 
         therm = 0d0
 endselect 
@@ -16839,7 +16882,7 @@ select case(trim(adjustl(mineral)))
     case('gac','mesmh','ims','teas','naoh','naglp','urea') ! reacting in any case
         omega = 0d0
     
-    case('inrt','fes') ! not reacting in any case (fes: only through extra reactions)
+    case('inrt','fes','fe2ad') ! not reacting in any case (fes, fe2ad: only through extra reactions)
         ! omega = 1d0
         omega = 0d0
         
@@ -21216,7 +21259,7 @@ real(kind=8):: po2th,fe2th,mwtom,g1th,g2th,g3th,mvpy,fe3th,knh3,k1nh3,ko2,v_tmp,
 real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,ombx &
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
-    & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx &
+    & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx,fe2adx,sfr,sad &
     & ,fesx,hsfr
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
@@ -21360,6 +21403,7 @@ amfe3x  = msldx_loc(findloc(chrsld_all,'amfe3',dim=1),:)
 grx     = msldx_loc(findloc(chrsld_all,'gr',dim=1),:)
 fesx    = msldx_loc(findloc(chrsld_all,'fes',dim=1),:)
 gtx     = msldx_loc(findloc(chrsld_all,'gt',dim=1),:)
+fe2adx  = msldx_loc(findloc(chrsld_all,'fe2ad',dim=1),:)
 
 
 nh4x = pnh3x*knh3*prox/k1nh3
@@ -22405,7 +22449,7 @@ select case(trim(adjustl(rxn_name)))
         v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),1) ! mol gr m^-3 yr^-1 
         km_tmp1 = krxn2_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),1) ! mol m^-3 
         fe2fr = max(maqx_loc(findloc(chraq_all,'fe2',dim=1),:),1d-30) ! free Fe2+, mol L-1 
-        lnomg = log(10d0)*(-9.98d0) + log(fe2fr) - 2d0*log(prox)
+        lnomg = log(10d0)*grlogk_f() + log(fe2fr) - 2d0*log(prox) ! log K -9.98 unless ./grlogk.in
         f_fe3 = merge(amfe3x/(amfe3x + km_tmp1),grx/(grx + km_tmp1),lnomg > 0d0)
         f_sat = min(2d0*sat,1d0)
         rxn_ext = v_tmp*f_sat*f_fe3*lnomg
@@ -22422,6 +22466,46 @@ select case(trim(adjustl(rxn_name)))
             case default
                 drxnext_dmsp = 0d0
         endselect 
+        
+    case('fe2sp') 
+        ! Fe(II) sorption on Fe(III) oxide weak sites (Fe2+ + >FeOH + H2O = >FeOFeOH + 2 H+); sites = 0.2 per amfe3 Fe;
+        ! omega = K Fe2+ (free sites) / (H+^2 sorbed); rate linear in ln(omega), limited by free sites (forward) or
+        ! sorbed Fe(II) (reverse), so sorbed Fe(II) is released as the oxide is reduced
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),1) ! mol m^-3 yr^-1 
+        km_tmp1 = 1d0 ! mol m^-3 
+        km_tmp2 = 0.2d0 ! sites per mol Fe 
+        fe2fr = max(maqx_loc(findloc(chraq_all,'fe2',dim=1),:),1d-30) ! free Fe2+, mol L-1 
+        sfr = max(km_tmp2*amfe3x - fe2adx,1d-20) ! free sites, mol m-3 
+        sad = max(fe2adx,1d-20) ! sorbed Fe(II), mol m-3 
+        lnomg = log(10d0)*krxn2_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),1) + log(fe2fr) - 2d0*log(prox) &
+            & + log(sfr) - log(sad)
+        f_fe3 = merge(sfr/(sfr + km_tmp1),sad/(sad + km_tmp1),lnomg > 0d0)
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_sat*f_fe3*lnomg
+        
+        select case(trim(adjustl(sp_name)))
+            case('fe2')
+                drxnext_dmsp = v_tmp*f_sat*f_fe3/fe2fr
+            case('pro')
+                drxnext_dmsp = v_tmp*f_sat*f_fe3*(-2d0)/prox
+            case('amfe3')
+                drxnext_dmsp = v_tmp*f_sat*( f_fe3*km_tmp2/sfr &
+                    & + lnomg*km_tmp1/(sfr + km_tmp1)**2d0*km_tmp2*merge(1d0,0d0,lnomg > 0d0) )
+            case('fe2ad')
+                drxnext_dmsp = v_tmp*f_sat*( f_fe3*(-1d0/sfr - 1d0/sad) &
+                    & - lnomg*km_tmp1/(sfr + km_tmp1)**2d0*merge(1d0,0d0,lnomg > 0d0) &
+                    & + lnomg*km_tmp1/(sad + km_tmp1)**2d0*merge(0d0,1d0,lnomg > 0d0) )
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('rtco2') 
+        ! rice root respiration: CO2 source with the root density profile (ch4pl rate constant relative to the top cell,
+        ! exp(-z/zr)), normalised by the e-folding depth zr so that the column total is krxn1 (mol m-2 yr-1); flooded soil only
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:)/krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        rxn_ext = krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),1)*vmax &
+            & /krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)*min(2d0*sat,1d0)
+        drxnext_dmsp = 0d0
         
     case('ch4pl') 
         ! plant-mediated CH4 transport: first order in dissolved CH4 above atmospheric equilibrium, with the rate 
