@@ -10026,6 +10026,7 @@ krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth
 ! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
 ! respiration); distributed with the root density profile of ch4pl
 krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+krxn1_ext_all(findloc(chrrxn_ext_all,'amo2o',dim=1),:) = 9.53d-6*60d0*60d0*24d0*365d0 ! nitrification vmax (Maggi et al. 2008), mol m^-3 yr^-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 300d0 ! vmax, mol CH2O m^-3 yr^-1 (as the anaerobic pathways)
 krxn2_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 5d-6 ! half-saturation for O2(aq), mol L-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 100d0 ! ebullition rate constant, yr^-1 (provisional) 
@@ -21740,7 +21741,7 @@ select case(trim(adjustl(rxn_name)))
         
         select case(trim(adjustl(scheme)))
             case('maggi08')
-                v_tmp = 9.53d-6*60d0*60d0*24d0*365d0 ! (~300 /yr)
+                v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'amo2o',dim=1),1) ! 9.53e-6 s^-1 (~300 /yr) unless overridden in krxn_ext.in
                 ! v_tmp = v_tmp/100d0 ! (~3 /yr; default value produces too much nitrate (pH goes down to ~1)
                 km_tmp1 = 14d-5
                 km_tmp2 = 2.41d-5
