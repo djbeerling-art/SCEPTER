@@ -3293,7 +3293,7 @@ if (do_psd) then
         write(ipsd,*) ' sldsp\log10(radius) ', (ps(ips),ips=1,nps), 'time'
         write(ipsdv,*) ' sldsp\diameter(um) ', (10d0**ps(ips)*1d6*2d0,ips=1,nps), 'p80(um)'
         do isps = 1, nsp_sld
-            volsld = msldi(isps)*mv(isps)*1d-6
+            volsld = max(msldi(isps)*mv(isps)*1d-6, 1d-20) ! paddy: minerals absent from the parent rock (e.g. rock dust) still need a PSD shape
             call calc_psd_pr( &
                 & nps,nps_pr_char,nps_pr_char_in &! input
                 & ,pi,hrii(isps),ps_sigma_std,poroi,volsld,tol &! input
@@ -3928,7 +3928,7 @@ if (read_data) then
 				write(ipsd,*) ' sldsp\log10(radius) ', (ps(ips),ips=1,nps), 'time'
 				write(ipsdv,*) ' sldsp\diameter(um) ', (10d0**ps(ips)*1d6*2d0,ips=1,nps), 'p80(um)'
 				do isps = 1, nsp_sld
-					volsld = msldi(isps)*mv(isps)*1d-6
+					volsld = max(msldi(isps)*mv(isps)*1d-6, 1d-20)
 					call calc_psd_pr( &
 						& nps,nps_pr_char,nps_pr_char_in &! input
 						& ,pi,hrii(isps),ps_sigma_std,poroi,volsld,tol &! input

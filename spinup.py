@@ -68,6 +68,8 @@ def run_a_scepter_run(
     sld_varlist_nopsd   = kwargs.get('sld_varlist_nopsd',   [])
     sld_varlist_2ndslds = kwargs.get('sld_varlist_2ndslds', [])
     srcfile_psdpr       = kwargs.get('srcfile_psdpr',       None)
+    sld_varlist_psdrain = kwargs.get('sld_varlist_psdrain', [])
+    srcfile_psdrain     = kwargs.get('srcfile_psdrain',     None)
     srcfile_dust        = kwargs.get('srcfile_dust',        None)
     srcfile_omrain      = kwargs.get('srcfile_omrain',      None)
     srcfile_cec         = kwargs.get('srcfile_cec',         None)
@@ -172,6 +174,7 @@ def run_a_scepter_run(
         
     sldvar_list_all = [
         ('psdpr.in',        srcfile_psdpr,      sld_varlist_psdpr),
+        ('psdrain.in',      srcfile_psdrain,    sld_varlist_psdrain),
         ('dust.in',         srcfile_dust,       sld_varlist_dust),
         ('cec.in',          srcfile_cec,        sld_varlist_cec),
         ('OM_rain.in',      srcfile_omrain,     sld_varlist_omrain),

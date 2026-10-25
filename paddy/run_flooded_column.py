@@ -45,6 +45,7 @@
 #   g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (ch4ph.in); e.g. 6.2:7.9:6.5 peaks near pH 7 and keeps the calibration at pH 6.5.
 # --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
 #   drain to --zdry/--sdry; typical practice 7-14 d); AWD cycles stop at the final drain.
+# --exe=<binary> picks the executable (default scepter_paddy; scepter_paddy_fast from makefile_paddy_fast has no run-time checks).
 # --nz=<n> sets the number of grid cells over the 0.3 m column (default 30); a restart needs a spin-up with the same nz.
 #   Goethite and hematite are not allowed to precipitate (data/2ndslds_paddy.in): otherwise the soil ferrihydrite ripens
 #   into goethite within a few years of spin-up, whereas in paddy soils it is stabilised by OM and Si and renewed by
@@ -141,6 +142,13 @@ if 'grlogk' in opt:
 with open(os.path.join(rundir,'floodwater.in'),'w') as f:
     f.write('transfer velocity [m/yr]\n%s\n' % opt.get('kfw','36.5'))
 
+# --psd=<file>: rock dust PSD (psdrain.in, e.g. data/psdrain_renforth_p80-100um.in from paddy/make_psd_renforth.py),
+# tracked for the rock minerals only; soil and secondary solids keep the single radius --prad
+psd = opt.get('psd')
+sld_list = (['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags else ['sid','gr']) if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
+    + ([m for m in bas_min if m not in ('amfe3','inrt')] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []))
+rock_min = [m for m in bas_min if m not in ('amfe3','inrt')] if bas else []
+
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
@@ -150,10 +158,10 @@ spinup.run_a_scepter_run(
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
-    psd_bulk='false',psd_full='false',
+    psd_bulk='true' if psd else 'false',psd_full='true' if psd else 'false',
+    srcfile_psdrain=psd,sld_varlist_psdpr=[(float(opt.get('prad','1e-5')),0.2,1)] if psd else [],sld_varlist_nopsd=[(m,'false' if m in rock_min else 'true') for m in sld_list] if psd else [],
     # ---- tracers ----
-    sld_list=['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags else ['sid','gr']) if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
-        + ([m for m in bas_min if m not in ('amfe3','inrt')] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []),
+    sld_list=sld_list,
     aq_list=(['fe2','fe3','ca','mg','na','k'] if fe2buf else ['fe2','fe3','ca'])
         + (['so4','hs'] if ch4 else []) + (['no3'] if nitro else []) + (['si','al'] if bas else []) + (['cl'] if ref else []),
     gas_list=['pco2','po2'] + (['pch4'] if ch4 else []) + (['pnh3','pn2o'] if nitro else []),
@@ -172,7 +180,7 @@ spinup.run_a_scepter_run(
     # cec [cmol/kg], log KH\\X for Na, K, Ca, Mg, Al, beta; Fe2+ follows Mg (+0.158) in the code
     sld_varlist_cec=[('inrt',cec,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []),
     srcfile_2ndslds='./data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in',
-    use_local_storage=False,exename_src='scepter_paddy',show_runtime_res=False,
+    use_local_storage=False,exename_src=opt.get('exe','scepter_paddy'),show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----
     moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
     dust_temp=[[0.0,t_app,t_app+1e-4,0.99],[fdust,fdust,0,0]],
