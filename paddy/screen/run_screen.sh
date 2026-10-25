@@ -13,7 +13,7 @@ job(){ tag=${1%% *}; o=${1#* }; grep -q "^$tag rc 0" "$D/status" 2>/dev/null && 
     mc_*) python3 paddy/run_flooded_column.py $tag $RG 0.31 $SOIL $SEAS $o > "$D/$tag.log" 2>&1;;
     *)    python3 paddy/run_flooded_column.py $tag $RG 0.31 $SOIL $SEAS --psd=data/psdrain_renforth_p80-100um.in $o > "$D/$tag.log" 2>&1;;
   esac
-  rc=$?; [ $rc = 0 ] && [ "${tag:0:3}" != ms_ ] && ! awk 'END{exit !($1>=0.3095)}' $SCEPTER_OUT/paddy/flood_$tag/flx/flx_gas-pch4.txt 2>/dev/null && rc=98   # stopped before season end
+  rc=$?; [ $rc = 0 ] && [ "${tag:0:3}" != ms_ ] && ! awk 'END{exit !($1+0>=0.3095)}' $SCEPTER_OUT/paddy/flood_$tag/flx/flx_gas-pch4.txt 2>/dev/null && rc=98   # stopped before season end
   r=$SCEPTER_OUT/paddy/flood_$tag
   [ "${tag:0:3}" != ms_ ] && find $r/prof -name "*.txt" -delete 2>/dev/null; find $r/flx -name "flx_psd*" -delete 2>/dev/null
   echo "$tag rc $rc" >> "$D/status"; }

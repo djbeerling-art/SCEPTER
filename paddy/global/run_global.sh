@@ -19,7 +19,7 @@ arch_job(){ IFS=, read -r aid regime args <<< "$1"
   for d in $DOSES; do tag=g_${aid}_$d; done_ok $tag && continue
     p=""; [ "$d" != 0 ] && p=--psd=$PSD
     python3 paddy/run_flooded_column.py $tag $RG 0.31 --rstrt=gs_$aid --basalt=$d $SOIL $SEAS $w $p $args > "$D/$tag.log" 2>&1
-    rc=$?; [ $rc = 0 ] && [ "${tag:0:3}" != ms_ ] && ! awk 'END{exit !($1>=0.3095)}' $SCEPTER_OUT/paddy/flood_$tag/flx/flx_gas-pch4.txt 2>/dev/null && rc=98   # stopped before season end
+    rc=$?; [ $rc = 0 ] && [ "${tag:0:3}" != ms_ ] && ! awk 'END{exit !($1+0>=0.3095)}' $SCEPTER_OUT/paddy/flood_$tag/flx/flx_gas-pch4.txt 2>/dev/null && rc=98   # stopped before season end
     o=$SCEPTER_OUT/paddy/flood_$tag
     find $o/prof -name "*.txt" -delete 2>/dev/null; find $o/flx -name "flx_psd*" -delete 2>/dev/null   # keep disk use ~3 MB per season run
     echo "$tag rc $rc" >> "$D/status"
