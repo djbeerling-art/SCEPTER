@@ -783,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 30
+integer,parameter::nrxn_ext_all = 31
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1151,7 +1151,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up'/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1954,7 +1954,8 @@ stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pnh3',di
 ! rice root uptake of NH4+ (N leaves the soil into the crop)
 stgas_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = -1d0
 ! rice root respiration: CO2 released into the rooted soil (carbon from the plant, not from soil OM)
-stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 ! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 ! FeS precipitation/dissolution (Fe2+  +  HS-  ->  FeS  +  H+) 
@@ -10030,7 +10031,11 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 50d0 ! plant transport 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth of root density, m (used in the main program) 
 ! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
 ! respiration); distributed with the root density profile of ch4pl
-krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+! radial O2 loss from rice roots, mol O2 m^-2 yr^-1 (3.65 = 10 mmol m^-2 d^-1; order of whole-crop estimates, e.g.
+! Kirk 2004, Revsbech et al. 1999); distributed and limited to wet soil as rtco2. The O2 is then used by the soil's own
+! O2 sinks (Fe2+ and FeS oxidation, CH4 oxidation, aerobic respiration, nitrification)
+krxn1_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1),:) = 3.65d0 
 krxn1_ext_all(findloc(chrrxn_ext_all,'amo2o',dim=1),:) = 9.53d-6*60d0*60d0*24d0*365d0 ! nitrification vmax (Maggi et al. 2008), mol m^-3 yr^-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 3.5d0 ! maximum crop N uptake, mol N m^-2 yr^-1 (~150 kg N/ha over a 113-d season)
 krxn2_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 5d-5 ! half-saturation for NH4+(aq), mol L-1 (rice high-affinity uptake ~10-50 uM)
@@ -10051,10 +10056,54 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'n2opl',dim=1),:) = 0.76d0 ! plant N2O cond
 
 
 ! optional run-time override of extra-reaction constants (for calibration without recompiling) 
-call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
+call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
+
+! paddy: temperature dependence of the microbial reactions, rate x Q10**((T-25)/10), so constants (incl. the run-time
+! override above) are 25 C values; Q10 3 for methanogenesis (cf. Segers 1998), 2 for the others; ./q10.in (a header
+! line, then lines of <reaction> <Q10>) overrides
+call paddy_q10(tc,nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all)
 
 endsubroutine coefs_v2
 
+!**************************************************************************************************************************************
+subroutine paddy_q10(tc,nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all)
+! scales the rate constants of the paddy microbial reactions by Q10**((tc-25)/10); see coefs_v2
+implicit none
+integer,intent(in)::nz,nrxn_ext_all
+real(kind=8),intent(in)::tc
+character(5),dimension(nrxn_ext_all),intent(in)::chrrxn_ext_all
+real(kind=8),dimension(nrxn_ext_all,nz),intent(inout)::krxn1_ext_all
+integer,parameter::nq = 12
+character(5),dimension(nq),save::rxn_q = (/'g2fe3','g2gr ','g2gt ','g2so4','g2ch4','ch4o2','g2o2 ','amo2o','g2n21','g2n2p', &
+    & 'g2n0 ','rtco2'/)
+real(kind=8),dimension(nq),save::q10_q = (/2d0,2d0,2d0,2d0,3d0,2d0,2d0,2d0,2d0,2d0,2d0,2d0/)
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios,iq,irxn
+character(5)::name_tmp
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./q10.in',exist=exist_file)
+    if (exist_file) then 
+        open(989,file='./q10.in',status='old',action='read')
+        read(989,'()')
+        do 
+            read(989,*,iostat=ios) name_tmp,v_tmp
+            if (ios /= 0) exit 
+            do iq = 1, nq
+                if (rxn_q(iq) == name_tmp) q10_q(iq) = v_tmp
+            enddo 
+        enddo 
+        close(989)
+    endif 
+endif 
+do iq = 1, nq
+    irxn = findloc(chrrxn_ext_all,rxn_q(iq),dim=1)
+    if (irxn < 1) cycle 
+    krxn1_ext_all(irxn,:) = krxn1_ext_all(irxn,:)*q10_q(iq)**((tc-25d0)/10d0)
+enddo 
+endsubroutine paddy_q10
 !**************************************************************************************************************************************
 function grlogk_f() result(grlogk)
 ! log K of green rust formation on Fe(III) oxide (Fe2+ + 2 Fe(OH)3 = Fe3(OH)8 + 2 H+) used by fe2gr:
@@ -22788,6 +22837,13 @@ select case(trim(adjustl(rxn_name)))
             case default
                 drxnext_dmsp = 0d0
         endselect 
+        
+    case('rtoxy') 
+        ! radial O2 loss from rice roots: O2 source with the rtco2 root profile; column total krxn1 (mol O2 m-2 yr-1)
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:)/krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        rxn_ext = krxn1_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1),1)*vmax &
+            & /krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)*min(2d0*sat,1d0)
+        drxnext_dmsp = 0d0
         
     case('rtco2') 
         ! rice root respiration: CO2 source with the root density profile (ch4pl rate constant relative to the top cell,
