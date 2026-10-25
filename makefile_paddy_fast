@@ -7,6 +7,8 @@ FC            = gfortran
 
 CPFLAGS       = 
 CPFLAGS       += -Dno_intr_findloc # need to use in cluster
+CPFLAGS       += -Dbanded_solve # banded LU for the main Jacobian (see solve_banded)
+CPFLAGS       += -Dcache_spec # reuse the speciation between calc_rxn_ext_dev_3 calls with the same state
 # CPFLAGS       += -Dshow_PSDiter # showing iteration process during PSD calculation
 # CPFLAGS       += -Dparallel_ON # testing parallelization
 # CPFLAGS       += -Dnpar_in=1 # number of threads for parallelization 

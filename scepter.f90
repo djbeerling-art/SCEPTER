@@ -21317,22 +21317,78 @@ real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,om
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
     & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx,fe2adx,sfr,sad &
     & ,fesx,hsfr,f_ph,df_ph
+#ifdef cache_spec
+real(kind=8),dimension(:),allocatable,save::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
+#else
 real(kind=8),dimension(nz)::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
+#endif
 real(kind=8),dimension(nsp_aq_all,nz)::maqx_loc
 real(kind=8),dimension(nsp_gas_all,nz)::mgasx_loc
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::msldx_loc,ck_msld
+#else
 real(kind=8),dimension(nsp_sld_all,nz)::msldx_loc
+#endif
 
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::maqft_loc,dmaqft_dpro_loc,dmaqft_dios_loc
+#else
 real(kind=8),dimension(nsp_aq_all,nz)::maqft_loc,dmaqft_dpro_loc,dmaqft_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::maqfte_loc,dmaqfte_dpro_loc,dmaqfte_dios_loc
+#else
 real(kind=8),dimension(nsp_aq_all,nz)::maqfte_loc,dmaqfte_dpro_loc,dmaqfte_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::maqfti_loc,dmaqfti_dpro_loc,dmaqfti_dios_loc
+#else
 real(kind=8),dimension(nsp_aq_all,nz)::maqfti_loc,dmaqfti_dpro_loc,dmaqfti_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:,:),allocatable,save::dmaqft_dmaqf_loc,dmaqfte_dmaqf_loc,dmaqfti_dmaqf_loc
+#else
 real(kind=8),dimension(nsp_aq_all,nsp_aq_all,nz)::dmaqft_dmaqf_loc,dmaqfte_dmaqf_loc,dmaqfti_dmaqf_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:,:),allocatable,save::dmaqft_dmgas_loc,dmaqfte_dmgas_loc,dmaqfti_dmgas_loc
+#else
 real(kind=8),dimension(nsp_aq_all,nsp_gas_all,nz)::dmaqft_dmgas_loc,dmaqfte_dmgas_loc,dmaqfti_dmgas_loc
+#endif
 
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::mgasft_loc,dmgasft_dpro_loc,dmgasft_dios_loc
+#else
 real(kind=8),dimension(nsp_gas_all,nz)::mgasft_loc,dmgasft_dpro_loc,dmgasft_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::mgasfte_loc,dmgasfte_dpro_loc,dmgasfte_dios_loc
+#else
 real(kind=8),dimension(nsp_gas_all,nz)::mgasfte_loc,dmgasfte_dpro_loc,dmgasfte_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:),allocatable,save::mgasfti_loc,dmgasfti_dpro_loc,dmgasfti_dios_loc
+#else
 real(kind=8),dimension(nsp_gas_all,nz)::mgasfti_loc,dmgasfti_dpro_loc,dmgasfti_dios_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:,:),allocatable,save::dmgasft_dmaqf_loc,dmgasfte_dmaqf_loc,dmgasfti_dmaqf_loc
+#else
 real(kind=8),dimension(nsp_gas_all,nsp_aq_all,nz)::dmgasft_dmaqf_loc,dmgasfte_dmaqf_loc,dmgasfti_dmaqf_loc
+#endif
+#ifdef cache_spec
+real(kind=8),dimension(:,:,:),allocatable,save::dmgasft_dmgas_loc,dmgasfte_dmgas_loc,dmgasfti_dmgas_loc
+#else
 real(kind=8),dimension(nsp_gas_all,nsp_gas_all,nz)::dmgasft_dmgas_loc,dmgasfte_dmgas_loc,dmgasfti_dmgas_loc
+#endif
+#ifdef cache_spec
+! cache of the speciation (get_maqt_all) between calls with the same state: within one Newton iteration this
+! routine is called for every reaction and every species derivative with identical concentrations
+real(kind=8),dimension(:,:),allocatable,save::ck_maq,ck_mgas
+real(kind=8),dimension(:),allocatable,save::ck_pro,ck_ios
+real(kind=8),save::ck_tc = -999d0, ck_kw = -999d0
+logical::ck_hit
+#endif
 
 ! real(kind=8):: thon = 1d0
 real(kind=8):: thon = -1d100
@@ -21415,6 +21471,94 @@ call get_maqgasx_all( &
     & )
 
 ! getting maqft_loc and its derivatives
+#ifdef cache_spec
+ck_hit = allocated(ck_maq)
+if (ck_hit) ck_hit = size(ck_maq,1)==nsp_aq_all .and. size(ck_maq,2)==nz .and. size(ck_mgas,1)==nsp_gas_all
+if (ck_hit) ck_hit = all(ck_maq==maqx_loc) .and. all(ck_mgas==mgasx_loc) .and. all(ck_pro==prox) .and. all(ck_ios==iosx) &
+    & .and. ck_tc==tc .and. ck_kw==kw
+if (.not.ck_hit) then
+  if (.not.allocated(maqft_loc) .or. .not.allocated(ck_maq)) then
+    ck_tc = -999d0
+  elseif (size(maqft_loc,1)/=nsp_aq_all .or. size(maqft_loc,2)/=nz .or. size(mgasft_loc,1)/=nsp_gas_all) then
+    ck_tc = -999d0
+  endif
+  if (ck_tc == -999d0) then
+    if (allocated(profte)) deallocate(profte)
+    allocate(profte(nz))
+    if (allocated(dprofte_dpro)) deallocate(dprofte_dpro)
+    allocate(dprofte_dpro(nz))
+    if (allocated(dprofte_dios)) deallocate(dprofte_dios)
+    allocate(dprofte_dios(nz))
+    if (allocated(profti)) deallocate(profti)
+    allocate(profti(nz))
+    if (allocated(dprofti_dpro)) deallocate(dprofti_dpro)
+    allocate(dprofti_dpro(nz))
+    if (allocated(dprofti_dios)) deallocate(dprofti_dios)
+    allocate(dprofti_dios(nz))
+    if (allocated(maqft_loc)) deallocate(maqft_loc)
+    allocate(maqft_loc(nsp_aq_all,nz))
+    if (allocated(dmaqft_dpro_loc)) deallocate(dmaqft_dpro_loc)
+    allocate(dmaqft_dpro_loc(nsp_aq_all,nz))
+    if (allocated(dmaqft_dios_loc)) deallocate(dmaqft_dios_loc)
+    allocate(dmaqft_dios_loc(nsp_aq_all,nz))
+    if (allocated(maqfte_loc)) deallocate(maqfte_loc)
+    allocate(maqfte_loc(nsp_aq_all,nz))
+    if (allocated(dmaqfte_dpro_loc)) deallocate(dmaqfte_dpro_loc)
+    allocate(dmaqfte_dpro_loc(nsp_aq_all,nz))
+    if (allocated(dmaqfte_dios_loc)) deallocate(dmaqfte_dios_loc)
+    allocate(dmaqfte_dios_loc(nsp_aq_all,nz))
+    if (allocated(maqfti_loc)) deallocate(maqfti_loc)
+    allocate(maqfti_loc(nsp_aq_all,nz))
+    if (allocated(dmaqfti_dpro_loc)) deallocate(dmaqfti_dpro_loc)
+    allocate(dmaqfti_dpro_loc(nsp_aq_all,nz))
+    if (allocated(dmaqfti_dios_loc)) deallocate(dmaqfti_dios_loc)
+    allocate(dmaqfti_dios_loc(nsp_aq_all,nz))
+    if (allocated(dmaqft_dmaqf_loc)) deallocate(dmaqft_dmaqf_loc)
+    allocate(dmaqft_dmaqf_loc(nsp_aq_all,nsp_aq_all,nz))
+    if (allocated(dmaqfte_dmaqf_loc)) deallocate(dmaqfte_dmaqf_loc)
+    allocate(dmaqfte_dmaqf_loc(nsp_aq_all,nsp_aq_all,nz))
+    if (allocated(dmaqfti_dmaqf_loc)) deallocate(dmaqfti_dmaqf_loc)
+    allocate(dmaqfti_dmaqf_loc(nsp_aq_all,nsp_aq_all,nz))
+    if (allocated(dmaqft_dmgas_loc)) deallocate(dmaqft_dmgas_loc)
+    allocate(dmaqft_dmgas_loc(nsp_aq_all,nsp_gas_all,nz))
+    if (allocated(dmaqfte_dmgas_loc)) deallocate(dmaqfte_dmgas_loc)
+    allocate(dmaqfte_dmgas_loc(nsp_aq_all,nsp_gas_all,nz))
+    if (allocated(dmaqfti_dmgas_loc)) deallocate(dmaqfti_dmgas_loc)
+    allocate(dmaqfti_dmgas_loc(nsp_aq_all,nsp_gas_all,nz))
+    if (allocated(mgasft_loc)) deallocate(mgasft_loc)
+    allocate(mgasft_loc(nsp_gas_all,nz))
+    if (allocated(dmgasft_dpro_loc)) deallocate(dmgasft_dpro_loc)
+    allocate(dmgasft_dpro_loc(nsp_gas_all,nz))
+    if (allocated(dmgasft_dios_loc)) deallocate(dmgasft_dios_loc)
+    allocate(dmgasft_dios_loc(nsp_gas_all,nz))
+    if (allocated(mgasfte_loc)) deallocate(mgasfte_loc)
+    allocate(mgasfte_loc(nsp_gas_all,nz))
+    if (allocated(dmgasfte_dpro_loc)) deallocate(dmgasfte_dpro_loc)
+    allocate(dmgasfte_dpro_loc(nsp_gas_all,nz))
+    if (allocated(dmgasfte_dios_loc)) deallocate(dmgasfte_dios_loc)
+    allocate(dmgasfte_dios_loc(nsp_gas_all,nz))
+    if (allocated(mgasfti_loc)) deallocate(mgasfti_loc)
+    allocate(mgasfti_loc(nsp_gas_all,nz))
+    if (allocated(dmgasfti_dpro_loc)) deallocate(dmgasfti_dpro_loc)
+    allocate(dmgasfti_dpro_loc(nsp_gas_all,nz))
+    if (allocated(dmgasfti_dios_loc)) deallocate(dmgasfti_dios_loc)
+    allocate(dmgasfti_dios_loc(nsp_gas_all,nz))
+    if (allocated(dmgasft_dmaqf_loc)) deallocate(dmgasft_dmaqf_loc)
+    allocate(dmgasft_dmaqf_loc(nsp_gas_all,nsp_aq_all,nz))
+    if (allocated(dmgasfte_dmaqf_loc)) deallocate(dmgasfte_dmaqf_loc)
+    allocate(dmgasfte_dmaqf_loc(nsp_gas_all,nsp_aq_all,nz))
+    if (allocated(dmgasfti_dmaqf_loc)) deallocate(dmgasfti_dmaqf_loc)
+    allocate(dmgasfti_dmaqf_loc(nsp_gas_all,nsp_aq_all,nz))
+    if (allocated(dmgasft_dmgas_loc)) deallocate(dmgasft_dmgas_loc)
+    allocate(dmgasft_dmgas_loc(nsp_gas_all,nsp_gas_all,nz))
+    if (allocated(dmgasfte_dmgas_loc)) deallocate(dmgasfte_dmgas_loc)
+    allocate(dmgasfte_dmgas_loc(nsp_gas_all,nsp_gas_all,nz))
+    if (allocated(dmgasfti_dmgas_loc)) deallocate(dmgasfti_dmgas_loc)
+    allocate(dmgasfti_dmgas_loc(nsp_gas_all,nsp_gas_all,nz))
+    if (allocated(ck_maq)) deallocate(ck_maq,ck_mgas,ck_pro,ck_ios)
+    allocate(ck_maq(nsp_aq_all,nz),ck_mgas(nsp_gas_all,nz),ck_pro(nz),ck_ios(nz))
+  endif
+#endif
 call get_maqt_all( 																			&
 	& nz,nsp_aq_all,nsp_gas_all, 															&
 	& chraq_all,chrgas_all, 																&
@@ -21427,14 +21571,35 @@ call get_maqt_all( 																			&
 	& mgasfte_loc,dmgasfte_dpro_loc,dmgasfte_dios_loc,dmgasfte_dmaqf_loc,dmgasfte_dmgas_loc,&! output
 	& mgasfti_loc,dmgasfti_dpro_loc,dmgasfti_dios_loc,dmgasfti_dmaqf_loc,dmgasfti_dmgas_loc,&! output
 	& profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios						&! output
-	& )
+	& )
+#ifdef cache_spec
+  ck_maq = maqx_loc
+  ck_mgas = mgasx_loc
+  ck_pro = prox
+  ck_ios = iosx
+  ck_tc = tc
+  ck_kw = kw
+endif
+#endif
 
+#ifdef cache_spec
+ck_hit = allocated(ck_msld)
+if (ck_hit) ck_hit = size(ck_msld,1)==nsp_sld .and. size(ck_msld,2)==nz .and. size(msldx_loc,1)==nsp_sld_all
+if (ck_hit) ck_hit = all(ck_msld==msldx)
+if (.not.ck_hit) then
+  if (allocated(ck_msld)) deallocate(ck_msld,msldx_loc)
+  allocate(ck_msld(nsp_sld,nz),msldx_loc(nsp_sld_all,nz))
+#endif
 call get_msldx_all( &
     & nz,nsp_sld_all,nsp_sld,nsp_sld_cnst &
     & ,chrsld,chrsld_all,chrsld_cnst &
     & ,msldx,msldc &
     & ,msldx_loc  &! output
-    & )
+    & )
+#ifdef cache_spec
+  ck_msld = msldx
+endif
+#endif
     
 po2x    = mgasx_loc(findloc(chrgas_all,'po2',dim=1),:)
 pco2x   = mgasx_loc(findloc(chrgas_all,'pco2',dim=1),:)
@@ -26078,7 +26243,11 @@ do while (.true.)
 	
 	ymx3_pre = ymx3
 
+#ifdef banded_solve
+    call solve_banded(nsp3*(Nz),amx3,ymx3,INFO) ! same solution, banded LU (cells couple only to neighbours)
+#else
     call DGESV(nsp3*(Nz),int(1),amx3,nsp3*(Nz),IPIV3,ymx3,nsp3*(Nz),INFO) 
+#endif
 
     if (any(isnan(ymx3)) .or. INFO/=0) then
         print*,'error in soultion (NAN found or INFO/=0)', INFO,amx3(4,4),xmx3(4)
@@ -36075,7 +36244,15 @@ integer,intent(in)::dim
 integer findloc,i
 
 findloc = 0
+! fast path: plain comparison (Fortran pads with blanks, so only leading blanks need adjustl)
 do i=1, size(chrlist_in,dim=dim)
+    if (chrspecific == chrlist_in(i)) then
+        findloc = i
+        return
+    endif 
+enddo 
+do i=1, size(chrlist_in,dim=dim)
+    if (chrspecific(1:1) /= ' ' .and. chrlist_in(i)(1:1) /= ' ') cycle ! already compared above
     if (trim(adjustl(chrspecific)) == trim(adjustl(chrlist_in(i)))) then
         findloc = i
         return
@@ -36086,5 +36263,42 @@ enddo
 endfunction findloc
 !ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 #endif 
+
+!ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+#ifdef banded_solve
+subroutine solve_banded(n,a,b,info)
+! Solves a x = b (b overwritten by x) with LAPACK DGBSV, using the band of nonzeros found in a.
+! The main Jacobian is ordered cell by cell, so without non-local mixing its band is ~2*nsp3 wide and
+! the banded LU is much cheaper than the dense DGESV.
+implicit none
+integer,intent(in)::n
+real(kind=8),dimension(n,n),intent(in)::a
+real(kind=8),dimension(n),intent(inout)::b
+integer,intent(out)::info
+integer kl,ku,i,j,ldab
+integer,dimension(n)::ipiv
+real(kind=8),dimension(:,:),allocatable::ab
+kl = 0
+ku = 0
+do j = 1, n
+    do i = 1, n
+        if (a(i,j) /= 0d0) then
+            if (i-j > kl) kl = i-j
+            if (j-i > ku) ku = j-i
+        endif
+    enddo
+enddo
+ldab = 2*kl+ku+1
+allocate(ab(ldab,n))
+ab = 0d0
+do j = 1, n
+    do i = max(1,j-ku), min(n,j+kl)
+        ab(kl+ku+1+i-j,j) = a(i,j)
+    enddo
+enddo
+call DGBSV(n,kl,ku,1,ab,ldab,ipiv,b,n,info)
+deallocate(ab)
+endsubroutine solve_banded
+#endif
 
 endprogram weathering
