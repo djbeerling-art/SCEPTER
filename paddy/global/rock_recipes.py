@@ -30,7 +30,7 @@ def canon(col):
 def read(path):
     """One download -> lat, lon and oxide columns. GEOROC: lat/lon = mean of MIN/MAX, whole-rock analyses only,
     samples flagged altered dropped."""
-    d = pd.read_csv(path, low_memory=False, encoding='latin-1', index_col=False)
+    d = pd.read_csv(path, low_memory=False, encoding='latin-1', index_col=False, on_bad_lines='skip')   # GEOROC appends references
     up = {c.upper(): c for c in d.columns}
     if 'TYPE OF MATERIAL' in up: d = d[d[up['TYPE OF MATERIAL']].astype(str).str.upper().str.contains('WHOLE ROCK')]
     if 'ALTERATION' in up: d = d[~d[up['ALTERATION']].astype(str).str.upper().str.contains('ALTERED')]
