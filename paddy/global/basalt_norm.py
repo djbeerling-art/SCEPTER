@@ -44,12 +44,15 @@ def norm(ox, fe3mgn=False):
     s = sum(w.values())
     return {k: v/s for k, v in w.items()}
 
+def write(name, r, note='CIPW-type norm of whole-rock oxides (paddy/global/basalt_norm.py)'):
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    with open(os.path.join(root, 'data', f'dust_{name}.in'), 'w') as f:
+        f.write(f'** {name}: {note}\n')
+        for k, v in sorted(r.items(), key=lambda kv: -kv[1]): f.write(f'{k:7s} {v:.4f}\n')
+
 if __name__ == '__main__':
     name = sys.argv[1]
     ox = {a.split('=')[0]: float(a.split('=')[1]) for a in sys.argv[2:] if '=' in a}
     r = norm(ox, fe3mgn='--fe3mgn' in sys.argv)
-    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    with open(os.path.join(root, 'data', f'dust_{name}.in'), 'w') as f:
-        f.write(f'** {name}: CIPW-type norm of whole-rock oxides (paddy/global/basalt_norm.py)\n')
-        for k, v in sorted(r.items(), key=lambda kv: -kv[1]): f.write(f'{k:7s} {v:.4f}\n')
+    write(name, r)
     print(' '.join(f'{k} {v:.3f}' for k, v in sorted(r.items(), key=lambda kv: -kv[1])))
