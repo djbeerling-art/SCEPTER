@@ -1,6 +1,6 @@
 # Build cells.csv (the archetypes.py input) from global datasets, one row per 5-arcmin MapSPAM rice cell.
 #   rice area   MapSPAM 2010 v2.0 harvested area (spam2010V2r0_global_H_TA/_TI.csv): area_irr = TI, area_rf = TA - TI
-#   soil        SoilGrids 2.0, 5 km aggregates (<var>_<depth>_mean_5000.tif, Goode homolosine): phh2o, cec, soc,
+#   soil        SoilGrids 2.0, 5 km aggregates (<var>_<depth>_mean_5000.tif, Goode homolosine): phh2o, cec, soc, clay,
 #               0-15 cm as the thickness-weighted mean of 0-5 and 5-15 cm; gaps filled from the nearest valid pixel
 #               within FILL pixels (SoilGrids masks water and built-up land, common in deltas)
 #   temp        WorldClim 2.1 5-arcmin monthly tavg: mean of the warmest NSEAS consecutive months, a stand-in for the
@@ -53,13 +53,13 @@ def sample(path, lon, lat, fill, to_crs=None):
     return v
 
 def soil(d, lon, lat, fill):
-    # SoilGrids units: phh2o pH*10, cec mmol(c)/kg, soc dg/kg -> pH, cmol(c)/kg, wt %
-    scale = {'phh2o': 0.1, 'cec': 0.1, 'soc': 0.01}
+    # SoilGrids units: phh2o pH*10, cec mmol(c)/kg, soc dg/kg, clay g/kg -> pH, cmol(c)/kg, wt %, wt %
+    scale = {'phh2o': 0.1, 'cec': 0.1, 'soc': 0.01, 'clay': 0.1}
     out = {}
     for v, s in scale.items():
         a, b = (sample(f'{d}/soil/{v}_{z}_mean_5000.tif', lon, lat, fill) for z in ('0-5cm', '5-15cm'))
         out[v] = s*(5*a + 10*b)/15
-    return out['phh2o'], out['cec'], out['soc']
+    return out['phh2o'], out['cec'], out['soc'], out['clay']
 
 def season_temp(d, lon, lat, nseas, fill):
     t = np.array([sample(f'{d}/wc/wc2.1_5m_tavg_{m:02d}.tif', lon, lat, fill) for m in range(1, 13)])
@@ -77,7 +77,7 @@ if __name__ == '__main__':
     dmax, nseas, fill = float(opt('dmax', 250)), int(opt('nseas', 4)), int(opt('fill', 3))
     c = rice_cells(d, float(opt('minarea', 1)))
     print(f'{len(c)} rice cells, {c.area_irr.sum()/1e6:.1f} Mha irrigated + {c.area_rf.sum()/1e6:.1f} Mha rainfed')
-    c['ph'], c['cec'], c['soc'] = soil(d, c.lon.values, c.lat.values, fill)
+    c['ph'], c['cec'], c['soc'], c['clay'] = soil(d, c.lon.values, c.lat.values, fill)
     c['temp'] = season_temp(d, c.lon.values, c.lat.values, nseas, fill)
     glim = opt('glim', None)
     if glim:
@@ -92,10 +92,10 @@ if __name__ == '__main__':
         c['rock'] = r.rock.values[i]
     else:
         c['rock'] = opt('rock', 'hillhouse')
-    bad = c[['ph', 'cec', 'soc', 'temp']].isna().any(axis=1)
+    bad = c[['ph', 'cec', 'soc', 'clay', 'temp']].isna().any(axis=1)
     if bad.any():
         print(f'dropping {bad.sum()} cells without soil/climate data ({(c.area_irr+c.area_rf)[bad].sum()/1e3:.0f} kha)')
         c = c[~bad]
-    c.round({'lon': 4, 'lat': 4, 'area_irr': 1, 'area_rf': 1, 'ph': 2, 'cec': 1, 'soc': 3, 'temp': 2,
+    c.round({'lon': 4, 'lat': 4, 'area_irr': 1, 'area_rf': 1, 'ph': 2, 'cec': 1, 'soc': 3, 'clay': 1, 'temp': 2,
              'dist_basalt': 1, 'dist_rock': 1}).to_csv(out, index=False)
     print(f'wrote {out}: {len(c)} cells, {(c.area_irr+c.area_rf).sum()/1e6:.1f} Mha')
