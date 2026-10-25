@@ -1,7 +1,7 @@
 # Basalt whole-rock analyses (GEOROC / EarthChem downloads) -> a small set of regional rock recipes for the global runs.
 # 1. Read one or more CSVs, find latitude/longitude and oxide columns by name (GEOROC 'SIO2(WT%)', EarthChem 'SIO2'...).
 # 2. Keep fresh basalts: SiO2 45-52 and Na2O+K2O <= 5 wt% (TAS basalt field, volatile-free), LOI <= --loi (default 3)
-#    where reported, oxide total 97-101.5 wt%, valid coordinates.
+#    where reported, oxide total incl. LOI 97-101.5 wt%, valid coordinates; GEOROC whole rock and not 'altered'.
 # 3. Keep samples within --dmax km (default 250) of a rice cell (--cells, a prep_cells.py output) and weight each
 #    sample by the rice area for which it is the nearest analysis.
 # 4. k-means (area-weighted, standardised oxides) into --n groups (default 12); each group's recipe is the
@@ -28,7 +28,16 @@ def canon(col):
     return ALIAS.get(re.sub(r'\(.*?\)|wt%|[^a-z0-9]', '', col.lower()))
 
 def read(path):
-    d = pd.read_csv(path, low_memory=False, encoding='latin-1')
+    """One download -> lat, lon and oxide columns. GEOROC: lat/lon = mean of MIN/MAX, whole-rock analyses only,
+    samples flagged altered dropped."""
+    d = pd.read_csv(path, low_memory=False, encoding='latin-1', index_col=False)
+    up = {c.upper(): c for c in d.columns}
+    if 'TYPE OF MATERIAL' in up: d = d[d[up['TYPE OF MATERIAL']].astype(str).str.upper().str.contains('WHOLE ROCK')]
+    if 'ALTERATION' in up: d = d[~d[up['ALTERATION']].astype(str).str.upper().str.contains('ALTERED')]
+    if 'LATITUDE (MIN.)' in up:
+        for k in ('LATITUDE', 'LONGITUDE'):
+            mm = d[[up[f'{k} (MIN.)'], up.get(f'{k} (MAX.)', up[f'{k} (MIN.)'])]].apply(pd.to_numeric, errors='coerce')
+            d = d.assign(**{k.lower(): mm.mean(axis=1)})
     ren = {}
     for c in d.columns:
         k = canon(c)
@@ -50,7 +59,7 @@ def clean(d, loi):
     d = d.dropna(subset=['FeOT'])
     ox = ['SiO2', 'TiO2', 'Al2O3', 'FeOT', 'MnO', 'MgO', 'CaO', 'Na2O', 'K2O', 'P2O5']
     tot = d[ox].fillna(0).sum(axis=1)
-    d = d[tot.between(97, 101.5) & (d.LOI.isna() | (d.LOI <= loi))]
+    d = d[(tot + d.LOI.clip(lower=0).fillna(0)).between(97, 101.5) & (d.LOI.isna() | (d.LOI <= loi))]
     vf = d[ox].fillna(0).div(d[ox].fillna(0).sum(axis=1), axis=0)*100       # volatile-free for TAS
     keep = vf.SiO2.between(45, 52) & (vf.Na2O + vf.K2O <= 5)
     return d[keep].drop_duplicates(subset=['lat', 'lon'] + ox)
