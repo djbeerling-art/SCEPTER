@@ -161,7 +161,14 @@ see `makefile_paddy`), so their numbers are superseded by the calibration runs a
   With a 14-day pre-harvest drain (`--phd=14`) and the methanogen pH response (`--ch4ph=6.2:7.9:6.5`) the season CH4
   falls ~25 %; Ki 9 restores it (1.18 and 1.20 kg/ha/d; onset 16-32 d). This is now the production set
   (`krxn_calibrated.in`); the no-drain set is kept as `krxn_calibrated_nodrain.in`. The drain gives a large N2O pulse
-  (3.5-4.4 kg N/ha/season), the same nitrification-on-drainage overestimate as under AWD. Without g2o2: at Ki 7 the two soils average 1.20 kg/ha/d (IPCC 1.19), with pH 6.5-6.6, porewater Fe2+ 0.6-2.5 mM and pCO2
+  (3.5-4.4 kg N/ha/season), the same nitrification-on-drainage overestimate as under AWD.
+  N2O fix (2026-10-25): no-fertiliser runs showed the fertiliser EF was fine and the excess was background N2O from
+  OM-derived NH4+ (C:N 10) that no crop took up. Added rice NH4+ uptake `nh4up` (Michaelis-Menten, Km 50 uM, column
+  maximum 3.5 mol N m-2 yr-1 on the root profile; takes up 100-110 kg N/ha per season) and set the nitrification
+  vmax (`amo2o` krxn1, now overridable) to 30 mol m-3 yr-1, 1/10 of the upland value of Maggi et al. (2008).
+  Production list adds `nh4up`. Season N2O (Ki 9, 14-d final drain): flooded 1.55 kg N/ha (background 1.08,
+  EF 0.38 %, IPCC 0.3 %), AWD 3.38 (background 2.30, EF 0.9 %, IPCC 0.5 %); the final drain alone gives 0.8-1.2
+  kg N/ha. CH4 1.15 (flooded) and 0.84 kg/ha/d (AWD). Without g2o2: at Ki 7 the two soils average 1.20 kg/ha/d (IPCC 1.19), with pH 6.5-6.6, porewater Fe2+ 0.6-2.5 mM and pCO2
   0.07-0.27 atm through the season, plant share 61-67 %. Still off: CH4 onset 34-50 d (field 1-3 weeks) and
   the flooded N2O EF 0.4-0.7 % (IPCC 0.3 %).
 

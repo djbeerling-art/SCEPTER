@@ -783,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 29
+integer,parameter::nrxn_ext_all = 30
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1151,7 +1151,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 '/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1951,6 +1951,8 @@ stsld_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrsld_all,'g2',dim=
 stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = -1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g2
+! rice root uptake of NH4+ (N leaves the soil into the crop)
+stgas_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = -1d0
 ! rice root respiration: CO2 released into the rooted soil (carbon from the plant, not from soil OM)
 stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
@@ -2001,6 +2003,7 @@ stsld_dext_all(findloc(chrrxn_ext_all,'g2n0',dim=1), findloc(chrsld_all,'g2',dim
 staq_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chraq_all,'no3',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'nh4up',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'g2n21',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 ! 2nd of 2 step denitrification (2 N2O  +  CH2O  ->  2 N2  +  CO2  +  H2O) 
@@ -10027,6 +10030,8 @@ krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth
 ! respiration); distributed with the root density profile of ch4pl
 krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
 krxn1_ext_all(findloc(chrrxn_ext_all,'amo2o',dim=1),:) = 9.53d-6*60d0*60d0*24d0*365d0 ! nitrification vmax (Maggi et al. 2008), mol m^-3 yr^-1
+krxn1_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 3.5d0 ! maximum crop N uptake, mol N m^-2 yr^-1 (~150 kg N/ha over a 113-d season)
+krxn2_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 5d-5 ! half-saturation for NH4+(aq), mol L-1 (rice high-affinity uptake ~10-50 uM)
 krxn1_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 300d0 ! vmax, mol CH2O m^-3 yr^-1 (as the anaerobic pathways)
 krxn2_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),:) = 5d-6 ! half-saturation for O2(aq), mol L-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1),:) = 100d0 ! ebullition rate constant, yr^-1 (provisional) 
@@ -22567,6 +22572,24 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_o2
             case('po2')
                 drxnext_dmsp = v_tmp*f_g2*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('nh4up') 
+        ! rice root uptake of NH4+: Michaelis-Menten in dissolved NH4+, distributed with the root density profile of ch4pl 
+        ! (as rtco2) so that the column maximum is krxn1 (mol N m-2 yr-1); limited to wet soil as rtco2 
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:)/krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),1)/krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        km_tmp1 = krxn2_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),1)
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*vmax*f_sat*nh4x/(nh4x + km_tmp1)
+        
+        select case(trim(adjustl(sp_name)))
+            case('pnh3')
+                drxnext_dmsp = v_tmp*vmax*f_sat*km_tmp1/(nh4x + km_tmp1)**2d0*dnh4_dpnh3
+            case('pro')
+                drxnext_dmsp = v_tmp*vmax*f_sat*km_tmp1/(nh4x + km_tmp1)**2d0*dnh4_dpro
             case default
                 drxnext_dmsp = 0d0
         endselect 
