@@ -18,12 +18,15 @@ args = [a for a in sys.argv[1:] if not a.startswith('--')]
 opt  = dict(a[2:].split('=') for a in sys.argv[1:] if a.startswith('--') and '=' in a)
 days = float(opt.get('days',113.))
 tend = days/365.
+warned = set()
 
 def integ(run,name):
     f = f'{run}/flx/flx_{name}.txt'
     h = open(f).readline().split()
     d = np.loadtxt(f,skiprows=1)
     t = np.concatenate([[0],d[:,0]])
+    if d[-1,0] < tend*0.999 and run not in warned:   # the model can stop early with a normal exit status
+        warned.add(run); print(f'WARNING: {run} ends at {d[-1,0]*365:.1f} d, before the {days:.0f}-d season',file=sys.stderr)
     dt = np.diff(np.minimum(t,tend))
     return {h[i]:np.sum(d[:,i]*dt) for i in range(1,len(h))}
 

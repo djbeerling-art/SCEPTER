@@ -15,7 +15,7 @@ ROCKS = ['Hillhouse', 'Oregon', 'BlueRidge', 'Tichum', 'basalt']
 SPIN = ['soilfe3', 'om', 'irralk', 'cec', 'temp']
 CTRL = SPIN+['awd', 'grbio']
 PROB = dict(num_vars=len(FACT), names=[f[0] for f in FACT], bounds=[[f[1], f[2]] for f in FACT])
-KRXN = 'paddy/krxn_calibrated_v4.in'
+KRXN = 'paddy/krxn_calibrated_v5.in'
 
 def key(row, cols): return hashlib.md5(','.join(f'{row[c]:.6g}' for c in cols).encode()).hexdigest()[:8]
 
