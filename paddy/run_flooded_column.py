@@ -154,6 +154,21 @@ sld_list = (['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags el
     + ([m for m in bas_min if m not in ('amfe3','inrt')] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []))
 rock_min = [m for m in bas_min if m not in ('amfe3','inrt')] if bas else []
 
+# --kscale=<factor>[,<mineral>:<factor>...] multiplies the rate constants of the rock minerals (kinscale.in), e.g. to
+#   stand for a lower reactive surface area of rock dust under flooding; <mineral>:<factor> overrides one mineral and
+#   fsp:<factor> / maf:<factor> all feldspars / mafic silicates (fit to Uchibayashi et al. 2025: --kscale=maf:0.45,fsp:0.25)
+kcls_fsp = ['ab','an','la','by','and','olg','kfs','sdn','leu']
+kcls_maf = ['agt','dp','fo','fa','en','fs','mgn','tm','ep','clch','hb','cpx','opx']
+if os.path.exists(os.path.join(rundir,'kinscale.in')): os.remove(os.path.join(rundir,'kinscale.in'))
+if 'kscale' in opt and rock_min:
+    ks = opt['kscale'].split(',')
+    kfac = {m:next((x for x in ks if ':' not in x),'1') for m in rock_min}
+    for k,v in (x.split(':') for x in ks if ':' in x):   # a mineral, or a class: fsp (feldspars) / maf (mafic silicates)
+        for m in {'fsp':kcls_fsp,'maf':kcls_maf}.get(k,[k]):
+            if m in rock_min: kfac[m] = v
+    with open(os.path.join(rundir,'kinscale.in'),'w') as f:
+        f.write('solid factor\n' + ''.join('%s %s\n' % (m,v) for m,v in kfac.items()))
+
 # --noprec=<solid>[,...] removes solids from the list allowed to precipitate (e.g. --noprec=cc: no calcite, whose
 #   onset from SCEPTER's 1e-20 seed is erratic; porewaters stay supersaturated as often observed)
 src2nd = './data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in'
@@ -196,7 +211,7 @@ spinup.run_a_scepter_run(
     srcfile_2ndslds=src2nd,
     use_local_storage=False,exename_src=opt.get('exe','scepter_paddy'),show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----
-    moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
+    moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[float(opt.get('q','0.5'))]*2],
     dust_temp=[[0.0,t_app,t_app+1e-4,0.99],[fdust,fdust,0,0]],
     # non-seasonal runs (fallow spin-ups) get no basalt
     sld_varlist_dust=list(bas_min.items()) if bas else [],zdust=float(opt.get('zmix','0.15')),

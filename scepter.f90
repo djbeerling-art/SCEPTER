@@ -2302,6 +2302,8 @@ enddo
 
 ! paddy: optional ./precnucl.in lets named phases (e.g. siderite) nucleate without a pre-existing mass
 call read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
+! paddy: optional ./kinscale.in multiplies the rate constants of named solids (e.g. rock minerals) by a factor
+call read_kinscale(nsp_sld,nz,chrsld,fkin)
 
 #ifdef redox_TST_ON
 
@@ -10150,6 +10152,34 @@ enddo
 close(988)
 
 endsubroutine read_precnucl
+!**************************************************************************************************************************************
+subroutine read_kinscale(nsp_sld,nz,chrsld,fkin)
+! reads ./kinscale.in if present: a header line, then lines of  <solid name> <factor>; fkin of each named solid is
+! multiplied by the factor, scaling its rate constant (dissolution and precipitation) through the run
+implicit none
+integer,intent(in)::nsp_sld,nz
+character(5),dimension(nsp_sld),intent(in)::chrsld
+real(kind=8),dimension(nsp_sld,nz),intent(inout)::fkin
+logical::exist_file
+integer::ios,isps
+character(5)::name_tmp
+real(kind=8)::f_tmp
+
+inquire(file='./kinscale.in',exist=exist_file)
+if (.not. exist_file) return
+open(988,file='./kinscale.in',status='old',action='read')
+read(988,'()')
+do 
+    read(988,*,iostat=ios) name_tmp,f_tmp
+    if (ios /= 0) exit 
+    isps = findloc(chrsld,name_tmp,dim=1)
+    if (isps < 1) cycle 
+    fkin(isps,:) = fkin(isps,:)*f_tmp
+    print *,'kinscale: ',name_tmp,f_tmp
+enddo 
+close(988)
+
+endsubroutine read_kinscale
 !**************************************************************************************************************************************
 subroutine read_precnucl_seed(msld_seed)
 ! the largest seed listed in ./precnucl.in (see read_precnucl), mol m-3; unchanged if the file is absent

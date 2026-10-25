@@ -31,7 +31,7 @@ def integ(run,name):
 
 def season(run):
     c = integ(run,'gas-pch4')
-    ch4 = c['dif'] + c['ch4eb'] + 0.5*c['ch4pl']
+    ch4 = c['dif'] + c.get('ch4eb',0) + 0.5*c.get('ch4pl',0)
     n = integ(run,'gas-pn2o')
     o = {'CH4 (kg/ha)':ch4*16.04*10,'N2O (kg N/ha)':(n['dif']+n.get('n2opl',0))*28.01*10}
     o['CO2 degassing (t/ha)'] = integ(run,'gas-pco2')['dif']*0.4401
