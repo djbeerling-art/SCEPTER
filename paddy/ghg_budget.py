@@ -18,8 +18,6 @@ args = [a for a in sys.argv[1:] if not a.startswith('--')]
 opt  = dict(a[2:].split('=') for a in sys.argv[1:] if a.startswith('--') and '=' in a)
 days = float(opt.get('days',113.))
 tend = days/365.
-# base-cation charge released per mol dissolved (fayalite Fe2+ excluded: it reoxidises and gives the acid back)
-BASALT = {'fo':4,'ab':1,'an':2,'fa':0,'dp':4,'kfs':1}
 
 def integ(run,name):
     f = f'{run}/flx/flx_{name}.txt'
@@ -38,11 +36,17 @@ def season(run):
     o['ALK export (t CO2/ha)'] = integ(run,'co2sp-ALK')['adv']*0.4401
     try: o['calcite (t CO2/ha)'] = -integ(run,'sld-cc')['cc']*0.4401   # cc column: dissolution positive
     except OSError: o['calcite (t CO2/ha)'] = 0.
+    # rock minerals = those in the run's dust.in (calcite, Fe(III) oxide and inert excluded); their base-cation charge
+    # release is read from the aqueous flux files (2 Ca + 2 Mg + Na + K), so any rock recipe works
+    rock = [l.split()[0] for l in open(f'{run}/dust.in').readlines()[1:] if l.split() and l.split()[0] not in ('cc','amfe3','inrt')]
     diss = eq = 0.
-    for m,z in BASALT.items():
-        try: r = integ(run,f'sld-{m}')[m]
-        except (OSError,KeyError): continue
-        diss += r; eq += z*r
+    for m in rock:
+        try: diss += integ(run,f'sld-{m}')[m]
+        except (OSError,KeyError): pass
+    for sp,z in [('ca',2),('mg',2),('na',1),('k',1)]:
+        try: c = integ(run,f'aq-{sp}')
+        except OSError: continue
+        eq -= z*sum(c.get(m,0.) for m in rock)   # mineral columns: dissolution supplies the solute (negative)
     o['basalt dissolved (mol/m2)'] = diss
     o['cation release (t CO2/ha)'] = eq*0.4401   # CDR potential once the cations leave the soil
     return o
@@ -57,4 +61,4 @@ for run,dose in zip([args[0]]+args[1:],[0.]+doses):
     dn2o = (o['N2O (kg N/ha)']-ctrl['N2O (kg N/ha)'])*44.01/28.01/1e3*273
     cdr  = (o['ALK export (t CO2/ha)']-ctrl['ALK export (t CO2/ha)']) + (o['calcite (t CO2/ha)']-ctrl['calcite (t CO2/ha)'])
     print(run.split('/')[-1][:14].ljust(14)+f'{dose:6.0f}'+''.join(f'{o[k]:12.4g}' for k in keys)
-          +f'{dch4:11.3f}{dn2o:11.3f}{cdr:6.3f}{dch4+dn2o-cdr:7.3f}{dch4+dn2o-o["cation release (t CO2/ha)"]:9.3f}')
+          +f' {dch4:10.3f} {dn2o:10.3f} {cdr:6.3f} {dch4+dn2o-cdr:7.3f} {dch4+dn2o-o["cation release (t CO2/ha)"]:8.3f}')
