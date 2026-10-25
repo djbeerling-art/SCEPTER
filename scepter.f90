@@ -27676,6 +27676,11 @@ implicit none
 integer,intent(in)::nz,nsp_sld,nsp_aq,nsp_gas
 real(kind=8),intent(in)::msld_seed,dt,poroi
 real(kind=8),dimension(nz)::mseed
+! paddy: nucleation threshold for 'seed' phases: the seed acts only above omega_crit (./omcrit.in, default 1);
+! once the phase exists it grows on itself at any omega > 1
+real(kind=8),save::omcrit_seed = 1d0
+logical,save::omcrit_read = .false.
+logical::omcrit_exist
 real(kind=8),dimension(nz),intent(in)::poro,sat,dz
 real(kind=8),dimension(nsp_sld,nz),intent(in)::hr
 real(kind=8),dimension(nsp_sld),intent(in)::mv,msldth,msldi
@@ -27885,7 +27890,18 @@ do isps = 1,nsp_sld
             
             
         case('seed') ! seed only on the precipitation side (omega > 1), so an absent phase cannot dissolve
-            mseed = msld_seed*merge(1d0,0d0,omega(isps,:) > 1d0)
+            if (.not. omcrit_read) then
+                inquire(file='./omcrit.in',exist=omcrit_exist)
+                if (omcrit_exist) then
+                    open(989,file='./omcrit.in',status='old',action='read')
+                    read(989,'()')
+                    read(989,*) omcrit_seed
+                    close(989)
+                    print *,'precnucl: omega_crit ',omcrit_seed
+                endif
+                omcrit_read = .true.
+            endif
+            mseed = msld_seed*merge(1d0,0d0,omega(isps,:) > max(1d0,omcrit_seed))
             rxnsld(isps,:) = ( &
                 & + ksld(isps,:)*poro*hr(isps,:)*mv(isps)*1d-6*(msldx(isps,:)+mseed)*(1d0-omega(isps,:)) &
                 & *merge(0d0,1d0,1d0-omega(isps,:)*nonprec(isps,:) < 0d0) &

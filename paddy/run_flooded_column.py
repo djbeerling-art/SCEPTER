@@ -52,6 +52,8 @@
 #   Fe2+ reoxidation every drainage.
 # --nucl=<solid>:<seed mol m-3>[,...] lets the named solids nucleate: precipitation scales with amount + seed (precnucl.in;
 #   SCEPTER precstyle 'seed', one seed for all, the largest listed), e.g. --nucl=sid:1 for kinetic siderite.
+# --omcrit=<omega> nucleation threshold for those solids: the seed acts only where omega > omega_crit (omcrit.in;
+#   default 1); a phase already present grows at any omega > 1. E.g. --nucl=cc:0.001 --omcrit=5.
 # --fe2sorb tracks Fe(II) sorbed on ferrihydrite (fe2ad) instead of green rust: list fe2sp in the reactions in place
 #   of fe2gr and g2gr (weak sites 0.2 per Fe, log K -11.55 for >FeOH + Fe2+ + H2O = >FeOFeOH + 2 H+, Appelo et al. 2002;
 #   krxn2 of fe2sp overrides the log K).
@@ -130,6 +132,9 @@ os.makedirs(rundir,exist_ok=True)
 if os.path.exists(os.path.join(rundir,'krxn_ext.in')): os.remove(os.path.join(rundir,'krxn_ext.in'))
 if 'k' in opt: shutil.copy(opt['k'],os.path.join(rundir,'krxn_ext.in'))
 if os.path.exists(os.path.join(rundir,'precnucl.in')): os.remove(os.path.join(rundir,'precnucl.in'))
+if os.path.exists(os.path.join(rundir,'omcrit.in')): os.remove(os.path.join(rundir,'omcrit.in'))
+if 'omcrit' in opt:
+    with open(os.path.join(rundir,'omcrit.in'),'w') as f: f.write('omega_crit\n%s\n' % opt['omcrit'])
 if 'nucl' in opt:
     with open(os.path.join(rundir,'precnucl.in'),'w') as f:
         f.write('solid fkin\n' + ''.join('%s %s\n' % tuple(x.split(':')) for x in opt['nucl'].split(',')))
@@ -148,6 +153,15 @@ psd = opt.get('psd')
 sld_list = (['inrt','g2','amfe3'] + ((['sid','fe2ad'] if '--fe2sorb' in flags else ['sid','gr']) if fe2buf else []) + (['fes'] if ch4 else []) + (['urea'] if nfert > 0 else [])
     + ([m for m in bas_min if m not in ('amfe3','inrt')] + [m for m in ['cc','ka','gb','amsi'] if m not in bas_min] if bas else []) + (['fe2o'] if '--feoh2' in flags else []) + (['gt'] if gtwt > 0 or '--gt0' in flags else []))
 rock_min = [m for m in bas_min if m not in ('amfe3','inrt')] if bas else []
+
+# --noprec=<solid>[,...] removes solids from the list allowed to precipitate (e.g. --noprec=cc: no calcite, whose
+#   onset from SCEPTER's 1e-20 seed is erratic; porewaters stay supersaturated as often observed)
+src2nd = './data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in'
+if 'noprec' in opt:
+    drop = opt['noprec'].split(',')
+    with open(src2nd) as f: lines = f.readlines()
+    src2nd = os.path.join(rundir,'2ndslds_src.in')
+    with open(src2nd,'w') as f: f.writelines([l for i,l in enumerate(lines) if i == 0 or l.split()[0] not in drop])
 
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
@@ -179,7 +193,7 @@ spinup.run_a_scepter_run(
     atm_list=[('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',3.3e-7 if nitro else 1e-50),('pch4',1.9e-6)],
     # cec [cmol/kg], log KH\\X for Na, K, Ca, Mg, Al, beta; Fe2+ follows Mg (+0.158) in the code
     sld_varlist_cec=[('inrt',cec,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []),
-    srcfile_2ndslds='./data/2ndslds_paddy.in' if fe2buf else './data/2ndslds_def.in',
+    srcfile_2ndslds=src2nd,
     use_local_storage=False,exename_src=opt.get('exe','scepter_paddy'),show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----
     moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[25,25]],q_temp=[[0.0,0.99],[0.5,0.5]],
