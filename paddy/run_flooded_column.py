@@ -186,12 +186,12 @@ rock_min = [m for m in bas_min if m not in ('amfe3','inrt')] if bas else []
 kcls_fsp = ['ab','an','la','by','and','olg','kfs','sdn','leu']
 kcls_maf = ['agt','dp','fo','fa','en','fs','mgn','tm','ep','clch','hb','cpx','opx']
 if os.path.exists(os.path.join(rundir,'kinscale.in')): os.remove(os.path.join(rundir,'kinscale.in'))
-if 'kscale' in opt and rock_min:
+if 'kscale' in opt and (rock_min or ':' in opt['kscale']):
     ks = opt['kscale'].split(',')
     kfac = {m:next((x for x in ks if ':' not in x),'1') for m in rock_min}
     for k,v in (x.split(':') for x in ks if ':' in x):   # a mineral, or a class: fsp (feldspars) / maf (mafic silicates)
         for m in {'fsp':kcls_fsp,'maf':kcls_maf}.get(k,[k]):
-            if m in rock_min: kfac[m] = v
+            if m in rock_min or m in sld_list: kfac[m] = v   # soil minerals too, e.g. amsi:<factor>
     with open(os.path.join(rundir,'kinscale.in'),'w') as f:
         f.write('solid factor\n' + ''.join('%s %s\n' % (m,v) for m,v in kfac.items()))
 

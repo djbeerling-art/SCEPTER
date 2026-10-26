@@ -12,7 +12,7 @@ name=$1; ny=$2; dose=$3; prev=$4; st=$5; shift 5
 om=$(printf '%s\n' "$@" | grep '^--om=' | cut -d= -f2); om=${om:-450}; OMF=${OMF:-0.7}
 oms=$(python3 -c "print(round($om*$OMF/0.31,2))"); omf=$(python3 -c "print(round($om*(1-$OMF)/0.69,2))")
 set -- $(printf '%s\n' "$@" | grep -v '^--om=')
-RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy
+RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy,siup
 RF=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,g2gt,g2o2,groxy
 C="--ch4 --n --kaol=0.05 --refsoil --gt=0.02 --nz=15 --exe=scepter_paddy_fast --nucl=cc:0.001 --kscale=maf:0.45,fsp:0.25"
 ok(){ grep -q "^$1 rc 0" "$st" 2>/dev/null; }
