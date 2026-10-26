@@ -223,7 +223,7 @@ spinup.run_a_scepter_run(
     # ---- frame.in ----
     ztot=0.3,nz=int(opt.get('nz','30')),ttot=ttot,temp=tsoil,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=float(opt.get('fsat',0.5)) if fallow else 1.0,  # water saturation 1 throughout: flooded
-    zwater=zdry if (awd or phd > 0) else (float(opt.get('fzw',0.5)) if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
+    zwater=zdry if (awd or phd > 0) else (float(opt.get('fzw',0.5)) if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=int(opt.get('nstep',10)),rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
