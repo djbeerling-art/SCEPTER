@@ -113,7 +113,8 @@ soilcc = float(opt.get('soilcc',0))   # --soilcc: soil calcite, wt fraction (cal
 tsoil  = float(opt.get('temp',25))    # --temp: soil temperature, deg C (constant)
 irralk = float(opt.get('irralk',1))   # --irralk: scales the alkalinity (0.2 meq/L) of the --refsoil irrigation water via Cl-; 0 = no alkalinity
 amsiwt = 0.01 if ref else 0            # amorphous (phytolith) silica, wt fraction
-# urea [g m-2 yr-1] as a fraction of the OM input [g C m-2 yr-1]; applied at a constant rate (the run is one season)
+# urea [g m-2 yr-1] as a fraction of the OM input [g C m-2 yr-1]; applied at a constant rate over the season (later
+# in the year fert_temp.in switches it off)
 urea_frac = nfert/10*60.056/28.014/0.31/omin
 
 phd = float(opt.get('phd',0))   # pre-harvest drain: days before the end of the 113-day season
@@ -144,6 +145,12 @@ if 'nucl' in opt:
     with open(os.path.join(rundir,'precnucl.in'),'w') as f:
         f.write('solid fkin\n' + ''.join('%s %s\n' % tuple(x.split(':')) for x in opt['nucl'].split(',')))
 if os.path.exists(os.path.join(rundir,'grlogk.in')): os.remove(os.path.join(rundir,'grlogk.in'))
+# seasonal runs: rice plants (ch4pl, rtco2, rtoxy, nh4up) and urea fertiliser only during the 113-d season (0.31 yr),
+# repeated every year, so multi-year runs (length > 0.31 yr) get a crop-free fallow; a one-season run is unaffected
+for fn in ('plant_temp.in','fert_temp.in'):
+    if os.path.exists(os.path.join(rundir,fn)): os.remove(os.path.join(rundir,fn))
+    if season and ttot > 0.311:
+        with open(os.path.join(rundir,fn),'w') as f: f.write('time(yr) factor\n0.0 1\n0.31 1\n0.3101 0\n0.9999 0\n')
 if os.path.exists(os.path.join(rundir,'ch4ph.in')): os.remove(os.path.join(rundir,'ch4ph.in'))
 if 'ch4ph' in opt:
     with open(os.path.join(rundir,'ch4ph.in'),'w') as f: f.write('pK1 pK2 pHref\n%s\n' % opt['ch4ph'].replace(':',' '))

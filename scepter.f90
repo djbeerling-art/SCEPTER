@@ -805,6 +805,7 @@ character(5),dimension(nrxn_ext_all)::chrrxn_ext_all
 character(5),dimension(nsld_kinspc_in),intent(in)::chrsld_kinspc_in
 character(5),dimension(:),allocatable ::chrsld_kinspc
 real(kind=8),dimension(nsp_sld)::msldi,msldth,mv,rfrc_sld,mwt,rfrc_sld_plant,rfrc_sld_2nd
+real(kind=8),dimension(nsp_sld)::f_fert_urea
 real(kind=8),dimension(nsp_sld,nsp_aq)::staq
 real(kind=8),dimension(nsp_sld,nsp_gas)::stgas
 real(kind=8),dimension(nsp_sld,nz)::msldx,msld,ksld,omega,msldsupp,nonprec,rxnsld
@@ -5034,6 +5035,9 @@ do while (it<nt)
     endif 
     
     
+    ! paddy: urea fertiliser only while ./fert_temp.in says so (none: always)
+    f_fert_urea = 1d0
+    where (chrsld == 'urea') f_fert_urea = paddy_fert(time)
     ! overload with OM rain 
     do isps = 1, nsp_sld
         if (imixtype==imixtype_nobio) then 
@@ -5048,7 +5052,7 @@ do while (it<nt)
                         & + plant_rain/12d0*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
                 case('amnt','cc','urea')
                     msldsupp(isps,:) = msldsupp(isps,:) &
-                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
+                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
                 case default
                     ! not doing anything
             endselect
@@ -5059,7 +5063,7 @@ do while (it<nt)
                         & + plant_rain/12d0*rfrc_sld_plant(isps)/dz(1) ! when plant_rain is in g_C/m2/yr
                 case('amnt','cc','urea')
                     msldsupp(isps,1) = msldsupp(isps,1) &
-                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)/dz(1) ! when plant_rain is in g_(isps)/m2/yr
+                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)/dz(1) ! when plant_rain is in g_(isps)/m2/yr
                 case default
                     ! not doing anything
                     msldsupp(isps,1) = msldsupp(isps,1) &
@@ -10172,6 +10176,50 @@ do i = 1, 4
     endif 
 enddo 
 endsubroutine paddy_plant
+
+function paddy_fert(time) result(f)
+! urea fertiliser input factor f(t) from ./fert_temp.in (header, then 'time(yr) factor'; linear interpolation, repeated
+! every year); no file: f = 1. Lets multi-year runs fertilise only during the rice season
+implicit none
+real(kind=8),intent(in)::time
+real(kind=8)::f
+integer,parameter::nmax = 100
+real(kind=8),dimension(nmax),save::tp,fp
+integer,save::np = 0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios,i
+real(kind=8)::ty
+f = 1d0
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./fert_temp.in',exist=exist_file)
+    if (exist_file) then 
+        open(987,file='./fert_temp.in',status='old',action='read')
+        read(987,'()')
+        do 
+            if (np >= nmax) exit 
+            read(987,*,iostat=ios) tp(np+1),fp(np+1)
+            if (ios /= 0) exit 
+            np = np + 1
+        enddo 
+        close(987)
+    endif 
+endif 
+if (np == 0) return 
+ty = time - floor(time)
+f = fp(np)
+if (ty <= tp(1)) then 
+    f = fp(1)
+else 
+    do i = 1, np-1
+        if (ty <= tp(i+1)) then 
+            f = fp(i) + (fp(i+1)-fp(i))*(ty-tp(i))/max(tp(i+1)-tp(i),1d-12)
+            exit 
+        endif 
+    enddo 
+endif 
+endfunction paddy_fert
 !**************************************************************************************************************************************
 function grlogk_f() result(grlogk)
 ! log K of green rust formation on Fe(III) oxide (Fe2+ + 2 Fe(OH)3 = Fe3(OH)8 + 2 H+) used by fe2gr:
