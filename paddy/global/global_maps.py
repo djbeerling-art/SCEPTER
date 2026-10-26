@@ -10,7 +10,7 @@ doses = [float(x) for x in (sys.argv[3] if len(sys.argv) > 3 else '10,20').split
 c = pd.read_csv(f'{D}/cell_ghg.csv')
 for k in ['d_ch4', 'net', 'net_pot']: c[k] = c[k+'_tot']/c.area      # t CO2e/ha
 COLS = [('d_ch4', 'ΔCH$_4$', 1.5), ('net', 'Net realised (one season)', 1.5), ('net_pot', 'Net with all released cations as CDR', 4)]
-fig, axs = plt.subplots(len(doses), 3, figsize=(15, 3.3*len(doses)+0.6), dpi=200,
+fig, axs = plt.subplots(len(doses), 3, figsize=(15, 2.5*len(doses)+0.7), dpi=200,
                         subplot_kw=dict(projection=ccrs.PlateCarree()), squeeze=False)
 for i, d in enumerate(doses):
     s = c[c.dose == d]
