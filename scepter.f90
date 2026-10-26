@@ -21994,9 +21994,9 @@ pnh3x   = mgasx_loc(findloc(chrgas_all,'pnh3',dim=1),:)
 pn2ox   = mgasx_loc(findloc(chrgas_all,'pn2o',dim=1),:)
 pch4x   = mgasx_loc(findloc(chrgas_all,'pch4',dim=1),:)
 
-oxax    = maqx_loc(findloc(chraq_all,'oxa',dim=1),:)    *maqft_loc(findloc(chraq_all,'oxa',dim=1),:)
-fe2x    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe2',dim=1),:)
-fe3x    = maqx_loc(findloc(chraq_all,'fe3',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe3',dim=1),:)
+oxax    = maqft_loc(findloc(chraq_all,'oxa',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
+fe2x    = maqft_loc(findloc(chraq_all,'fe2',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
+fe3x    = maqft_loc(findloc(chraq_all,'fe3',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
 no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:) ! as so4: maqft_loc for no3 is the total itself, not a total/free ratio
 so4x    = maqx_loc(findloc(chraq_all,'so4',dim=1),:) ! dissolved sulfate as solved for (maqft_loc for so4 is not a total/free ratio)
 fe2f    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)
@@ -22169,10 +22169,7 @@ select case(trim(adjustl(rxn_name)))
                         drxnext_dmsp = ( &
                             & poro*sat*1d3*po2x &
                             & * ( & 
-                            & + 1d0    & 
-                            & * maqft_loc(findloc(chraq_all,'fe2',dim=1),:)   &
-                            & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                            & * dmaqft_dmaqf_loc( &
+                            & + dmaqft_dmaqf_loc( &
                             &       findloc(chraq_all,'fe2',dim=1) &
                             &       ,findloc(chraq_all,'fe2',dim=1),:)   &
                             & ) & 
@@ -22185,8 +22182,7 @@ select case(trim(adjustl(rxn_name)))
                             drxnext_dmsp = ( &
                                 & poro*sat*1d3*po2x &
                                 & * ( & 
-                                & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                                & * dmaqft_dmaqf_loc( &
+                                & + dmaqft_dmaqf_loc( &
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
@@ -22197,8 +22193,7 @@ select case(trim(adjustl(rxn_name)))
                             drxnext_dmsp = ( &
                                 & poro*sat*1d3*po2x &
                                 & * ( & 
-                                & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                                & * dmaqft_dmgas_loc( &
+                                & + dmaqft_dmgas_loc( &
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
