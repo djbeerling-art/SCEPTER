@@ -50,6 +50,9 @@
 #   h = si/(si + ksi) (rtsi.in); e.g. 5e-4:2.7e-4:0.5 (Si-fed rice has higher root oxidising activity).
 # --n2c=<mol N/mol C> NH3 released per OM C decomposed (n2c.in; default 0.1, ~0.03 for straw/root inputs).
 # --o2inh=<mol/L> O2 inhibition constant of all anaerobic pathways (o2inh.in; default 2.52e-5).
+# --fe2ox=<x>     multiplier on the Fe2+ oxygenation rate constant (fe2ox.in; default 1).
+# --fe2k0=<k>     pH-independent Fe2+ oxygenation rate constant, /min/atm (fe2k0.in; default 1e-7).
+# --pan=ztop:zbot:factor  plough pan: aqueous diffusivity multiplied by factor for ztop <= z < zbot (m) (pan.in).
 # --fe3in=<mol Fe m-2 yr-1> reducible Fe(III) (ferrihydrite) supply with the OM input (irrigation sediment and soil-mineral
 #   weathering), balancing Fe2+ leaching so that topsoil Fe is not drained within decades.
 # --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
@@ -162,6 +165,15 @@ if os.path.exists(os.path.join(rundir,'ch4ph.in')): os.remove(os.path.join(rundi
 if os.path.exists(os.path.join(rundir,'o2inh.in')): os.remove(os.path.join(rundir,'o2inh.in'))
 if 'o2inh' in opt:
     with open(os.path.join(rundir,'o2inh.in'),'w') as f: f.write('ki\n%s\n' % opt['o2inh'])
+if os.path.exists(os.path.join(rundir,'fe2ox.in')): os.remove(os.path.join(rundir,'fe2ox.in'))
+if 'fe2ox' in opt:
+    with open(os.path.join(rundir,'fe2ox.in'),'w') as f: f.write('factor\n%s\n' % opt['fe2ox'])
+if os.path.exists(os.path.join(rundir,'fe2k0.in')): os.remove(os.path.join(rundir,'fe2k0.in'))
+if 'fe2k0' in opt:
+    with open(os.path.join(rundir,'fe2k0.in'),'w') as f: f.write('k0\n%s\n' % opt['fe2k0'])
+if os.path.exists(os.path.join(rundir,'pan.in')): os.remove(os.path.join(rundir,'pan.in'))
+if 'pan' in opt:
+    with open(os.path.join(rundir,'pan.in'),'w') as f: f.write('ztop zbot factor\n%s\n' % opt['pan'].replace(':',' '))
 if os.path.exists(os.path.join(rundir,'n2c.in')): os.remove(os.path.join(rundir,'n2c.in'))
 if 'n2c' in opt:
     with open(os.path.join(rundir,'n2c.in'),'w') as f: f.write('n2c\n%s\n' % opt['n2c'])

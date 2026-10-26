@@ -3258,7 +3258,7 @@ tor_ref = 'M59'         ! Millington 1959 | Millington and Quirk 1961 | Steefel 
 ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
 torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-tora = tor_f( tor_ref, nz, poro, sat )
+tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
 
 w_btm = w0
 w = w_btm
@@ -3862,7 +3862,7 @@ if (read_data) then
 		theta = poro*sat
 
 		torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-		tora = tor_f( tor_ref, nz, poro, sat )
+		tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
 			
 		c_disp = c0_disp*zdisp**c1_disp
 #ifdef AMD_benchmark
@@ -4662,7 +4662,7 @@ do while (it<nt)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
         torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-        tora = tor_f( tor_ref, nz, poro, sat )
+        tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
 #ifdef AMD_benchmark
@@ -5300,7 +5300,7 @@ do while (it<nt)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
         torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-        tora = tor_f( tor_ref, nz, poro, sat )
+        tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
 #ifdef AMD_benchmark
@@ -5638,7 +5638,7 @@ do while (it<nt)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
         torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-        tora = tor_f( tor_ref, nz, poro, sat )
+        tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
 #ifdef AMD_benchmark
@@ -5741,7 +5741,7 @@ do while (it<nt)
         v = qin/poro/sat
 
         torg = tor_f( tor_ref, nz, poro, 1d0-sat )
-        tora = tor_f( tor_ref, nz, poro, sat )
+        tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
 #ifdef AMD_benchmark
@@ -10288,6 +10288,96 @@ if (.not. read_done) then
 endif 
 ki = ki_save
 endfunction o2inh_f
+!**************************************************************************************************************************************
+function fe2k0_f() result(f)
+! pH-independent rate constant (mol L-1 min-1 atm-1 per mol L-1 Fe2+) of Fe2+ oxygenation (fe2o2): 1e-7 (the acid-pH limb of
+! Singer and Stumm 1970), or the value in ./fe2k0.in (a header line, then the value), read once. A larger value stands for
+! microbial and surface-catalysed Fe(II) oxidation, which unlike the homogeneous [OH-]2 pathway keeps going as oxidation
+! acidifies a drained soil
+implicit none
+real(kind=8)::f
+real(kind=8),save::f_save = 1d-7
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./fe2k0.in',exist=exist_file)
+    if (exist_file) then 
+        open(987,file='./fe2k0.in',status='old',action='read')
+        read(987,'()')
+        read(987,*,iostat=ios) v_tmp
+        close(987)
+        if (ios == 0) then 
+            f_save = v_tmp
+            print *,'pH-independent Fe2+ oxygenation rate constant: ',f_save
+        endif 
+    endif 
+endif 
+f = f_save
+endfunction fe2k0_f
+!**************************************************************************************************************************************
+function fe2ox_f() result(f)
+! Multiplier on the homogeneous (Singer and Stumm 1970) rate constant of Fe2+ oxygenation (fe2o2), from ./fe2ox.in (a header
+! line, then the value), read once; default 1. Stands for the surface-catalysed oxidation of Fe(II) sorbed on Fe(III)
+! oxides and microbial Fe(II) oxidation, which dominate over the homogeneous pathway in soils at pH < 7 (Tamura et al. 1976;
+! Park and Dempsey 2005) and re-oxidise reduced paddy soils within weeks of drainage
+implicit none
+real(kind=8)::f
+real(kind=8),save::f_save = 1d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./fe2ox.in',exist=exist_file)
+    if (exist_file) then 
+        open(986,file='./fe2ox.in',status='old',action='read')
+        read(986,'()')
+        read(986,*,iostat=ios) v_tmp
+        close(986)
+        if (ios == 0) then 
+            f_save = v_tmp
+            print *,'Fe2+ oxygenation rate multiplier: ',f_save
+        endif 
+    endif 
+endif 
+f = f_save
+endfunction fe2ox_f
+!**************************************************************************************************************************************
+function pan_f(nz,z) result(f)
+! Plough pan: multiplier on aqueous tortuosity (solute diffusivity) for cells with ztop <= z < zbot, from ./pan.in
+! (a header line, then ztop zbot factor), read once; without the file f = 1. A puddled paddy's compacted pan (bulk
+! density ~1.6-1.7 vs ~1.1-1.3 g/cm3 above) slows solute exchange between the plough layer and the subsoil; the
+! percolation through it is set separately (driver --q)
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::z
+real(kind=8),dimension(nz)::f
+real(kind=8),save::ztop = 0d0, zbot = 0d0, fac = 1d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v1,v2,v3
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./pan.in',exist=exist_file)
+    if (exist_file) then 
+        open(985,file='./pan.in',status='old',action='read')
+        read(985,'()')
+        read(985,*,iostat=ios) v1,v2,v3
+        close(985)
+        if (ios == 0) then 
+            ztop = v1; zbot = v2; fac = v3
+            print *,'plough pan (ztop, zbot, diffusivity factor): ',ztop,zbot,fac
+        endif 
+    endif 
+endif 
+f = 1d0
+where (z >= ztop .and. z < zbot) f = fac
+endfunction pan_f
 !**************************************************************************************************************************************
 subroutine ch4ph_f(nz,prox,f_ph,df_ph)
 ! pH response of methanogenesis, f = g(pH)/g(pHref) with g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (bell curve, as
@@ -22058,7 +22148,7 @@ select case(trim(adjustl(rxn_name)))
             case default
                 rxn_ext = ( &
                     & poro*sat*1d3*fe2x*po2x &
-                    & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + 1d-7*60.0d0*24.0d0*365.0d0) &
+                    & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + fe2k0_f()*60.0d0*24.0d0*365.0d0) &
                     & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                     & )
                 
@@ -22066,13 +22156,13 @@ select case(trim(adjustl(rxn_name)))
                     case('pro')
                         drxnext_dmsp = ( &
                             & poro*sat*1d3*fe2x*po2x &
-                            & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)*2.0d0*(kw*(-1d0)/prox**2d0)) &
+                            & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)*2.0d0*(kw*(-1d0)/prox**2d0)) &
                             & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                             & )
                     case('po2')
                         drxnext_dmsp = ( &
                             & poro*sat*1d3*fe2x*1d0 &
-                            & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + 1d-7*60.0d0*24.0d0*365.0d0) &
+                            & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + fe2k0_f()*60.0d0*24.0d0*365.0d0) &
                             & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                             & )
                     case('fe2')
@@ -22086,7 +22176,7 @@ select case(trim(adjustl(rxn_name)))
                             &       findloc(chraq_all,'fe2',dim=1) &
                             &       ,findloc(chraq_all,'fe2',dim=1),:)   &
                             & ) & 
-                            & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + 1d-7*60.0d0*24.0d0*365.0d0) &
+                            & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + fe2k0_f()*60.0d0*24.0d0*365.0d0) &
                             & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                             & )
                     case default
@@ -22100,7 +22190,7 @@ select case(trim(adjustl(rxn_name)))
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
-                                & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + 1d-7*60.0d0*24.0d0*365.0d0) &
+                                & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + fe2k0_f()*60.0d0*24.0d0*365.0d0) &
                                 & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                                 & )
                         elseif (any( trim(adjustl(sp_name)) == chrgas ) ) then
@@ -22112,7 +22202,7 @@ select case(trim(adjustl(rxn_name)))
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
-                                & *(8.0d13*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + 1d-7*60.0d0*24.0d0*365.0d0) &
+                                & *(8.0d13*fe2ox_f()*60.0d0*24.0d0*365.0d0*(kw/prox)**2.0d0 + fe2k0_f()*60.0d0*24.0d0*365.0d0) &
                                 & *merge(0d0,1d0,po2x < po2th*thon .or. fe2x < fe2th*thon) &
                                 & )
                         else
