@@ -49,6 +49,7 @@
 # --rtsi=<ksi>:<siref>:<w> makes root O2 loss (rtoxy) depend on dissolved Si (mol/L): x 1 - w + w*h(si)/h(siref),
 #   h = si/(si + ksi) (rtsi.in); e.g. 5e-4:2.7e-4:0.5 (Si-fed rice has higher root oxidising activity).
 # --n2c=<mol N/mol C> NH3 released per OM C decomposed (n2c.in; default 0.1, ~0.03 for straw/root inputs).
+# --o2inh=<mol/L> O2 inhibition constant of all anaerobic pathways (o2inh.in; default 2.52e-5).
 # --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
 #   drain to --zdry/--sdry; typical practice 7-14 d); AWD cycles stop at the final drain.
 # --exe=<binary> picks the executable (default scepter_paddy; scepter_paddy_fast from makefile_paddy_fast has no run-time checks).
@@ -156,6 +157,9 @@ for fn in ('plant_temp.in','fert_temp.in'):
     if season and ttot > 0.311:
         with open(os.path.join(rundir,fn),'w') as f: f.write('time(yr) factor\n0.0 1\n0.31 1\n0.3101 0\n0.9999 0\n')
 if os.path.exists(os.path.join(rundir,'ch4ph.in')): os.remove(os.path.join(rundir,'ch4ph.in'))
+if os.path.exists(os.path.join(rundir,'o2inh.in')): os.remove(os.path.join(rundir,'o2inh.in'))
+if 'o2inh' in opt:
+    with open(os.path.join(rundir,'o2inh.in'),'w') as f: f.write('ki\n%s\n' % opt['o2inh'])
 if os.path.exists(os.path.join(rundir,'n2c.in')): os.remove(os.path.join(rundir,'n2c.in'))
 if 'n2c' in opt:
     with open(os.path.join(rundir,'n2c.in'),'w') as f: f.write('n2c\n%s\n' % opt['n2c'])

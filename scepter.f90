@@ -10248,6 +10248,34 @@ endif
 grlogk = grlogk_save
 endfunction grlogk_f
 !**************************************************************************************************************************************
+function o2inh_f() result(ki)
+! O2 inhibition constant (mol L-1) of the anaerobic pathways (denitrification steps, Fe(III), SO42- reduction,
+! methanogenesis): 2.52e-5 (Maggi et al. 2008), or the value in ./o2inh.in (a header line, then the value), read once.
+! Air-saturated water holds ~2.6e-4 M O2, so 2.52e-5 leaves ~9% of the anaerobic rate in fully aerated soil
+implicit none
+real(kind=8)::ki
+real(kind=8),save::ki_save = 2.52d-5
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./o2inh.in',exist=exist_file)
+    if (exist_file) then 
+        open(984,file='./o2inh.in',status='old',action='read')
+        read(984,'()')
+        read(984,*,iostat=ios) v_tmp
+        close(984)
+        if (ios == 0) then 
+            ki_save = v_tmp
+            print *,'O2 inhibition constant of anaerobic pathways: ',ki_save
+        endif 
+    endif 
+endif 
+ki = ki_save
+endfunction o2inh_f
+!**************************************************************************************************************************************
 subroutine ch4ph_f(nz,prox,f_ph,df_ph)
 ! pH response of methanogenesis, f = g(pH)/g(pHref) with g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (bell curve, as
 ! for an enzyme with two ionisable groups); df_ph = df/d[H+]. Parameters pK1 pK2 pHref from ./ch4ph.in (a header line,
@@ -22328,7 +22356,7 @@ select case(trim(adjustl(rxn_name)))
                 v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,trim(adjustl(rxn_name)),dim=1),1) ! default 1.23d-7*sec2yr (coefs_v2)
                 km_tmp1 = 10d-5 * 1d6 ! mol L-1 converted to mol m-3
                 km_tmp2 = 11.3d-5
-                km_tmp3 = 2.52d-5
+                km_tmp3 = o2inh_f()
                 rxn_ext = ( &
                     & v_tmp &
                     & *g2x/(g2x + km_tmp1 ) &
@@ -22401,7 +22429,7 @@ select case(trim(adjustl(rxn_name)))
                 v_tmp = 1.23d-7*60d0*60d0*24d0*365d0
                 km_tmp1 = 10d-5 * 1d6 ! mol L-1 converted to mol m-3
                 km_tmp2 = 11.3d-5
-                km_tmp3 = 2.52d-5
+                km_tmp3 = o2inh_f()
                 rxn_ext = ( &
                     & v_tmp &
                     & *g2x/(g2x + km_tmp1 ) &
@@ -22776,7 +22804,7 @@ select case(trim(adjustl(rxn_name)))
         v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),1) ! mol CH2O m^-3 yr^-1
         km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
         km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2fe3',dim=1),1) ! half-saturation for Fe(III), mol m-3
-        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1 (as g2n21)
         vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (taken as the NO3- half-saturation of g2n21)
         f_g2  = g2x/(g2x + km_tmp1 )
         f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
@@ -22816,7 +22844,7 @@ select case(trim(adjustl(rxn_name)))
         v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),1) ! mol CH2O m^-3 yr^-1
         km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
         km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2gt ',dim=1),1) ! half-saturation for gt, mol m-3
-        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1 (as g2n21)
         vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
         f_g2  = g2x/(g2x + km_tmp1 )
         f_ea  = gtx/(gtx + km_tmp2 )
@@ -22844,7 +22872,7 @@ select case(trim(adjustl(rxn_name)))
         v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ! mol CH2O m^-3 yr^-1
         km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
         km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2so4',dim=1),1) ! half-saturation for SO42-, mol L-1
-        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1 (as g2n21)
         vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
         f_g2  = g2x/(g2x + km_tmp1 )
         f_ea  = so4x/(so4x + km_tmp2 )
@@ -22872,7 +22900,7 @@ select case(trim(adjustl(rxn_name)))
         v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),1) ! mol CH2O m^-3 yr^-1
         km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n21)
         km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2ch4',dim=1),1) ! amfe3 inhibition, mol m-3
-        km_tmp3 = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n21)
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1 (as g2n21)
         vmax_tmp = 11.3d-5 ! NO3- inhibition, mol L-1 (as g2fe3)
         f_g2  = g2x/(g2x + km_tmp1 )
         f_fe3 = km_tmp2/(amfe3x + 2d0*fgr_bio*grx + km_tmp2 ) ! inhibition by reducible Fe(III), oxide + green rust
@@ -23140,7 +23168,7 @@ select case(trim(adjustl(rxn_name)))
         km_tmp3 = 10d0**(-krxn2_ext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1),1)) ! H50, mol L-1 
         km_tmp1 = 10d-5 * 1d6 ! half-saturation for OM, mol m-3 (as g2n22) 
         km_tmp2 = 5d-6 ! half-saturation for N2O(aq), mol L-1: soil N2O reductase has um-level affinity (order 1-10 uM) 
-        vmax_tmp = 2.52d-5 ! O2 inhibition, mol L-1 (as g2n22 and g2n21) 
+        vmax_tmp = o2inh_f() ! O2 inhibition, mol L-1 (as g2n22 and g2n21) 
         f_g2  = g2x/(g2x + km_tmp1 )
         f_ea  = kn2o*pn2ox/(kn2o*pn2ox + km_tmp2 )
         f_no3 = 1d-3/(no3x + 1d-3 ) ! NO3- inhibition, mol L-1: N2O/(N2O+N2) rises mainly at mM NO3- (Blackmer and Bremner 1978)
