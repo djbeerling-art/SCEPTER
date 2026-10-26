@@ -19,6 +19,7 @@
 #   (written to floodwater.in; default 36.5 m/yr = 0.1 m/d, limited by the diffusive boundary layer at the soil
 #   surface); --kfw=0 restores SCEPTER's closed top boundary for dissolved gases.
 # --fallow runs the column drained (surface saturation 0.5, water table at 0.5 m), e.g. to spin up the soil OM
+#   (--fsat=<surface saturation> and --fzw=<water table depth, m> change both)
 #   and Fe(III) stocks before a rice season; --rstrt=<tag> starts from the end state of run flood_<tag>.
 # --nfert=<kg N/ha> (with --n) adds urea, spread evenly over the first 0.31 yr (113 d, IPCC default season)
 #   through the OM input (same depth distribution); urea hydrolyses to NH3/NH4+ in a few days.
@@ -203,8 +204,8 @@ spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
     ztot=0.3,nz=int(opt.get('nz','30')),ttot=ttot,temp=tsoil,omrain=omin,zom=0.15,poro=0.5,
-    moistsrf=0.5 if fallow else 1.0,  # water saturation 1 throughout: flooded
-    zwater=zdry if (awd or phd > 0) else (0.5 if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
+    moistsrf=float(opt.get('fsat',0.5)) if fallow else 1.0,  # water saturation 1 throughout: flooded
+    zwater=zdry if (awd or phd > 0) else (float(opt.get('fzw',0.5)) if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=10,rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
     act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
