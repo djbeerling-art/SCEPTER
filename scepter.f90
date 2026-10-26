@@ -783,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 33
+integer,parameter::nrxn_ext_all = 34
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1152,7 +1152,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup '/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup ','sidox'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1964,6 +1964,11 @@ staq_ext_all(findloc(chrrxn_ext_all,'siup ',dim=1), findloc(chraq_all,'si',dim=1
 stsld_ext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrsld_all,'gr',dim=1)) = -1d0
 stsld_ext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 3d0
 stgas_ext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrgas_all,'po2',dim=1)) = -0.25d0
+! siderite oxidation in drained soil (FeCO3 + 1/4 O2 + 5/2 H2O -> Fe(OH)3 + CO2)
+stsld_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrsld_all,'sid',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrgas_all,'po2',dim=1)) = -0.25d0
+stgas_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! CH4 ebullition: dissolved CH4 above a bubble-formation threshold leaves the soil directly 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 ! FeS precipitation/dissolution (Fe2+  +  HS-  ->  FeS  +  H+) 
@@ -2079,6 +2084,8 @@ stsld_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrsld_all,'fes',d
 stgas_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrsld_all,'sid',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'sidox',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 staq_dext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0 ! Si feedback (rtsi.in)
 staq_dext_all(findloc(chrrxn_ext_all,'siup ',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0
 ! paddy N2O reduction 
@@ -5055,7 +5062,7 @@ do while (it<nt)
                         ! & *exp(-z/zsupp_plant)/zsupp_plant
                     msldsupp(isps,:) = msldsupp(isps,:) &
                         & + plant_rain/12d0*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
-                case('amnt','cc','urea')
+                case('amnt','cc','urea','amfe3') ! amfe3: paddy soil Fe(III) resupply (irrigation sediment, weathering)
                     msldsupp(isps,:) = msldsupp(isps,:) &
                         & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
                 case default
@@ -5066,7 +5073,7 @@ do while (it<nt)
                 case('g1','g2','g3')
                     msldsupp(isps,1) = msldsupp(isps,1) &
                         & + plant_rain/12d0*rfrc_sld_plant(isps)/dz(1) ! when plant_rain is in g_C/m2/yr
-                case('amnt','cc','urea')
+                case('amnt','cc','urea','amfe3') ! amfe3: paddy soil Fe(III) resupply (irrigation sediment, weathering)
                     msldsupp(isps,1) = msldsupp(isps,1) &
                         & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)/dz(1) ! when plant_rain is in g_(isps)/m2/yr
                 case default
@@ -10056,6 +10063,7 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1),:) = 3.65d0
 ! green rust oxidation by dissolved O2, L mol^-1 yr^-1: 1e7 gives a half-life of ~3 h at air saturation (green rusts
 ! oxidise in minutes to hours in air, e.g. Genin et al. 1998), so on drainage it is limited by O2 supply
 krxn1_ext_all(findloc(chrrxn_ext_all,'groxy',dim=1),:) = 1d7
+krxn1_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1),:) = 1d5 ! L mol^-1 yr^-1: ~1 d half-life in air-saturated porewater
 krxn1_ext_all(findloc(chrrxn_ext_all,'amo2o',dim=1),:) = 9.53d-6*60d0*60d0*24d0*365d0 ! nitrification vmax (Maggi et al. 2008), mol m^-3 yr^-1
 krxn1_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 3.5d0 ! maximum crop N uptake, mol N m^-2 yr^-1 (~150 kg N/ha over a 113-d season)
 krxn2_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1),:) = 5d-5 ! half-saturation for NH4+(aq), mol L-1 (rice high-affinity uptake ~10-50 uM)
@@ -23150,6 +23158,21 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_sat*f_fe3*(-1d0)/prox
             case('fes')
                 drxnext_dmsp = v_tmp*f_sat*lnomg*km_tmp1/(fesx + km_tmp1)**2d0*merge(0d0,1d0,lnomg > 0d0)
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('sidox') 
+        ! siderite oxidation by dissolved O2 (FeCO3 + 1/4 O2 + 5/2 H2O -> Fe(OH)3 + CO2): first order in siderite and O2(aq),
+        ! so that Fe(II) stored as siderite below the plough layer returns to reducible Fe(III) when the field drains
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'sidox',dim=1),1) ! L mol^-1 yr^-1 
+        rxn_ext = v_tmp*msldx_loc(findloc(chrsld_all,'sid',dim=1),:)*ko2*po2x
+        
+        select case(trim(adjustl(sp_name)))
+            case('sid')
+                drxnext_dmsp = v_tmp*ko2*po2x
+            case('po2')
+                drxnext_dmsp = v_tmp*msldx_loc(findloc(chrsld_all,'sid',dim=1),:)*ko2
             case default
                 drxnext_dmsp = 0d0
         endselect 

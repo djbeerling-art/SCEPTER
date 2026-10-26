@@ -50,6 +50,8 @@
 #   h = si/(si + ksi) (rtsi.in); e.g. 5e-4:2.7e-4:0.5 (Si-fed rice has higher root oxidising activity).
 # --n2c=<mol N/mol C> NH3 released per OM C decomposed (n2c.in; default 0.1, ~0.03 for straw/root inputs).
 # --o2inh=<mol/L> O2 inhibition constant of all anaerobic pathways (o2inh.in; default 2.52e-5).
+# --fe3in=<mol Fe m-2 yr-1> reducible Fe(III) (ferrihydrite) supply with the OM input (irrigation sediment and soil-mineral
+#   weathering), balancing Fe2+ leaching so that topsoil Fe is not drained within decades.
 # --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
 #   drain to --zdry/--sdry; typical practice 7-14 d); AWD cycles stop at the final drain.
 # --exe=<binary> picks the executable (default scepter_paddy; scepter_paddy_fast from makefile_paddy_fast has no run-time checks).
@@ -233,7 +235,7 @@ spinup.run_a_scepter_run(
         + ([('so4',2e-4),('hs',1e-12)] if ch4 else []) + ([('no3',1e-6)] if nitro else []),  # irrigation water ~0.2 mM SO42-, balanced by Ca above
     atm_list=[('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',3.3e-7 if nitro else 1e-50),('pch4',1.9e-6)],
     # cec [cmol/kg], log KH\\X for Na, K, Ca, Mg, Al, beta; Fe2+ follows Mg (+0.158) in the code
-    sld_varlist_cec=[('inrt',cec,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []),
+    sld_varlist_cec=[('inrt',cec,5.9,4.8,10.47,10.786,16.47,3.4)] if fe2buf else [],sld_varlist_omrain=[('g2',1.0)] + ([('urea',urea_frac)] if nfert > 0 else []) + ([('amfe3',float(opt['fe3in'])*88.854/omin)] if 'fe3in' in opt else []),
     srcfile_2ndslds=src2nd,
     use_local_storage=False,exename_src=opt.get('exe','scepter_paddy'),show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----

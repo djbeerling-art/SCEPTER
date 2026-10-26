@@ -12,13 +12,15 @@ name=$1; ny=$2; dose=$3; prev=$4; st=$5; shift 5
 om=$(printf '%s\n' "$@" | grep '^--om=' | cut -d= -f2); om=${om:-450}; OMF=${OMF:-0.7}
 oms=$(python3 -c "print(round($om*$OMF/0.31,2))"); omf=$(python3 -c "print(round($om*(1-$OMF)/0.69,2))")
 set -- $(printf '%s\n' "$@" | grep -v '^--om=')
-RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy,siup
-RF=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,g2gt,g2o2,groxy
+RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy,siup,sidox
+RF=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,g2gt,g2o2,groxy,sidox
 C="--ch4 --n --kaol=0.05 --refsoil --gt=0.02 --nz=15 --exe=scepter_paddy_fast --nucl=cc:0.001 --kscale=maf:0.45,fsp:0.25"
 ok(){ grep -q "^$1 rc 0" "$st" 2>/dev/null; }
 for y in $(seq 1 $ny); do
   ts=${name}_y${y}s; tf=${name}_y${y}f
   if ! ok $ts; then
+    # puddling before transplanting mixes the plough layer (TILL = depth in m, default 0.16; 0 = no tillage)
+    [ "${TILL:-0.16}" != 0 ] && python3 paddy/multiyear/till.py $SCEPTER_OUT/paddy/flood_$prev ${TILL:-0.16}
     p=""; [ "$dose" != 0 ] && p=--psd=data/psdrain_renforth_p80-100um.in
     python3 paddy/run_flooded_column.py $ts $RS 0.31 --season --nfert=120 --rstrt=$prev --basalt=$dose --om=$oms $p $C "$@" > /dev/null 2>&1
     rc=$?; awk 'END{exit !($1+0>=0.3095)}' $SCEPTER_OUT/paddy/flood_$ts/flx/flx_gas-pch4.txt 2>/dev/null || rc=98
