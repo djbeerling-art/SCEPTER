@@ -100,9 +100,9 @@ real(kind=8),parameter :: sec2yr = 60d0*60d0*24d0*365d0
 
 real(kind=8) pco2i,pnh3i,proi
 
-real(kind=8),parameter :: n2c_g1 = 0.1d0 ! N to C ratio for OM-G1; Could be related to reactivity cf. Janssen 1996
-real(kind=8),parameter :: n2c_g2 = 0.1d0
-real(kind=8),parameter :: n2c_g3 = 0.1d0
+real(kind=8) :: n2c_g1 = 0.1d0 ! N to C ratio for OM-G1; Could be related to reactivity cf. Janssen 1996
+real(kind=8) :: n2c_g2 = 0.1d0
+real(kind=8) :: n2c_g3 = 0.1d0
 
 real(kind=8),parameter :: oxa2c_g2 = 0.01d0 ! amount of oxlate (C2O4=) released (DEF)
 ! real(kind=8),parameter :: oxa2c_g2 = 0.5d0 ! amount of oxlate (C2O4=) released  
@@ -1751,6 +1751,7 @@ staq_all(findloc(chrsld_all,'leu',dim=1), findloc(chraq_all,'k',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'leu',dim=1), findloc(chraq_all,'al',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'leu',dim=1), findloc(chraq_all,'si',dim=1)) = 2d0
 ! OMs; CH2O
+call read_n2c(n2c_g1,n2c_g2,n2c_g3) ! N:C of decomposing OM (0.1 unless ./n2c.in)
 stgas_all(findloc(chrsld_all,'g1',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 stgas_all(findloc(chrsld_all,'g1',dim=1), findloc(chrgas_all,'po2',dim=1)) = -1d0
 stgas_all(findloc(chrsld_all,'g1',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = n2c_g1
@@ -2076,6 +2077,7 @@ stsld_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrsld_all,'fes',d
 stgas_dext_all(findloc(chrrxn_ext_all,'fesox',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrsld_all,'gr',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'groxy',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0 ! Si feedback (rtsi.in)
 ! paddy N2O reduction 
 stsld_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrsld_all,'g2',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'g2n2p',dim=1), findloc(chrgas_all,'pn2o',dim=1)) = 1d0
@@ -10286,6 +10288,65 @@ g = 1d0/(1d0 + a1*prox + a2/prox)
 f_ph = g/gref
 df_ph = -(a1 - a2/prox**2d0)*g**2d0/gref
 endsubroutine ch4ph_f
+!**************************************************************************************************************************************
+subroutine rtsi_f(nz,six,f_si,df_si)
+! silicon feedback on rice root O2 release (Si-fed rice has higher root oxidising activity and radial O2 loss, the
+! reason usually given for CH4 decreases with silicate slag): f = 1 - w + w*h(si)/h(siref), h = si/(si + ksi), with
+! dissolved Si (mol L-1) in the cell; df_si = df/dsi. Parameters ksi siref w from ./rtsi.in (a header line, then the
+! three values), read once; without the file f = 1 (no Si dependence)
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::six
+real(kind=8),dimension(nz),intent(out)::f_si,df_si
+real(kind=8),save::ksi = 1d0,w = 0d0,href = 1d0
+logical,save::read_done = .false.,on = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::siref
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./rtsi.in',exist=exist_file)
+    if (exist_file) then 
+        open(986,file='./rtsi.in',status='old',action='read')
+        read(986,'()')
+        read(986,*,iostat=ios) ksi,siref,w
+        close(986)
+        if (ios == 0) then 
+            on = .true.
+            href = siref/(siref + ksi)
+            print *,'root O2 loss Si response ksi, siref, w: ',ksi,siref,w
+        endif 
+    endif 
+endif 
+if (.not. on) then 
+    f_si = 1d0
+    df_si = 0d0
+    return
+endif 
+f_si = 1d0 - w + w*six/(six + ksi)/href
+df_si = w*ksi/(six + ksi)**2d0/href
+endsubroutine rtsi_f
+!**************************************************************************************************************************************
+subroutine read_n2c(n2c_g1,n2c_g2,n2c_g3)
+! N:C (mol/mol) of NH3 released when OM pools g1, g2, g3 decompose (net mineralisation); ./n2c.in (a header line, then
+! one value used for all pools) overrides the default 0.1, e.g. ~0.03 for rice straw and root inputs (C:N 30-80)
+implicit none
+real(kind=8),intent(inout)::n2c_g1,n2c_g2,n2c_g3
+logical::exist_file
+integer::ios
+real(kind=8)::v
+inquire(file='./n2c.in',exist=exist_file)
+if (.not. exist_file) return
+open(985,file='./n2c.in',status='old',action='read')
+read(985,'()')
+read(985,*,iostat=ios) v
+close(985)
+if (ios /= 0) return
+n2c_g1 = v
+n2c_g2 = v
+n2c_g3 = v
+print *,'N:C of OM decomposition: ',v
+endsubroutine read_n2c
 !**************************************************************************************************************************************
 subroutine read_precnucl(nsp_sld,nz,chrsld,precstyle,fkin)
 ! reads ./precnucl.in if present: a header line, then lines of  <solid name> <seed, mol m-3>.
@@ -21511,7 +21572,7 @@ real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,om
     & ,mo2g1,mo2g2,mo2g3,kg1,kg2,kg3,g1x,g2x,g3x,pyx,fe3x,koxpy,pnh3x,nh4x,dnh4_dpro,dnh4_dpnh3 &
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
     & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx,fe2adx,sfr,sad &
-    & ,fesx,hsfr,f_ph,df_ph
+    & ,fesx,hsfr,f_ph,df_ph,six,f_si,df_si
 #ifdef cache_spec
 real(kind=8),dimension(:),allocatable,save::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 #else
@@ -22956,10 +23017,17 @@ select case(trim(adjustl(rxn_name)))
         
     case('rtoxy') 
         ! radial O2 loss from rice roots: O2 source with the rtco2 root profile; column total krxn1 (mol O2 m-2 yr-1)
+        six = maqx_loc(findloc(chraq_all,'si',dim=1),:)
+        call rtsi_f(nz,six,f_si,df_si) ! Si feedback on root O2 loss (1 unless ./rtsi.in)
         vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:)/krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
         rxn_ext = krxn1_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1),1)*vmax &
-            & /krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)*min(2d0*sat,1d0)
-        drxnext_dmsp = 0d0
+            & /krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)*min(2d0*sat,1d0)*f_si
+        select case(trim(adjustl(sp_name)))
+            case('si')
+                drxnext_dmsp = rxn_ext/f_si*df_si
+            case default
+                drxnext_dmsp = 0d0
+        endselect
         
     case('rtco2') 
         ! rice root respiration: CO2 source with the root density profile (ch4pl rate constant relative to the top cell,
