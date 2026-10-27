@@ -4,8 +4,8 @@ This document lists every process added to SCEPTER for flooded rice paddies: rat
 parameters, units, temperature and pH treatment, boundary schedules and the calibration behind each
 value. It is written so the processes can be re-implemented in another reactive-transport code (for
 example as PHREEQC `RATES`/`KINETICS` blocks) without porting the Fortran. Code references are to
-`scepter.f90` and `paddy/run_flooded_column.py` on branch `paddy/fe3-reduction` (model version v15,
-calibration file `paddy/krxn_calibrated_v15.in`).
+`scepter.f90` and `paddy/run_flooded_column.py` on branch `paddy/fe3-reduction` (model version v15 code with
+calibration v16, `paddy/krxn_calibrated_v16.in`).
 
 Notation: "Monod(X, K)" = X/(X + K); "Inh(X, Ki)" = Ki/(X + Ki); φ porosity; S_w water saturation;
 K_H Henry's constant (mol L-1 atm-1); [X] aqueous concentration (M).
@@ -111,7 +111,7 @@ see §7) and as a charge-balanced form for PHREEQC.
 |---|---|---|---|---|
 | `g2o2` aerobic respiration | −1 g2, −1 O2, +1 DIC, +n2c NH3 | CH2O + O2 → CO2 + H2O | v·Monod(g2)·Monod([O2], 5e-6 M) | v 300 |
 | `g2fe3` ferrihydrite reduction | −1 g2, −4 amfe3, +4 Fe(II), +1 DIC, +n2c NH3 | CH2O + 4 Fe(OH)3 + 8 H+ → CO2 + 4 Fe2+ + 11 H2O | v·Monod(g2)·Fe_pool/(Fe_pool + 100)·f_O2·f_NO3·f_sat; Fe_pool = amfe3 + 2·f_gr·gr (mol m-3) | v 300 |
-| `g2gr` green-rust reduction | −1 g2, −2 gr, +6 Fe(II), +1 DIC | CH2O + 2 Fe3(OH)8 + 12 H+ → CO2 + 6 Fe2+ + 15 H2O | shares the `g2fe3` expression; GR enters Fe_pool with bioavailability f_gr | f_gr 0.3 |
+| `g2gr` green-rust reduction | −1 g2, −2 gr, +6 Fe(II), +1 DIC | CH2O + 2 Fe3(OH)8 + 12 H+ → CO2 + 6 Fe2+ + 15 H2O | shares the `g2fe3` expression; GR enters Fe_pool with bioavailability f_gr | f_gr 1.0 (v16; 0.3 in v15) |
 | `g2gt` goethite reduction | −1 g2, −4 gt, +4 Fe(II), +1 DIC | CH2O + 4 FeOOH + 8 H+ → CO2 + 4 Fe2+ + 7 H2O | v·Monod(g2)·Monod(gt, 100)·f_O2·f_NO3·f_sat | v 10 (crystalline Fe ~30× slower; Roden & Zachara 1996) |
 | `g2so4` sulfate reduction | −1 g2, −0.5 SO4, +0.5 HS, +1 DIC | CH2O + ½ SO4 2- + ½ H+ → CO2 + ½ HS- + H2O | v·Monod(g2)·Monod([SO4], 1e-4 M)·f_O2·f_NO3·f_sat | v 300 |
 | `g2ch4` methanogenesis | −1 g2, +0.5 CH4, +0.5 DIC | CH2O → ½ CH4 + ½ CO2 | v·Monod(g2)·30/(Fe_pool + 30)·Inh([SO4], 1e-4 M)·f_O2·f_NO3·f_sat | v 1630, Fe(III) Ki 30 mol m-3 |
@@ -260,7 +260,7 @@ growing-season mean). The Q10 values are literature values (Segers 1998 range), 
 
 ---
 
-## 9. Calibration: targets and data per rate
+## 9. Calibration: targets and data per rate (v16)
 
 All targets are read on the **settled cycle**: a 3-year drained spin-up, then season + fallow years
 (`run_chain.sh`, OM 450 g C m-2 yr-1 with 70% in season) until year 3–4, at the reference site
@@ -280,10 +280,10 @@ after porting, because OM and Fe pools take years to settle.
 | O2 inhibition Ki | 2.5e-7 M | fallow N2O ~1 kg N ha-1 yr-1 (2.5e-5 gave ~7) | 0.3–0.9 kg N |
 | `amo2o`, `g2n21` | 30, 300 | Maggi et al. 2008 defaults; not tuned | |
 | `g2fe3`, `g2gt` | 300, 10 | not tuned individually; g2gt from crystalline/amorphous Fe reduction ratio | |
-| f_gr (green-rust bioavailability) | 0.3 | pH 6.5–7 all season; porewater Fe2+ 1–3 mM (Ponnamperuma 1972) | pH 6.5–6.9 |
+| f_gr (green-rust bioavailability) | 1.0 (v16) | not tuned; 0.3 in v15 gave the same reference CH4 and a worse lime and Park response | pH 6.5–6.9 |
 | `rtco2` | 60 mol C m-2 yr-1 | porewater pCO2 0.1–0.3 atm, HCO3- ~10–15 mM (Kirk et al. 2019) | |
 | `rtoxy` | 3.65 mol O2 m-2 yr-1 | root radial O2 loss ~10 mmol m-2 d-1 (literature) | |
-| Si feedback w | 0.5 | Gong et al. 2026: 36 t ha-1 basalt, AWD, CH4 −18% | −20% (best fit w ≈ 0.4) |
+| Si feedback w | 0.5 | Gong et al. 2026 (36 t ha-1 basalt, AWD, CH4 −18%) and Wang et al. 2014 slag jointly | −21% |
 | `siup` | 3.7 mol m-2 yr-1 | rice Si uptake ~100–150 kg Si ha-1 season-1 | ~130 kg |
 | Rock rate scaling | mafic ×0.45, plagioclase ×0.25, amorphous Si ×30 | Uchibayashi et al. 2025 pot fluxes of Mg and Na | match |
 | `fe3in` | 0.3 mol Fe m-2 yr-1 | control-plot CH4 drift < ~1–2% per year over 20 yr | ~1.4%/yr |
@@ -294,11 +294,11 @@ after porting, because OM and Fe pools take years to settle.
 
 | Study | Treatment | Observed CH4 change | Model v15 |
 |---|---|---|---|
-| Gong et al. 2026 | basalt 36 t ha-1, AWD | −18% | −20% (w 0.5) |
-| Park et al. 2026 | anoxic batch, basalt 10/20 wt% | −25 / −37% | −15 / −28% |
-| Wang et al. 2014 | steel slag 2/4/8 t ha-1 | −27 / −43 / −49% | −24 / −27 / −30% |
+| Gong et al. 2026 | basalt 36 t ha-1, AWD | −18% | −21% (w 0.5) |
+| Park et al. 2026 | anoxic batch, basalt 10/20 wt% | −25 / −37% | −20 / −34% |
+| Wang et al. 2014 | steel slag 2/4/8 t ha-1 | −27 / −43 / −49% | −24 / −27 / −31% |
 | Wang F. et al. 2024 | wollastonite 5 t ha-1, soil inorganic C | +1.2 t CO2 ha-1 | +1.3 (calcite seeded) |
-| Five liming trials | 1–4 t ha-1 lime | −20 to −53% | year 1 −8%, year 2 +5% (**misfit**) |
+| Five liming trials | 1–4 t ha-1 lime | −20 to −53% | year 1 −12%, year 2 +2% (**misfit**) |
 
 ---
 
