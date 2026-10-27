@@ -10261,6 +10261,48 @@ endif
 grlogk = grlogk_save
 endfunction grlogk_f
 !**************************************************************************************************************************************
+function n2oy_on_f() result(on)
+! true when ./n2oy.in (a header line, then pH50, n, rmin) is present: pH-dependent N2O yield of denitrification (see n2oy_f)
+implicit none
+logical::on
+logical,save::on_save = .false.
+logical,save::read_done = .false.
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./n2oy.in',exist=on_save)
+endif 
+on = on_save
+endfunction n2oy_on_f
+!**************************************************************************************************************************************
+subroutine n2oy_f(prox,nz,r,dr)
+! N2O fraction of denitrified NO3-, r = rmin + (1-rmin)/(1 + (H50/H+)^n), and dr/dH+; parameters from ./n2oy.in, read once
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::prox
+real(kind=8),dimension(nz),intent(out)::r,dr
+real(kind=8),save::ph50 = 6d0, nh = 1.5d0, rmin = 0.1d0
+logical,save::read_done = .false.
+real(kind=8)::h50
+real(kind=8),dimension(nz)::x
+integer::ios
+real(kind=8)::v1,v2,v3
+if (.not. read_done) then 
+    read_done = .true.
+    open(985,file='./n2oy.in',status='old',action='read')
+    read(985,'()')
+    read(985,*,iostat=ios) v1,v2,v3
+    close(985)
+    if (ios == 0) then 
+        ph50 = v1; nh = v2; rmin = v3
+    endif 
+    print *,'pH-dependent N2O yield of denitrification (pH50, n, rmin): ',ph50,nh,rmin
+endif 
+h50 = 10d0**(-ph50)
+x = (h50/prox)**nh
+r = rmin + (1d0 - rmin)/(1d0 + x)
+dr = (1d0 - rmin)*nh*x/prox/(1d0 + x)**2d0
+endsubroutine n2oy_f
+!**************************************************************************************************************************************
 function o2inh_f() result(ki)
 ! O2 inhibition constant (mol L-1) of the anaerobic pathways (denitrification steps, Fe(III), SO42- reduction,
 ! methanogenesis): 2.52e-5 (Maggi et al. 2008), or the value in ./o2inh.in (a header line, then the value), read once.
@@ -22518,6 +22560,23 @@ select case(trim(adjustl(rxn_name)))
                 endselect 
                 
         endselect 
+                
+        ! optional pH-dependent product ratio (./n2oy.in): of the NO3- denitrified, a fraction r(pH) stops at N2O (g2n21) and 
+        ! the rest goes to N2 in the same anoxic microsites (g2n0, run at the g2n21 vmax), r = rmin + (1-rmin)/(1+(H50/H)^n) 
+        ! (N2O/(N2O+N2) falls steeply with pH; Simek and Cooper 2002, Liu et al. 2010, Bakken et al. 2012) 
+        if (n2oy_on_f()) then 
+            call n2oy_f(prox,nz,f_so4,f_fe3) ! r, dr/dH+ 
+            if (trim(adjustl(rxn_name))=='g2n0') then 
+                ! per CH2O, g2n0 uses 4/5 NO3- vs 1 for g2n21; also take the g2n21 vmax 
+                v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'g2n21',dim=1),1) &
+                    & /krxn1_ext_all(findloc(chrrxn_ext_all,'g2n0',dim=1),1)
+                f_so4 = 1.25d0*v_tmp*(1d0 - f_so4)
+                f_fe3 = -1.25d0*v_tmp*f_fe3
+            endif 
+            if (trim(adjustl(sp_name))=='pro') drxnext_dmsp = drxnext_dmsp*f_so4 + rxn_ext*f_fe3
+            if (trim(adjustl(sp_name))/='pro') drxnext_dmsp = drxnext_dmsp*f_so4
+            rxn_ext = rxn_ext*f_so4
+        endif 
                 
     case('g2n22') ! 2nd of 2 step denitrification (2 N2O  +  CH2O  ->  2 N2  +  CO2  +  H2O)  
         scheme = 'maggi08' ! Maggi et al. (2008) wihtout baterial, pH and water saturation functions

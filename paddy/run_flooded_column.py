@@ -50,6 +50,8 @@
 #   h = si/(si + ksi) (rtsi.in); e.g. 5e-4:2.7e-4:0.5 (Si-fed rice has higher root oxidising activity).
 # --n2c=<mol N/mol C> NH3 released per OM C decomposed (n2c.in; default 0.1, ~0.03 for straw/root inputs).
 # --o2inh=<mol/L> O2 inhibition constant of all anaerobic pathways (o2inh.in; default 2.52e-5).
+# --n2oy=pH50:n:rmin  pH-dependent N2O yield of denitrification (n2oy.in): a fraction rmin + (1-rmin)/(1+10^(n(pH-pH50)))
+#                 of NO3- denitrified stops at N2O (g2n21), the rest goes to N2 (g2n0, added to the reactions); e.g. 6:1.5:0.1.
 # --fe2ox=<x>     multiplier on the Fe2+ oxygenation rate constant (fe2ox.in; default 1).
 # --fe2k0=<k>     pH-independent Fe2+ oxygenation rate constant, /min/atm (fe2k0.in; default 1e-7).
 # --pan=ztop:zbot:factor  plough pan: aqueous diffusivity multiplied by factor for ztop <= z < zbot (m) (pan.in).
@@ -83,6 +85,7 @@ flags  = [a for a in sys.argv[1:] if a.startswith('--')]
 args   = [a for a in sys.argv[1:] if not a.startswith('--')]
 tag    = args[0]
 rxns   = args[1].split(',') if args[1] != 'none' else []
+if any(a.startswith('--n2oy=') for a in sys.argv[1:]) and 'g2n21' in rxns and 'g2n0' not in rxns: rxns.append('g2n0')
 ttot   = float(args[2]) if len(args) > 2 else 0.5
 ch4    = '--ch4' in flags
 fe2buf = '--fe2buf' in flags or ch4
@@ -165,6 +168,9 @@ if os.path.exists(os.path.join(rundir,'ch4ph.in')): os.remove(os.path.join(rundi
 if os.path.exists(os.path.join(rundir,'o2inh.in')): os.remove(os.path.join(rundir,'o2inh.in'))
 if 'o2inh' in opt:
     with open(os.path.join(rundir,'o2inh.in'),'w') as f: f.write('ki\n%s\n' % opt['o2inh'])
+if os.path.exists(os.path.join(rundir,'n2oy.in')): os.remove(os.path.join(rundir,'n2oy.in'))
+if 'n2oy' in opt:
+    with open(os.path.join(rundir,'n2oy.in'),'w') as f: f.write('pH50 n rmin\n%s\n' % opt['n2oy'].replace(':',' '))
 if os.path.exists(os.path.join(rundir,'fe2ox.in')): os.remove(os.path.join(rundir,'fe2ox.in'))
 if 'fe2ox' in opt:
     with open(os.path.join(rundir,'fe2ox.in'),'w') as f: f.write('factor\n%s\n' % opt['fe2ox'])
