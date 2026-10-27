@@ -783,7 +783,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 34
+integer,parameter::nrxn_ext_all = 35
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1152,7 +1152,7 @@ chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup ','sidox'/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup ','sidox','ch4rx'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1948,6 +1948,11 @@ stsld_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',
 ! (Pox = 0.5, Walter and Heimann 2000), so CH4 -> 0.5 CO2 in the soil and 0.5 CH4 emitted 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0.5d0
+! with ./pox.in the rhizosphere oxidation is explicit: ch4pl carries only the emitted part (no CO2) and ch4rx the
+! oxidised part, Pox(pH) of the plant-transported CH4 (CH4 + 2 O2 -> CO2 with root-supplied O2)
+if (pox_on_f()) stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 0d0
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4rx',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'ch4rx',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
 ! aerobic respiration of labile OM (CH2O  +  O2  ->  CO2), consumes the O2 left in the soil after flooding
 stsld_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrsld_all,'g2',dim=1)) = -1d0
 stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'po2',dim=1)) = -1d0
@@ -2075,6 +2080,7 @@ stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'amfe3'
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',dim=1)) = 1d0
 ! plant transport and ebullition of CH4 
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'ch4rx',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4eb',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
 ! FeS formation and oxidation 
 staq_dext_all(findloc(chrrxn_ext_all,'fe2fs',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
@@ -10420,6 +10426,89 @@ endif
 f = 1d0
 where (z >= ztop .and. z < zbot) f = fac
 endfunction pan_f
+!**************************************************************************************************************************************
+function pox_on_f() result(on)
+! true when ./pox.in (a header line, then pmin, pmax, pH50, n) is present: explicit pH-dependent rhizosphere CH4
+! oxidation (reaction ch4rx; see pox_f); without it ch4pl keeps the fixed Pox = 0.5 in its stoichiometry
+implicit none
+logical::on
+logical,save::on_save = .false.
+logical,save::read_done = .false.
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./pox.in',exist=on_save)
+endif 
+on = on_save
+endfunction pox_on_f
+!**************************************************************************************************************************************
+subroutine pox_f(nz,prox,p,dp)
+! rhizosphere oxidation fraction of plant-transported CH4, p = pmin + (pmax-pmin)/(1 + (H+/H50)^n), and dp/dH+;
+! parameters from ./pox.in, read once
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::prox
+real(kind=8),dimension(nz),intent(out)::p,dp
+real(kind=8),save::pmin = 0.5d0, pmax = 0.5d0, h50 = 1d-6, nh = 1d0
+logical,save::read_done = .false.
+real(kind=8),dimension(nz)::x
+integer::ios
+real(kind=8)::v1,v2,v3,v4
+if (.not. read_done) then 
+    read_done = .true.
+    open(983,file='./pox.in',status='old',action='read')
+    read(983,'()')
+    read(983,*,iostat=ios) v1,v2,v3,v4
+    close(983)
+    if (ios == 0) then 
+        pmin = v1; pmax = v2; h50 = 10d0**(-v3); nh = v4
+    endif 
+    print *,'rhizosphere CH4 oxidation fraction (pmin, pmax, pH50, n): ',pmin,pmax,-log10(h50),nh
+endif 
+x = (prox/h50)**nh
+p = pmin + (pmax - pmin)/(1d0 + x)
+dp = -(pmax - pmin)*nh*x/prox/(1d0 + x)**2d0
+endsubroutine pox_f
+!**************************************************************************************************************************************
+subroutine phfac_f(k,nz,prox,f_ph,df_ph)
+! pH response of a microbial rate, f = g(pH)/g(pHref) with g = fmin + (1-fmin)/(1 + 10^(n(pH50-pH))) (rises with pH from
+! fmin to 1); df_ph = df/d[H+]. k = 1: aerobic OM decomposition g2o2 (./phdec.in); k = 2: CH4 oxidation ch4o2 (./phmo.in).
+! Each file holds a header line, then pH50, n, fmin, pHref, read once; without the file f = 1 (no pH dependence)
+implicit none
+integer,intent(in)::k,nz
+real(kind=8),dimension(nz),intent(in)::prox
+real(kind=8),dimension(nz),intent(out)::f_ph,df_ph
+real(kind=8),dimension(2),save::h50 = 1d0,nh = 1d0,fmin = 1d0,gref = 1d0
+logical,dimension(2),save::read_done = .false.,on = .false.
+character(9),dimension(2),parameter::fname = (/'phdec.in ','phmo.in  '/)
+logical::exist_file
+integer::ios
+real(kind=8)::v1,v2,v3,v4
+real(kind=8),dimension(nz)::x
+if (.not. read_done(k)) then 
+    read_done(k) = .true.
+    inquire(file='./'//trim(fname(k)),exist=exist_file)
+    if (exist_file) then 
+        open(984,file='./'//trim(fname(k)),status='old',action='read')
+        read(984,'()')
+        read(984,*,iostat=ios) v1,v2,v3,v4
+        close(984)
+        if (ios == 0) then 
+            on(k) = .true.
+            h50(k) = 10d0**(-v1); nh(k) = v2; fmin(k) = v3
+            gref(k) = v3 + (1d0 - v3)/(1d0 + (10d0**(-v4)/h50(k))**v2)
+            print *,'pH response ('//trim(fname(k))//') pH50, n, fmin, pHref: ',v1,v2,v3,v4
+        endif 
+    endif 
+endif 
+if (.not. on(k)) then 
+    f_ph = 1d0
+    df_ph = 0d0
+    return
+endif 
+x = (prox/h50(k))**nh(k)
+f_ph = (fmin(k) + (1d0 - fmin(k))/(1d0 + x))/gref(k)
+df_ph = -(1d0 - fmin(k))*nh(k)*x/prox/(1d0 + x)**2d0/gref(k)
+endsubroutine phfac_f
 !**************************************************************************************************************************************
 subroutine ch4ph_f(nz,prox,f_ph,df_ph)
 ! pH response of methanogenesis, f = g(pH)/g(pHref) with g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (bell curve, as
@@ -23097,13 +23186,16 @@ select case(trim(adjustl(rxn_name)))
         km_tmp2 = 2d-5 ! half-saturation for O2(aq), mol L-1 
         f_ea  = kch4*pch4x/(kch4*pch4x + km_tmp1 )
         f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
-        rxn_ext = v_tmp*f_ea*f_o2
+        call phfac_f(2,nz,prox,f_ph,df_ph) ! pH response of methanotrophs (1 unless ./phmo.in)
+        rxn_ext = v_tmp*f_ea*f_o2*f_ph
         
         select case(trim(adjustl(sp_name)))
             case('pch4')
-                drxnext_dmsp = v_tmp*km_tmp1*kch4/(kch4*pch4x + km_tmp1 )**2d0*f_o2
+                drxnext_dmsp = v_tmp*km_tmp1*kch4/(kch4*pch4x + km_tmp1 )**2d0*f_o2*f_ph
             case('po2')
-                drxnext_dmsp = v_tmp*f_ea*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0
+                drxnext_dmsp = v_tmp*f_ea*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0*f_ph
+            case('pro')
+                drxnext_dmsp = v_tmp*f_ea*f_o2*df_ph
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -23171,13 +23263,16 @@ select case(trim(adjustl(rxn_name)))
         km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1),1) ! half-saturation for O2(aq), mol L-1
         f_g2  = g2x/(g2x + km_tmp1 )
         f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
-        rxn_ext = v_tmp*f_g2*f_o2
+        call phfac_f(1,nz,prox,f_ph,df_ph) ! pH response of aerobic decomposition (1 unless ./phdec.in)
+        rxn_ext = v_tmp*f_g2*f_o2*f_ph
         
         select case(trim(adjustl(sp_name)))
             case('g2')
-                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_o2
+                drxnext_dmsp = v_tmp*km_tmp1/(g2x + km_tmp1 )**2d0*f_o2*f_ph
             case('po2')
-                drxnext_dmsp = v_tmp*f_g2*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0
+                drxnext_dmsp = v_tmp*f_g2*km_tmp2*ko2/(ko2*po2x + km_tmp2 )**2d0*f_ph
+            case('pro')
+                drxnext_dmsp = v_tmp*f_g2*f_o2*df_ph
             case default
                 drxnext_dmsp = 0d0
         endselect 
@@ -23249,6 +23344,29 @@ select case(trim(adjustl(rxn_name)))
         select case(trim(adjustl(sp_name)))
             case('pch4')
                 drxnext_dmsp = vmax*poro*sat*1d3*kch4
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        if (pox_on_f()) then ! emitted part only, 1 - Pox(pH)
+            call pox_f(nz,prox,f_ph,df_ph)
+            if (trim(adjustl(sp_name))=='pro') drxnext_dmsp = -rxn_ext*df_ph
+            if (trim(adjustl(sp_name))/='pro') drxnext_dmsp = drxnext_dmsp*(1d0 - f_ph)
+            rxn_ext = rxn_ext*(1d0 - f_ph)
+        endif 
+        
+    case('ch4rx') 
+        ! rhizosphere CH4 oxidation (with ./pox.in): the fraction Pox(pH) of the plant-transported CH4 (as ch4pl) that root
+        ! O2 oxidises before it reaches the aerenchyma; Pox rises with pH (methanotroph activity, cf. lime and slag trials)
+        kch4 = keqgas_h(findloc(chrgas_all,'pch4',dim=1),ieqgas_h0)
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) ! yr^-1 
+        call pox_f(nz,prox,f_ph,df_ph)
+        rxn_ext = vmax*poro*sat*1d3*kch4*(pch4x - 1.9d-6)*f_ph
+        
+        select case(trim(adjustl(sp_name)))
+            case('pch4')
+                drxnext_dmsp = vmax*poro*sat*1d3*kch4*f_ph
+            case('pro')
+                drxnext_dmsp = vmax*poro*sat*1d3*kch4*(pch4x - 1.9d-6)*df_ph
             case default
                 drxnext_dmsp = 0d0
         endselect 

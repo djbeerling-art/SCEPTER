@@ -1,7 +1,7 @@
 # Season greenhouse-gas budget of basalt-amended paddy runs against their no-basalt control.
 # Usage: python3 paddy/ghg_budget.py <control run dir> <run dir> [<run dir> ...] [--days=113] [--dose=<t/ha>,...]
 # Per run (season totals, per ha):
-#   CH4 emission  = diffusion + ebullition + unoxidised half of plant transport (as in calib_metrics.py)
+#   CH4 emission  = diffusion + ebullition + unoxidised plant transport (half of ch4pl, or all of it with ch4rx)
 #   N2O emission  = diffusion + plant transport
 #   CO2 degassing = net pco2 exchange across the top (positive = to the atmosphere)
 #   ALK export    = alkalinity leached through the base: the EW CO2 removal term, counted 1 mol CO2 per eq
@@ -33,7 +33,8 @@ def integ(run,name):
 
 def season(run):
     c = integ(run,'gas-pch4')
-    ch4 = c['dif'] + c.get('ch4eb',0) + 0.5*c.get('ch4pl',0)
+    # explicit rhizosphere oxidation (--pox, reaction ch4rx): ch4pl is the emitted part; otherwise half of ch4pl is emitted
+    ch4 = c['dif'] + c.get('ch4eb',0) + (1. if 'ch4rx' in c else 0.5)*c.get('ch4pl',0)
     n = integ(run,'gas-pn2o')
     o = {'CH4 (kg/ha)':ch4*16.04*10,'N2O (kg N/ha)':(n['dif']+n.get('n2opl',0))*28.01*10}
     o['CO2 degassing (t/ha)'] = integ(run,'gas-pco2')['dif']*0.4401

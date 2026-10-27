@@ -46,6 +46,11 @@
 #   'inrt' for its unreactive fraction (glass, clays), which then stays in the dose instead of being renormalised away.
 # --ch4ph=<pK1>:<pK2>:<pHref> makes methanogenesis pH dependent, rate x g(pH)/g(pHref) with
 #   g = 1/(1 + 10^(pK1-pH) + 10^(pH-pK2)) (ch4ph.in); e.g. 6.2:7.9:6.5 peaks near pH 7 and keeps the calibration at pH 6.5.
+# --phdec=<pH50>:<n>:<fmin>:<pHref> makes aerobic OM decomposition (g2o2) pH dependent, rate x g(pH)/g(pHref) with
+#   g = fmin + (1-fmin)/(1 + 10^(n(pH50-pH))) (phdec.in); --phmo=... does the same for CH4 oxidation (ch4o2, phmo.in).
+# --pox=<pmin>:<pmax>:<pH50>:<n> makes rhizosphere oxidation of plant-transported CH4 explicit and pH dependent:
+#   reaction ch4rx oxidises Pox = pmin + (pmax-pmin)/(1 + 10^(n(pH50-pH))) of it and ch4pl emits the rest (pox.in);
+#   without it ch4pl's stoichiometry keeps the fixed Pox 0.5 and ghg_budget.py counts half of ch4pl as emitted.
 # --rtsi=<ksi>:<siref>:<w> makes root O2 loss (rtoxy) depend on dissolved Si (mol/L): x 1 - w + w*h(si)/h(siref),
 #   h = si/(si + ksi) (rtsi.in); e.g. 5e-4:2.7e-4:0.5 (Si-fed rice has higher root oxidising activity).
 # --n2c=<mol N/mol C> NH3 released per OM C decomposed (n2c.in; default 0.1, ~0.03 for straw/root inputs).
@@ -86,6 +91,7 @@ args   = [a for a in sys.argv[1:] if not a.startswith('--')]
 tag    = args[0]
 rxns   = args[1].split(',') if args[1] != 'none' else []
 if any(a.startswith('--n2oy=') for a in sys.argv[1:]) and 'g2n21' in rxns and 'g2n0' not in rxns: rxns.append('g2n0')
+if any(a.startswith('--pox=') for a in sys.argv[1:]) and 'ch4pl' in rxns and 'ch4rx' not in rxns: rxns.append('ch4rx')
 ttot   = float(args[2]) if len(args) > 2 else 0.5
 ch4    = '--ch4' in flags
 fe2buf = '--fe2buf' in flags or ch4
@@ -186,6 +192,13 @@ if 'n2c' in opt:
 if os.path.exists(os.path.join(rundir,'rtsi.in')): os.remove(os.path.join(rundir,'rtsi.in'))
 if 'rtsi' in opt:
     with open(os.path.join(rundir,'rtsi.in'),'w') as f: f.write('ksi siref w\n%s\n' % opt['rtsi'].replace(':',' '))
+if os.path.exists(os.path.join(rundir,'pox.in')): os.remove(os.path.join(rundir,'pox.in'))
+if 'pox' in opt and 'ch4rx' in rxns:
+    with open(os.path.join(rundir,'pox.in'),'w') as f: f.write('pmin pmax pH50 n\n%s\n' % opt['pox'].replace(':',' '))
+for k in ('phdec','phmo'):
+    if os.path.exists(os.path.join(rundir,k+'.in')): os.remove(os.path.join(rundir,k+'.in'))
+    if k in opt:
+        with open(os.path.join(rundir,k+'.in'),'w') as f: f.write('pH50 n fmin pHref\n%s\n' % opt[k].replace(':',' '))
 if 'ch4ph' in opt:
     with open(os.path.join(rundir,'ch4ph.in'),'w') as f: f.write('pK1 pK2 pHref\n%s\n' % opt['ch4ph'].replace(':',' '))
 if 'grlogk' in opt:
