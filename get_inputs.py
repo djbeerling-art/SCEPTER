@@ -97,7 +97,7 @@ def get_input_tracer_bounds(**kwargs):
     runname     = kwargs.get('runname',     'test_input')
     pr_list     = kwargs.get('pr_list',     [])
     rain_list   = kwargs.get('rain_list',   []) 
-    atm_list    = kwargs.get('atm_list',    [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)]) 
+    atm_list    = kwargs.get('atm_list',    [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)]) 
     
     notes = [
         '** parent rock wt fraction (e.g., "ab      0.2" in one line and "ka     0.001" in the next) (if not specified assumed 1e-20)'
