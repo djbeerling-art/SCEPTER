@@ -5074,10 +5074,10 @@ do while (it<nt)
                         ! & *rfrc_sld_plant(isps) &
                         ! & *exp(-z/zsupp_plant)/zsupp_plant
                     msldsupp(isps,:) = msldsupp(isps,:) &
-                        & + plant_rain/12d0*rfrc_sld_plant(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
+                        & + plant_rain/12d0*rfrc_sld_plant(isps)*om_prof(nz,z,dz,zsupp_plant,.false.) ! when plant_ (om_prof: omalloc.in)
                 case('amnt','cc','urea','amfe3') ! amfe3: paddy soil Fe(III) resupply (irrigation sediment, weathering)
                     msldsupp(isps,:) = msldsupp(isps,:) &
-                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)*exp(-z/zsupp_plant)/zsupp_plant ! when plant_
+                        & + plant_rain/mwt(isps)*rfrc_sld_plant(isps)*f_fert_urea(isps)*om_prof(nz,z,dz,zsupp_plant,.true.) ! (om_prof: omalloc.in)
                 case default
                     ! not doing anything
             endselect
@@ -10419,6 +10419,53 @@ call pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
 f = 1d0
 where (z >= ztop .and. z < zbot) f = fac
 endfunction pan_f
+!**************************************************************************************************************************************
+function om_prof(nz,z,dz,zsupp,resonly) result(f)
+! Depth distribution (m-1, integrating to 1 over the column) of the organic-matter input, from ./omalloc.in (header line,
+! then: zres fres zroot). A fraction fres is incorporated residue (straw, stubble, weeds), spread uniformly over the
+! puddled plough layer 0-zres; the rest is root-derived C (roots, exudates), distributed as exp(-z/zroot) and
+! renormalised to the column so none is lost below its base. resonly = .true. (urea, Fe(III) resupply with irrigation
+! sediment) uses the plough-layer profile alone. Without the file: SCEPTER's exp(-z/zsupp)/zsupp (truncated at the base).
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::z,dz
+real(kind=8),intent(in)::zsupp
+logical,intent(in)::resonly
+real(kind=8),dimension(nz)::f,fr,fo
+real(kind=8),save::zres = -1d0, fres = 1d0, zroot = 0.1d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v(3)
+if (.not. read_done) then
+    read_done = .true.
+    inquire(file='./omalloc.in',exist=exist_file)
+    if (exist_file) then
+        open(986,file='./omalloc.in',status='old',action='read')
+        read(986,'()')
+        read(986,*,iostat=ios) v
+        close(986)
+        if (ios == 0) then
+            zres = v(1); fres = v(2); zroot = v(3)
+            print *,'OM allocation (plough-layer depth, residue fraction, root e-folding depth): ',zres,fres,zroot
+        endif
+    endif
+endif
+if (zres <= 0d0) then
+    f = exp(-z/zsupp)/zsupp
+    return
+endif
+fr = 0d0
+where (z < zres) fr = 1d0
+fr = fr/sum(fr*dz)
+if (resonly) then
+    f = fr
+    return
+endif
+fo = exp(-z/zroot)
+fo = fo/sum(fo*dz)
+f = fres*fr + (1d0-fres)*fo
+endfunction om_prof
 !**************************************************************************************************************************************
 function pan_gf(nz,z) result(f)
 ! Plough pan: multiplier on gas-phase tortuosity (soil-air diffusivity) in the pan, from ./pan.in (see pan_cfg);

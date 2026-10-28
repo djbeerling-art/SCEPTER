@@ -63,6 +63,9 @@
 #   satsub caps saturation below the pan (perched water, deep water table); botopen=1 opens the column base to air
 #   for O2 (oxidised subsoil); further optional fields gfac:po2b:pco2b:zdisp (gas-diffusivity factor in the pan,
 #   basal pO2 and pCO2 in atm, dispersivity scale in m; see pan_cfg in scepter.f90) (pan.in).
+# --omalloc=zres:fres:zroot  organic-matter input allocation (omalloc.in): a fraction fres is incorporated residue,
+#   uniform over the plough layer 0-zres (m), the rest root-derived C as exp(-z/zroot), normalised to the column; urea
+#   and --fe3in Fe(III) go to the plough layer only. Default: SCEPTER's exp(-z/0.3)/0.3, truncated at the column base.
 # --ztot=<m>  column depth (default 0.3).
 # --fe3in=<mol Fe m-2 yr-1> reducible Fe(III) (ferrihydrite) supply with the OM input (irrigation sediment and soil-mineral
 #   weathering), balancing Fe2+ leaching so that topsoil Fe is not drained within decades.
@@ -190,6 +193,9 @@ if 'fe2k0' in opt:
 if os.path.exists(os.path.join(rundir,'pan.in')): os.remove(os.path.join(rundir,'pan.in'))
 if 'pan' in opt:
     with open(os.path.join(rundir,'pan.in'),'w') as f: f.write('ztop zbot factor\n%s\n' % opt['pan'].replace(':',' '))
+if os.path.exists(os.path.join(rundir,'omalloc.in')): os.remove(os.path.join(rundir,'omalloc.in'))
+if 'omalloc' in opt:
+    with open(os.path.join(rundir,'omalloc.in'),'w') as f: f.write('zres fres zroot\n%s\n' % opt['omalloc'].replace(':',' '))
 if os.path.exists(os.path.join(rundir,'n2c.in')): os.remove(os.path.join(rundir,'n2c.in'))
 if 'n2c' in opt:
     with open(os.path.join(rundir,'n2c.in'),'w') as f: f.write('n2c\n%s\n' % opt['n2c'])
