@@ -509,7 +509,9 @@ real(kind=8) :: rcharge
 real(kind=8),dimension(nz):: dummy,up,dwn,cnr,adf
 real(kind=8) :: rough_c0_b = 10d0**(3.3d0)
 real(kind=8) :: rough_c1_b = 0.33d0
-real(kind=8) :: c_disp,c0_disp,c1_disp,zdisp  ! dispersion coefficients 
+real(kind=8) :: c_disp,c0_disp,c1_disp,zdisp  ! dispersion coefficients
+real(kind=8) :: ztop_pan,zbot_pan,fac_pan,satsub_pan,gfac_pan,po2b_pan,pco2b_pan,zdisp_pan ! plough pan settings (pan.in)
+logical :: botopen_pan 
 real(kind=8),parameter :: disp_FULL = 1d0
 real(kind=8),dimension(nz) :: disp,dispprev  ! dispersion coefficients 
 real(kind=8),dimension(nz) :: cec  ! cation exchange capacity  
@@ -1961,7 +1963,8 @@ stgas_ext_all(findloc(chrrxn_ext_all,'g2o2',dim=1), findloc(chrgas_all,'pnh3',di
 ! rice root uptake of NH4+ (N leaves the soil into the crop)
 stgas_ext_all(findloc(chrrxn_ext_all,'nh4up',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = -1d0
 ! rice root respiration: CO2 released into the rooted soil (carbon from the plant, not from soil OM)
-stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
+
 stgas_ext_all(findloc(chrrxn_ext_all,'rtoxy',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 ! rice root uptake of H4SiO4 (Si leaves the soil into the crop)
 staq_ext_all(findloc(chrrxn_ext_all,'siup ',dim=1), findloc(chraq_all,'si',dim=1)) = -1d0
@@ -3277,6 +3280,8 @@ w = w_btm
 ! adding dispersion calculation
 if (disp_ON) then 
     zdisp = ztot ! assuming dispersion scale = total depth 
+    call pan_cfg(ztop_pan,zbot_pan,fac_pan,satsub_pan,botopen_pan,gfac_pan,po2b_pan,pco2b_pan,zdisp_pan)
+    if (zdisp_pan > 0d0) zdisp = zdisp_pan ! fixed dispersion scale from pan.in (keeps dispersion independent of column depth)
 else 
     zdisp = 0d0
     disp_FULL_ON = .false.
@@ -3293,7 +3298,7 @@ c_disp = c0_disp*zdisp**c1_disp
 c_disp = 5d-4
 #endif 
 
-disp = c_disp * abs(v)
+disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 
 if (disp_FULL_ON) disp = disp_FULL
 
@@ -3875,7 +3880,7 @@ if (read_data) then
 #ifdef AMD_benchmark
 		c_disp = 5d-4
 #endif 
-		disp = c_disp * abs(v)
+		disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 
 		if (disp_FULL_ON) disp = disp_FULL
 		
@@ -4676,7 +4681,7 @@ do while (it<nt)
 #ifdef AMD_benchmark
 		c_disp = 5d-4
 #endif 
-        disp = c_disp * abs(v)
+        disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 
         if (disp_FULL_ON) disp = disp_FULL
         
@@ -5314,7 +5319,7 @@ do while (it<nt)
 #ifdef AMD_benchmark
 		c_disp = 5d-4
 #endif 
-        disp = c_disp * abs(v)
+        disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 
         if (disp_FULL_ON) disp = disp_FULL
 		
@@ -5652,7 +5657,7 @@ do while (it<nt)
 #ifdef AMD_benchmark
 		c_disp = 5d-4
 #endif 
-        disp = c_disp * abs(v)
+        disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 
         if (disp_FULL_ON) disp = disp_FULL
 		
@@ -5755,7 +5760,7 @@ do while (it<nt)
 #ifdef AMD_benchmark
 		c_disp = 5d-4
 #endif 
-        disp = c_disp * abs(v)
+        disp = c_disp * abs(v)*pan_f( nz, z ) ! plough pan (pan.in) scales dispersion as well as diffusion
 		
 ! #ifdef disp_cnst
 		! disp = disp_cnst
@@ -10063,7 +10068,8 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 50d0 ! plant transport 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth of root density, m (used in the main program) 
 ! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
 ! respiration); distributed with the root density profile of ch4pl
-krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+krxn1_ext_all(findloc(chrrxn_ext_all,'rtco2',dim=1),:) = 15d0 
+
 ! radial O2 loss from rice roots, mol O2 m^-2 yr^-1 (3.65 = 10 mmol m^-2 d^-1; order of whole-crop estimates, e.g.
 ! Kirk 2004, Revsbech et al. 1999); distributed and limited to wet soil as rtco2. The O2 is then used by the soil's own
 ! O2 sinks (Fe2+ and FeS oxidation, CH4 oxidation, aerobic respiration, nitrification)
@@ -10094,7 +10100,8 @@ krxn1_ext_all(findloc(chrrxn_ext_all,'n2opl',dim=1),:) = 0.76d0 ! plant N2O cond
 
 
 ! optional run-time override of extra-reaction constants (for calibration without recompiling) 
-call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
+call read_krxn_ext_override(nz,nrxn_ext_all,chrrxn_ext_all,krxn1_ext_all,krxn2_ext_all)
+
 
 ! paddy: temperature dependence of the microbial reactions, rate x Q10**((T-25)/10), so constants (incl. the run-time
 ! override above) are 25 C values; Q10 3 for methanogenesis (cf. Segers 1998), 2 for the others; ./q10.in (a header
@@ -10427,9 +10434,11 @@ f = 1d0
 where (z >= ztop .and. z < zbot) f = gfac
 endfunction pan_gf
 !**************************************************************************************************************************************
-subroutine pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
-! Reads ./pan.in once: a header line, then ztop zbot factor [satsub [botopen [gfac [po2b [pco2b]]]]]. factor and gfac
-! (default 1) multiply the aqueous and gas-phase tortuosities in the pan. satsub (default 1) caps the water
+subroutine pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b,zdisp)
+! Reads ./pan.in once: a header line, then ztop zbot factor [satsub [botopen [gfac [po2b [pco2b [zdisp]]]]]]. factor
+! multiplies the aqueous tortuosity and the mechanical dispersion in the pan, gfac (default 1) the gas-phase tortuosity.
+! zdisp (m, default -1 = column depth) fixes the scale of the dispersivity, which SCEPTER otherwise ties to the column
+! depth (Schulze-Makuch 2005), so that deepening the column to add a subsoil does not change mixing in the plough layer. satsub (default 1) caps the water
 ! saturation below the pan (z >= zbot): with a deep water table the water ponded above the pan is perched and the
 ! subsoil stays unsaturated. botopen (default 0) = 1 opens the column base to soil air: pO2 is held at po2b (atm,
 ! default 0.21) below the bottom cell, an idealised aerated subsoil or lateral O2 access beneath perched water, and,
@@ -10437,13 +10446,15 @@ subroutine pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
 ! Advection through the pan is not set here: in 1-D the percolation q (driver --q) is the pan-limited flux
 implicit none
 real(kind=8),intent(out)::ztop,zbot,fac,satsub,gfac,po2b,pco2b
+real(kind=8),intent(out),optional::zdisp
 logical,intent(out)::botopen
 real(kind=8),save::ztop_s = 0d0, zbot_s = 0d0, fac_s = 1d0, satsub_s = 1d0, gfac_s = 1d0, po2b_s = 0.21d0, pco2b_s = -1d0
+real(kind=8),save::zdisp_s = -1d0
 logical,save::botopen_s = .false.
 logical,save::read_done = .false.
 logical::exist_file
 integer::ios
-real(kind=8)::v(8)
+real(kind=8)::v(9)
 character(500)::line
 if (.not. read_done) then 
     read_done = .true.
@@ -10454,8 +10465,9 @@ if (.not. read_done) then
         read(985,'(a)',iostat=ios) line
         close(985)
         if (ios == 0) then 
-            v = (/0d0,0d0,1d0,1d0,0d0,1d0,0.21d0,-1d0/)
+            v = (/0d0,0d0,1d0,1d0,0d0,1d0,0.21d0,-1d0,-1d0/)
             read(line,*,iostat=ios) v
+            if (ios /= 0) read(line,*,iostat=ios) v(1:8)
             if (ios /= 0) read(line,*,iostat=ios) v(1:7)
             if (ios /= 0) read(line,*,iostat=ios) v(1:6)
             if (ios /= 0) read(line,*,iostat=ios) v(1:5)
@@ -10463,15 +10475,16 @@ if (.not. read_done) then
             if (ios /= 0) read(line,*,iostat=ios) v(1:3)
             if (ios == 0) then 
                 ztop_s = v(1); zbot_s = v(2); fac_s = v(3); satsub_s = v(4); botopen_s = v(5) > 0.5d0
-                gfac_s = v(6); po2b_s = v(7); pco2b_s = v(8)
-                print *,'plough pan (ztop, zbot, aq/gas diffusivity factors, subsoil sat, open base, pO2, pCO2 at base): ' &
-                    & ,ztop_s,zbot_s,fac_s,gfac_s,satsub_s,botopen_s,po2b_s,pco2b_s
+                gfac_s = v(6); po2b_s = v(7); pco2b_s = v(8); zdisp_s = v(9)
+                print *,'plough pan (ztop, zbot, aq/gas diffusivity factors, subsoil sat, open base, pO2, pCO2 at base, zdisp): ' &
+                    & ,ztop_s,zbot_s,fac_s,gfac_s,satsub_s,botopen_s,po2b_s,pco2b_s,zdisp_s
             endif 
         endif 
     endif 
 endif 
 ztop = ztop_s; zbot = zbot_s; fac = fac_s; satsub = satsub_s; botopen = botopen_s
 gfac = gfac_s; po2b = po2b_s; pco2b = pco2b_s
+if (present(zdisp)) zdisp = zdisp_s
 endsubroutine pan_cfg
 !**************************************************************************************************************************************
 subroutine pan_sat(nz,z,sat)
@@ -22150,7 +22163,8 @@ call get_maqt_all( 																			&
 	& mgasfte_loc,dmgasfte_dpro_loc,dmgasfte_dios_loc,dmgasfte_dmaqf_loc,dmgasfte_dmgas_loc,&! output
 	& mgasfti_loc,dmgasfti_dpro_loc,dmgasfti_dios_loc,dmgasfti_dmaqf_loc,dmgasfti_dmgas_loc,&! output
 	& profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios						&! output
-	& )
+	& )
+
 #ifdef cache_spec
   ck_maq = maqx_loc
   ck_mgas = mgasx_loc
@@ -22174,7 +22188,8 @@ call get_msldx_all( &
     & ,chrsld,chrsld_all,chrsld_cnst &
     & ,msldx,msldc &
     & ,msldx_loc  &! output
-    & )
+    & )
+
 #ifdef cache_spec
   ck_msld = msldx
 endif

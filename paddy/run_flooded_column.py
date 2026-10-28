@@ -61,7 +61,8 @@
 # --fe2k0=<k>     pH-independent Fe2+ oxygenation rate constant, /min/atm (fe2k0.in; default 1e-7).
 # --pan=ztop:zbot:factor[:satsub[:botopen]]  plough pan: aqueous diffusivity multiplied by factor for ztop <= z < zbot (m);
 #   satsub caps saturation below the pan (perched water, deep water table); botopen=1 opens the column base to air
-#   for O2 (oxidised subsoil) (pan.in).
+#   for O2 (oxidised subsoil); further optional fields gfac:po2b:pco2b:zdisp (gas-diffusivity factor in the pan,
+#   basal pO2 and pCO2 in atm, dispersivity scale in m; see pan_cfg in scepter.f90) (pan.in).
 # --ztot=<m>  column depth (default 0.3).
 # --fe3in=<mol Fe m-2 yr-1> reducible Fe(III) (ferrihydrite) supply with the OM input (irrigation sediment and soil-mineral
 #   weathering), balancing Fe2+ leaching so that topsoil Fe is not drained within decades.
