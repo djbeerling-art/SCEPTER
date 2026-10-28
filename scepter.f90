@@ -2975,6 +2975,7 @@ enddo
 call interpolate_saturation(nz, z, sat)						   
 #endif 
 
+call pan_sat(nz,z,sat) ! perched water above a plough pan (pan.in)
 ! getting user-defined thermodynamc data
 call get_keqspc_num(nsld_keqspc)
 
@@ -3263,7 +3264,7 @@ tor_ref = 'M59'         ! Millington 1959 | Millington and Quirk 1961 | Steefel 
 ! torg = poro**(3.4d0-2.0d0)*(1.0d0-sat)**(3.4d0-1.0d0)
 ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
-torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
 tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
 
 w_btm = w0
@@ -3867,7 +3868,7 @@ if (read_data) then
 		
 		theta = poro*sat
 
-		torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+		torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
 		tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
 			
 		c_disp = c0_disp*zdisp**c1_disp
@@ -4663,11 +4664,12 @@ do while (it<nt)
         endif 
         
 		sat = min(1.0d0,(1d0-satup)*z/zsat + satup)
+		call pan_sat(nz,z,sat)
         v = qin/poro/sat
         ! torg = poro**(3.4d0-2.0d0)*(1.0d0-sat)**(3.4d0-1.0d0)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
-        torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+        torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
         tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
@@ -5305,7 +5307,7 @@ do while (it<nt)
         ! torg = poro**(3.4d0-2.0d0)*(1.0d0-sat)**(3.4d0-1.0d0)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
-        torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+        torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
         tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
@@ -5643,7 +5645,7 @@ do while (it<nt)
         ! torg = poro**(3.4d0-2.0d0)*(1.0d0-sat)**(3.4d0-1.0d0)
         ! tora = poro**(3.4d0-2.0d0)*(sat)**(3.4d0-1.0d0)
 
-        torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+        torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
         tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
@@ -5746,7 +5748,7 @@ do while (it<nt)
 		poro = poroi
         v = qin/poro/sat
 
-        torg = tor_f( tor_ref, nz, poro, 1d0-sat )
+        torg = tor_f( tor_ref, nz, poro, 1d0-sat )*pan_gf( nz, z )
         tora = tor_f( tor_ref, nz, poro, sat )*pan_f( nz, z )
         
         c_disp = c0_disp*zdisp**c1_disp
@@ -10397,35 +10399,94 @@ endfunction fe2ox_f
 !**************************************************************************************************************************************
 function pan_f(nz,z) result(f)
 ! Plough pan: multiplier on aqueous tortuosity (solute diffusivity) for cells with ztop <= z < zbot, from ./pan.in
-! (a header line, then ztop zbot factor), read once; without the file f = 1. A puddled paddy's compacted pan (bulk
-! density ~1.6-1.7 vs ~1.1-1.3 g/cm3 above) slows solute exchange between the plough layer and the subsoil; the
-! percolation through it is set separately (driver --q)
+! (see pan_cfg); without the file f = 1. A puddled paddy's compacted pan (bulk density ~1.6-1.7 vs ~1.1-1.3 g/cm3
+! above) slows solute exchange between the plough layer and the subsoil; the percolation through it is set
+! separately (driver --q)
 implicit none
 integer,intent(in)::nz
 real(kind=8),dimension(nz),intent(in)::z
 real(kind=8),dimension(nz)::f
-real(kind=8),save::ztop = 0d0, zbot = 0d0, fac = 1d0
+real(kind=8)::ztop,zbot,fac,satsub,gfac,po2b,pco2b
+logical::botopen
+call pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
+f = 1d0
+where (z >= ztop .and. z < zbot) f = fac
+endfunction pan_f
+!**************************************************************************************************************************************
+function pan_gf(nz,z) result(f)
+! Plough pan: multiplier on gas-phase tortuosity (soil-air diffusivity) in the pan, from ./pan.in (see pan_cfg);
+! matters when the pan is not saturated (drained periods)
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::z
+real(kind=8),dimension(nz)::f
+real(kind=8)::ztop,zbot,fac,satsub,gfac,po2b,pco2b
+logical::botopen
+call pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
+f = 1d0
+where (z >= ztop .and. z < zbot) f = gfac
+endfunction pan_gf
+!**************************************************************************************************************************************
+subroutine pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
+! Reads ./pan.in once: a header line, then ztop zbot factor [satsub [botopen [gfac [po2b [pco2b]]]]]. factor and gfac
+! (default 1) multiply the aqueous and gas-phase tortuosities in the pan. satsub (default 1) caps the water
+! saturation below the pan (z >= zbot): with a deep water table the water ponded above the pan is perched and the
+! subsoil stays unsaturated. botopen (default 0) = 1 opens the column base to soil air: pO2 is held at po2b (atm,
+! default 0.21) below the bottom cell, an idealised aerated subsoil or lateral O2 access beneath perched water, and,
+! if pco2b >= 0, pCO2 at pco2b so subsoil CO2 can leave the same way (default -1: closed); other gases stay closed.
+! Advection through the pan is not set here: in 1-D the percolation q (driver --q) is the pan-limited flux
+implicit none
+real(kind=8),intent(out)::ztop,zbot,fac,satsub,gfac,po2b,pco2b
+logical,intent(out)::botopen
+real(kind=8),save::ztop_s = 0d0, zbot_s = 0d0, fac_s = 1d0, satsub_s = 1d0, gfac_s = 1d0, po2b_s = 0.21d0, pco2b_s = -1d0
+logical,save::botopen_s = .false.
 logical,save::read_done = .false.
 logical::exist_file
 integer::ios
-real(kind=8)::v1,v2,v3
+real(kind=8)::v(8)
+character(500)::line
 if (.not. read_done) then 
     read_done = .true.
     inquire(file='./pan.in',exist=exist_file)
     if (exist_file) then 
         open(985,file='./pan.in',status='old',action='read')
         read(985,'()')
-        read(985,*,iostat=ios) v1,v2,v3
+        read(985,'(a)',iostat=ios) line
         close(985)
         if (ios == 0) then 
-            ztop = v1; zbot = v2; fac = v3
-            print *,'plough pan (ztop, zbot, diffusivity factor): ',ztop,zbot,fac
+            v = (/0d0,0d0,1d0,1d0,0d0,1d0,0.21d0,-1d0/)
+            read(line,*,iostat=ios) v
+            if (ios /= 0) read(line,*,iostat=ios) v(1:7)
+            if (ios /= 0) read(line,*,iostat=ios) v(1:6)
+            if (ios /= 0) read(line,*,iostat=ios) v(1:5)
+            if (ios /= 0) read(line,*,iostat=ios) v(1:4)
+            if (ios /= 0) read(line,*,iostat=ios) v(1:3)
+            if (ios == 0) then 
+                ztop_s = v(1); zbot_s = v(2); fac_s = v(3); satsub_s = v(4); botopen_s = v(5) > 0.5d0
+                gfac_s = v(6); po2b_s = v(7); pco2b_s = v(8)
+                print *,'plough pan (ztop, zbot, aq/gas diffusivity factors, subsoil sat, open base, pO2, pCO2 at base): ' &
+                    & ,ztop_s,zbot_s,fac_s,gfac_s,satsub_s,botopen_s,po2b_s,pco2b_s
+            endif 
         endif 
     endif 
 endif 
-f = 1d0
-where (z >= ztop .and. z < zbot) f = fac
-endfunction pan_f
+ztop = ztop_s; zbot = zbot_s; fac = fac_s; satsub = satsub_s; botopen = botopen_s
+gfac = gfac_s; po2b = po2b_s; pco2b = pco2b_s
+endsubroutine pan_cfg
+!**************************************************************************************************************************************
+subroutine pan_sat(nz,z,sat)
+! caps the saturation below the pan at satsub (perched water above a plough pan; see pan_cfg)
+implicit none
+integer,intent(in)::nz
+real(kind=8),dimension(nz),intent(in)::z
+real(kind=8),dimension(nz),intent(inout)::sat
+real(kind=8)::ztop,zbot,fac,satsub,gfac,po2b,pco2b
+logical::botopen
+call pan_cfg(ztop,zbot,fac,satsub,botopen,gfac,po2b,pco2b)
+if (satsub < 1d0) then 
+    where (z >= zbot) sat = min(sat,satsub)
+endif 
+endsubroutine pan_sat
 !**************************************************************************************************************************************
 function pox_on_f() result(on)
 ! true when ./pox.in (a header line, then pmin, pmax, pH50, n) is present: explicit pH-dependent rhizosphere CH4
@@ -31483,9 +31544,12 @@ integer i_c,i_p,i_n ! 1 -- iz, 2 -- iz + 1, 3 -- iz - 1
 data i_c,i_p,i_n/1,2,3/
 
 logical ghost_node
+logical pan_botopen
+real(kind=8) pan_v1,pan_v2,pan_v3,pan_v4,pan_v5,pan_po2b,pan_pco2b,pgas_bot
 
 ! ghost_node = .true.
 ghost_node = .false.
+call pan_cfg(pan_v1,pan_v2,pan_v3,pan_v4,pan_botopen,pan_v5,pan_po2b,pan_pco2b)
 
 ! dgas(ispg,:)	= ucv*poro*(1.0d0-sat)*1d3*torg*dgasg(ispg)+poro*sat*khgasx(ispg,:)*1d3*(tora*dgasa(ispg)+disp)  !! effective gas + aq diffusion
 ! dgasi(ispg)		= ucv*1d3*dgasg(ispg)   !! gas diffusion alone in air 
@@ -31562,6 +31626,11 @@ do ispg=1,nsp_gas
 	pgas_tmp_n(2:nz) = pgas_tmp(1:nz-1)
 	
 	pgas_tmp_p(nz) = pgas_tmp(nz) ! making the flux at the bottom 0 
+	! open base (pan.in): pO2 (and pCO2 if pan_pco2b >= 0) held at prescribed values below the bottom cell
+	pgas_bot = -1d0
+	if (pan_botopen .and. ispg == findloc(chrgas,'po2',dim=1)) pgas_bot = pan_po2b
+	if (pan_botopen .and. ispg == findloc(chrgas,'pco2',dim=1)) pgas_bot = pan_pco2b
+	if (pgas_bot >= 0d0) pgas_tmp_p(nz) = pgas_bot
 	pgas_tmp_n(1) = mgasi(ispg) ! fixing the conc at the top  
 	
 	if (ghost_node) pgas_tmp_n(1) = 2d0*mgasi(ispg) - pgas_tmp(1)
@@ -31600,6 +31669,8 @@ do ispg=1,nsp_gas
 		& - edif_p(1:nz-1)*( -dpgas_dmgas(1:nz-1) )/dz(1:nz-1) ! note that the bottom flux is zero 
 	dfgasgdif_dmgas(ispg,ispg,1:nz-1,i_p) = dfgasgdif_dmgas(ispg,ispg,1:nz-1,i_p) &
 		& - edif_p(1:nz-1)*( dpgas_dmgas(2:nz) )/dz(1:nz-1)   
+	if (pgas_bot >= 0d0) &
+		& dfgasgdif_dmgas(ispg,ispg,nz,i_c) = dfgasgdif_dmgas(ispg,ispg,nz,i_c) + edif_p(nz)*dpgas_dmgas(nz)/dz(nz)
 		
 
 enddo 

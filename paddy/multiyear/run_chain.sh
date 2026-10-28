@@ -32,7 +32,9 @@ for y in $(seq 1 $ny); do
     python3 paddy/run_flooded_column.py $tf $RF 0.69 --fallow --rstrt=$ts --basalt=0 --om=$omf $C $(printf '%s\n' "$@" | grep -v -e '^--awd$' -e '^--phd' -e '^--k=') --k=$(printf '%s\n' "$@" | grep '^--k=' | cut -d= -f2) ${FOPT:-} > /dev/null 2>&1
     rc=$?; awk 'END{exit !($1+0>=0.6895)}' $SCEPTER_OUT/paddy/flood_$tf/flx/flx_gas-pch4.txt 2>/dev/null || rc=98
     find $SCEPTER_OUT/paddy/flood_$tf/flx -name 'flx_psd*' -delete 2>/dev/null
-    [ $y -gt 1 ] && find $SCEPTER_OUT/paddy/flood_${name}_y$((y-1))[sf]/prof -type f -delete 2>/dev/null
+    # KEEPALK=1 (environment) keeps the porewater, dissolved-gas and solid profiles for paddy/alk_flux.py
+    if [ $y -gt 1 ]; then if [ -n "${KEEPALK:-}" ]; then paddy/prune_run.sh season $SCEPTER_OUT/paddy/flood_${name}_y$((y-1))[sf]
+      else find $SCEPTER_OUT/paddy/flood_${name}_y$((y-1))[sf]/prof -type f -delete 2>/dev/null; fi; fi
     echo "$tf rc $rc" >> "$st"; [ $rc = 0 ] || exit 1
   fi
   # keep only what ghg_budget.py reads (a season run is ~50 MB unpruned); the latest fallow keeps its restart state

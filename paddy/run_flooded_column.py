@@ -59,7 +59,10 @@
 #                 of NO3- denitrified stops at N2O (g2n21), the rest goes to N2 (g2n0, added to the reactions); e.g. 6:1.5:0.1.
 # --fe2ox=<x>     multiplier on the Fe2+ oxygenation rate constant (fe2ox.in; default 1).
 # --fe2k0=<k>     pH-independent Fe2+ oxygenation rate constant, /min/atm (fe2k0.in; default 1e-7).
-# --pan=ztop:zbot:factor  plough pan: aqueous diffusivity multiplied by factor for ztop <= z < zbot (m) (pan.in).
+# --pan=ztop:zbot:factor[:satsub[:botopen]]  plough pan: aqueous diffusivity multiplied by factor for ztop <= z < zbot (m);
+#   satsub caps saturation below the pan (perched water, deep water table); botopen=1 opens the column base to air
+#   for O2 (oxidised subsoil) (pan.in).
+# --ztot=<m>  column depth (default 0.3).
 # --fe3in=<mol Fe m-2 yr-1> reducible Fe(III) (ferrihydrite) supply with the OM input (irrigation sediment and soil-mineral
 #   weathering), balancing Fe2+ leaching so that topsoil Fe is not drained within decades.
 # --phd=<days> drains the field that many days before harvest (day 113), for flooded and AWD runs alike (final
@@ -240,7 +243,7 @@ if 'noprec' in opt:
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
-    ztot=0.3,nz=int(opt.get('nz','30')),ttot=ttot,temp=tsoil,omrain=omin,zom=0.15,poro=0.5,
+    ztot=float(opt.get('ztot','0.3')),nz=int(opt.get('nz','30')),ttot=ttot,temp=tsoil,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=float(opt.get('fsat',0.5)) if fallow else 1.0,  # water saturation 1 throughout: flooded
     zwater=zdry if (awd or phd > 0) else (float(opt.get('fzw',0.5)) if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=int(opt.get('nstep',10)),rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',

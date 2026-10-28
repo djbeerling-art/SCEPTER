@@ -4,13 +4,17 @@
 #   CH4 emission  = diffusion + ebullition + unoxidised plant transport (half of ch4pl, or all of it with ch4rx)
 #   N2O emission  = diffusion + plant transport
 #   CO2 degassing = net pco2 exchange across the top (positive = to the atmosphere)
-#   ALK export    = alkalinity leached through the base: the EW CO2 removal term, counted 1 mol CO2 per eq
-#                   (assumes the alkalinity is kept downstream)
+#   ALK export    = carbonate alkalinity leached through the base, counted 1 mol CO2 per eq
+#   durable ALK   = ALK export - 2 x (Fe2+ + NH4+) export: Fe2+ leaving a reduced column is oxidised downstream, and
+#                   Fe(OH)3 precipitation releases 2 H+ per Fe; nitrification releases 2 H+ per NH4+. Both consume the
+#                   HCO3- the ions travelled with. This is the EW CO2
+#                   removal term (assumes the remaining alkalinity is kept downstream); --alk=carbonate restores the
+#                   uncorrected ALK export
 #   calcite       = net calcite precipitation in the column (1 mol CO2 stored per mol)
 #   cation release = base-cation charge released by basalt dissolution: the CDR potential, realised as the cations
 #                   leave the soil (in one season most stay on the exchange complex)
 # Net GHG change vs control (t CO2-eq/ha, AR6 GWP100, non-fossil CH4):
-#   realised  = dCH4*27 + dN2O*273 - dALK export - dcalcite, with dcalcite capped at the basalt's cation release
+#   realised  = dCH4*27 + dN2O*273 - d(durable ALK) - dcalcite, with dcalcite capped at the basalt's cation release
 #               less dALK export (calcite beyond that is not rock-derived CDR)
 #   potential = dCH4*27 + dN2O*273 - cation release
 import sys,numpy as np
@@ -39,6 +43,13 @@ def season(run):
     o = {'CH4 (kg/ha)':ch4*16.04*10,'N2O (kg N/ha)':(n['dif']+n.get('n2opl',0))*28.01*10}
     o['CO2 degassing (t/ha)'] = integ(run,'gas-pco2')['dif']*0.4401
     o['ALK export (t CO2/ha)'] = integ(run,'co2sp-ALK')['adv']*0.4401
+    try: fe2 = integ(run,'aq-fe2')['adv']
+    except OSError:
+        fe2 = np.nan
+        if 'fe2' not in warned: warned.add('fe2'); print('WARNING: no flx_aq-fe2.txt (pruned?): durable ALK unknown',file=sys.stderr)
+    try: nh4 = integ(run,'gas-pnh3')['adv']
+    except (OSError,KeyError): nh4 = 0.
+    o['durable ALK (t CO2/ha)'] = o['ALK export (t CO2/ha)'] - 2*(fe2+nh4)*0.4401
     try: o['calcite (t CO2/ha)'] = -integ(run,'sld-cc')['cc']*0.4401   # cc column: dissolution positive
     except OSError: o['calcite (t CO2/ha)'] = 0.
     # rock minerals = those in the run's dust.in (calcite, Fe(III) oxide and inert excluded); their base-cation charge
@@ -64,7 +75,8 @@ for run,dose in zip([args[0]]+args[1:],[0.]+doses):
     o = season(run)
     dch4 = (o['CH4 (kg/ha)']-ctrl['CH4 (kg/ha)'])/1e3*27
     dn2o = (o['N2O (kg N/ha)']-ctrl['N2O (kg N/ha)'])*44.01/28.01/1e3*273
-    dalk = o['ALK export (t CO2/ha)']-ctrl['ALK export (t CO2/ha)']
+    ak = 'ALK export (t CO2/ha)' if opt.get('alk','durable') == 'carbonate' else 'durable ALK (t CO2/ha)'
+    dalk = o[ak]-ctrl[ak]
     dcc  = o['calcite (t CO2/ha)']-ctrl['calcite (t CO2/ha)']
     # extra calcite counts as CDR only up to the base-cation charge the basalt released (less what already left as
     # alkalinity): beyond that, its Ca and alkalinity come from the exchange complex and Fe/SO4 reduction, which is
