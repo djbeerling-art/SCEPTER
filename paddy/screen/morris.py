@@ -4,23 +4,24 @@
 # analyse: python3 paddy/screen/morris.py analyse <dir>  -> <dir>/morris_<metric>.csv (mu*, sigma per factor)
 # Factors and ranges (Morris p=4 levels): soil reducible Fe(III), OM input, soil pH (through irrigation alkalinity,
 # 0 -> pH ~5.0, 2 -> ~6.7 after spin-up), soil CEC, temperature, rock reducible Fe(III), basalt (5 SCEPTER rocks),
-# dose, water management (continuous flooding with mid-season drain / AWD), green-rust bioavailability (g2gr krxn2,
-# the least constrained calibration constant).
+# dose, water management (continuous flooding with pre-harvest drain / AWD), strength w of the Si feedback on root O2
+# loss (the least constrained calibration constant, --rtsi) and percolation q (0.2-1 m/yr = 0.5-2.7 mm/d).
+# Calibration v16; one season after a 3-yr drained spin-up.
 import sys, os, hashlib
 import numpy as np, pandas as pd
 
 FACT = [('soilfe3', 0.004, 0.03), ('om', 250, 800), ('irralk', 0, 2), ('cec', 8, 30), ('temp', 20, 30),
-        ('basfe3', 0, 0.05), ('rock', 0, 4), ('dose', 5, 30), ('awd', 0, 1), ('grbio', 0.02, 0.3)]
+        ('basfe3', 0, 0.05), ('rock', 0, 4), ('dose', 5, 30), ('awd', 0, 1), ('siw', 0.25, 0.75), ('q', 0.2, 1.0)]
 ROCKS = ['Hillhouse', 'Oregon', 'BlueRidge', 'Tichum', 'basalt']
-SPIN = ['soilfe3', 'om', 'irralk', 'cec', 'temp']
-CTRL = SPIN+['awd', 'grbio']
+SPIN = ['soilfe3', 'om', 'irralk', 'cec', 'temp', 'q']
+CTRL = SPIN+['awd', 'siw']
 PROB = dict(num_vars=len(FACT), names=[f[0] for f in FACT], bounds=[[f[1], f[2]] for f in FACT])
-KRXN = 'paddy/krxn_calibrated_v5.in'
+KRXN = 'paddy/krxn_calibrated_v16.in'
 
 def key(row, cols): return hashlib.md5(','.join(f'{row[c]:.6g}' for c in cols).encode()).hexdigest()[:8]
 
 def opts(r):
-    o = f'--fe3={r.soilfe3:.4g} --om={r.om:.0f} --irralk={r.irralk:.3g} --cec={r.cec:.3g} --temp={r.temp:.3g}'
+    o = f'--fe3={r.soilfe3:.4g} --om={r.om:.0f} --irralk={r.irralk:.3g} --cec={r.cec:.3g} --temp={r.temp:.3g} --q={r.q:.3g}'
     return o
 
 def design(d, nr):
@@ -32,14 +33,9 @@ def design(d, nr):
     df['ctrl'] = [key(r, CTRL) for _, r in df.iterrows()]
     df['tag'] = [f'm_{i:03d}' for i in range(len(df))]
     df.to_csv(os.path.join(d, 'design.csv'), index=False)
-    os.makedirs(os.path.join(d, 'krxn'), exist_ok=True)
-    base = open(KRXN).read().splitlines()
-    for g in sorted(set(df.grbio)):
-        with open(os.path.join(d, 'krxn', f'gr{g:.4f}.in'), 'w') as f:
-            f.write('\n'.join(f'g2gr -999 {g:.4f}' if l.startswith('g2gr') else l for l in base)+'\n')
     sp, ct, ds = {}, {}, []
     for r in df.itertuples():
-        kf = os.path.join(d, 'krxn', f'gr{r.grbio:.4f}.in'); w = '--awd' if r.awd else '--phd=14'
+        kf = KRXN; w = ('--awd --phd=14' if r.awd else '--phd=14') + f' --rtsi=5e-4:2.7e-4:{r.siw:.3g}'
         sp[f'ms_{r.spin}'] = opts(r)
         ct[f'mc_{r.ctrl}'] = f'--rstrt=ms_{r.spin} --k={kf} {w} --basalt=0 {opts(r)}'
         ds.append(f'{r.tag} --rstrt=ms_{r.spin} --k={kf} {w} --basalt={r.dose:.3g} --rock={ROCKS[r.rock]} '
