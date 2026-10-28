@@ -817,6 +817,10 @@ real(kind=8),dimension(nsp_aq)::maqi,maqth,daq,mwtaq,int_btm_efflx
 real(kind=8),dimension(nsp_aq,nz)::maqx,maq,rxnaq,maqsupp,cecaq,cecaqr,cecaqwt
 real(kind=8),dimension(nsp_aq,5 + nrxn_ext + nsp_sld,nz)::flx_aq
 real(kind=8),dimension(nsp_aq,5 + nrxn_ext + nsp_sld)::int_flx_aq
+real(kind=8),dimension(nsp_aq,5 + nrxn_ext + nsp_sld,nz)::zint_flx_aq ! time-integrated flux terms per cell (mol m-2), flx/zint_*.txt
+real(kind=8),dimension(nsp_sld,5 + nrxn_ext + nsp_sld,nz)::zint_flx_sld
+real(kind=8),dimension(5 + nrxn_ext + nsp_sld,nz)::zint_flx_alk
+character(4000)::zint_hdr
 real(kind=8),dimension(nsp_gas)::mgasi,mgasth,dgasa,dgasg,dmgas,khgasi,dgasi,mgasfti
 real(kind=8),dimension(nsp_gas,nz)::mgasx,mgas,khgasx,khgas,dgas,agasx,agas,rxngas,mgassupp 
 real(kind=8),dimension(nsp_gas,5 + nrxn_ext + nsp_sld,nz)::flx_gas  
@@ -981,6 +985,7 @@ integer,parameter::nsp_aqex = 6 ! exchangeable species
 character(5),dimension(nsp_aqex)::chraqex
 real(kind=8),dimension(nsp_aqex,5 + nrxn_ext + nsp_sld,nz)::flx_aqex
 real(kind=8),dimension(nsp_aqex,5 + nrxn_ext + nsp_sld)::int_flx_aqex
+real(kind=8),dimension(nsp_aqex,5 + nrxn_ext + nsp_sld,nz)::zint_flx_aqex
 
 character(10),dimension(nsp_sld)::precstyle
 real(kind=8),dimension(nsp_sld,nz)::solmod,fkin,fkin_tmp
@@ -4240,6 +4245,10 @@ ict_change = .false.
 count_dtunchanged = 0
 
 int_flx_aq = 0d0
+zint_flx_aq = 0d0
+zint_flx_sld = 0d0
+zint_flx_aqex = 0d0
+zint_flx_alk = 0d0
 int_flx_gas = 0d0
 int_flx_sld = 0d0
 int_flx_co2sp = 0d0
@@ -6867,10 +6876,12 @@ do while (it<nt)
     do iflx=1,nflx
         do isps=1,nsp_sld 
             int_flx_sld(isps,iflx) = int_flx_sld(isps,iflx) + sum(flx_sld(isps,iflx,:)*dz(:))*dt
+            zint_flx_sld(isps,iflx,:) = zint_flx_sld(isps,iflx,:) + flx_sld(isps,iflx,:)*dz(:)*dt
         enddo 
         
         do ispa=1,nsp_aq 
             int_flx_aq(ispa,iflx) = int_flx_aq(ispa,iflx) + sum(flx_aq(ispa,iflx,:)*dz(:))*dt
+            zint_flx_aq(ispa,iflx,:) = zint_flx_aq(ispa,iflx,:) + flx_aq(ispa,iflx,:)*dz(:)*dt
         enddo 
         
         do ispg=1,nsp_gas 
@@ -6880,6 +6891,8 @@ do while (it<nt)
         do ico2=1,6 
             if (ico2 .le. 4) then 
                 int_flx_co2sp(ico2,iflx) = int_flx_co2sp(ico2,iflx) + sum(flx_co2sp(ico2,iflx,:)*dz(:))*dt
+            if (ico2 == 3) zint_flx_alk(iflx,:) = zint_flx_alk(iflx,:) + flx_co2sp(3,iflx,:)*dz(:)*dt
+            if (ico2 == 4) zint_flx_alk(iflx,:) = zint_flx_alk(iflx,:) + 2d0*flx_co2sp(4,iflx,:)*dz(:)*dt
             elseif (ico2 .eq. 5) then 
                 int_flx_co2sp(ico2,iflx) = int_flx_co2sp(ico2,iflx) + ( &
                     & sum(flx_co2sp(2,iflx,:)*dz(:))+sum(flx_co2sp(3,iflx,:)*dz(:))+sum(flx_co2sp(4,iflx,:)*dz(:)) &
@@ -6893,6 +6906,7 @@ do while (it<nt)
 		
 		do iaqex=1,nsp_aqex
 			int_flx_aqex(iaqex,iflx) = int_flx_aqex(iaqex,iflx) + sum(flx_aqex(iaqex,iflx,:)*dz(:))*dt
+			zint_flx_aqex(iaqex,iflx,:) = zint_flx_aqex(iaqex,iflx,:) + flx_aqex(iaqex,iflx,:)*dz(:)*dt
 		enddo 
     enddo 
     
@@ -7303,6 +7317,43 @@ do while (it<nt)
         endif 
         
         irec_prof=irec_prof+1
+        
+        ! layer budgets: time-integrated flux terms per cell since the start of this run (mol m-2 per cell; sum the
+        ! rows of a layer for its budget: tflx = storage change, adv/dif = net transport in, the rest reactions)
+        zint_hdr = 'z'
+        do iflx = 1, nflx
+            zint_hdr = trim(zint_hdr)//' '//trim(adjustl(chrflx(iflx)))
+        enddo
+        do ispa = 1, nsp_aq
+            open(987, file=trim(adjustl(flxdir))//'/zint_aq-'//trim(adjustl(chraq(ispa)))//'.txt', status='replace')
+            write(987,'(a)') trim(zint_hdr)
+            do iz = 1, nz
+                write(987,*) z(iz),(zint_flx_aq(ispa,iflx,iz),iflx=1,nflx)
+            enddo
+            close(987)
+        enddo
+        do isps = 1, nsp_sld
+            open(987, file=trim(adjustl(flxdir))//'/zint_sld-'//trim(adjustl(chrsld(isps)))//'.txt', status='replace')
+            write(987,'(a)') trim(zint_hdr)
+            do iz = 1, nz
+                write(987,*) z(iz),(zint_flx_sld(isps,iflx,iz),iflx=1,nflx)
+            enddo
+            close(987)
+        enddo
+        do iaqex = 1, nsp_aqex
+            open(987, file=trim(adjustl(flxdir))//'/zint_aqex-'//trim(adjustl(chraqex(iaqex)))//'.txt', status='replace')
+            write(987,'(a)') trim(zint_hdr)
+            do iz = 1, nz
+                write(987,*) z(iz),(zint_flx_aqex(iaqex,iflx,iz),iflx=1,nflx)
+            enddo
+            close(987)
+        enddo
+        open(987, file=trim(adjustl(flxdir))//'/zint_co2sp-ALK.txt', status='replace')
+        write(987,'(a)') trim(zint_hdr)
+        do iz = 1, nz
+            write(987,*) z(iz),(zint_flx_alk(iflx,iz),iflx=1,nflx)
+        enddo
+        close(987)
         
 #ifdef full_flux_report
         do isps=1,nsp_sld 
