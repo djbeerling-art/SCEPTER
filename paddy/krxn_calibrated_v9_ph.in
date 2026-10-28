@@ -1,0 +1,10 @@
+name krxn1 krxn2  (v9.1 pH-response case: as krxn_calibrated_v9.in but g2ch4 vmax 3600 so the control stays near the IPCC rice CH4 emission with --ch4ph=6.2:7.9:6.5)
+g2ch4 3600 30
+g2fe3 300 -999
+g2so4 300 -999
+ch4pl 300 -999
+g2n21 300 -999
+g2n2p 1000 5.5
+g2gr -999 0.3
+rtco2 60 -999
+amo2o 30 -999

@@ -1,0 +1,10 @@
+name krxn1 krxn2  (calibrated 2026-10-25 against IPCC 2019 rice CH4 (1.19 kg/ha/d): reference soil, 15-cell grid, reactions incl. g2o2, nh4up, rtoxy (root O2 loss 10 mmol/m2/d), --phd=14 --ch4ph=6.2:7.9:6.5 --nucl=cc:0.001 --kscale=maf:0.45,fsp:0.25; flooded 1.17 kg/ha/d)
+g2ch4 300 30
+g2fe3 300 -999
+g2so4 300 -999
+ch4pl 300 -999
+g2n21 300 -999
+g2n2p 300 -999
+g2gr -999 0.3
+rtco2 60 -999
+amo2o 30 -999
