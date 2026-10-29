@@ -22,6 +22,8 @@ Two of the five tests are not fully independent of the calibration:
 - The Si-feedback constants were chosen to minimise the joint misfit to Gong et al. (2026) and the 2 t ha⁻¹ treatment of Wang et al. (2014). The comparison for the 4 and 8 t ha⁻¹ treatments, and for CH₄ production and oxidation, is therefore a prediction, but the emission response at 2 t ha⁻¹ is not.
 - The rock dissolution scaling factors (mafic minerals ×0.45, plagioclase ×0.25) were set against an earlier version of the Uchibayashi et al. (2025) release rates. That case is a consistency check on the current model, not an independent test.
 
+We therefore present Section 3 as model evaluation, not independent validation. Table 3 marks each comparison as calibration-informed or as a prediction of a measurement not used in fitting. We keep the unresolved discrepancies (the ferric-Fe rise in Wang et al., 2014, and the carbonate gain in Wang et al., 2024) as identified targets for model development. We do not require the current version to reproduce every observation.
+
 **Table 1.** Five experimental tests used to evaluate Riceland SCEPTER.
 
 | Study | System and site | Amendment and application rates | Duration | Measured endpoints used | Model processes tested |
@@ -202,6 +204,20 @@ Because the scaling factors were set against these data, the case shows internal
 | Season-mean log₁₀ Ω_calcite, control → treatment | −1.18 → −0.35 | −1.00 → −0.20 | −0.90 → −0.13 |
 | Season CH₄ change | −46% | −48% | −48% |
 
+**Calcium conservation.** The whole-column Ca budget, taken from the model's own time-integrated fluxes, closes to better than 10⁻¹¹ mol m⁻² in every run. In treatment minus control (mol m⁻²):
+
+| Term | q 1.1 m yr⁻¹ | q 0.5 | q 0.25 |
+|---|---|---|---|
+| Ca added: wollastonite + its native calcite | 3.587 + 0.131 = 3.718 | 3.718 | 3.718 |
+| Wollastonite remaining | 0.002 | 0.002 | 0.002 |
+| Exchangeable Ca | +2.77 | +2.75 | +2.59 |
+| Dissolved Ca (porewater) | +0.10 | +0.10 | +0.09 |
+| Calcite, whole column | +0.90 (0.39 t CO₂ ha⁻¹) | +0.91 (0.40) | +1.06 (0.47) |
+| Ca leached out of the column base | −0.05 | −0.05 | −0.02 |
+| Sum of sinks | 3.72 | 3.72 | 3.72 |
+
+There are no other Ca sinks in the model: no plant Ca uptake and no other Ca-bearing secondary phase. The Ca that passes below 20 cm (0.05–0.60 mol m⁻², see the percolation table below) is retained deeper in the column, mainly on exchange sites. Leaching from the column base is slightly lower in the treatment than in the control. The carbonate shortfall is therefore not an accounting error. In the model, the added Ca goes mainly to the exchange complex rather than to calcite.
+
 **Mechanistic interpretation and limitations.**
 
 The wollastonite dissolves completely in all three cases. About two thirds of its Ca ends up on the exchange complex. Calcite forms only in short supersaturated windows during drainage, because the plough layer is undersaturated on season average. Lower percolation shifts Ca from leaching into calcite. Even at q = 0.25 m yr⁻¹, however, simulated carbonate reaches only 0.48 t CO₂ ha⁻¹, 40% of the observed 1.20.
@@ -220,16 +236,16 @@ We therefore treat carbonate stock as an observable and report CDR separately, a
 
 **Table 3.** Summary of observed and simulated responses (frozen model, K_Si 2 mM, w 0.2).
 
-| Test | Metric | Observed | Model | Assessment |
-|---|---|---|---|---|
-| Wang 2014 | CH₄ emission change at 2 / 4 / 8 t ha⁻¹ | −27 / −43 / −49% | −35 / −43 / −52% | good (2 t ha⁻¹ used in Si calibration) |
-| Wang 2014 | CH₄ production change | −16 / −33 / −41% | −27 / −33 / −38% | good |
-| Wang 2014 | CH₄ oxidation | ~constant | −24 / −29 / −33% | oxidation does not rise, as observed; absolute fraction too high |
-| Wang 2014 | ferric Fe gain at 8 t ha⁻¹ | +5.6 g kg⁻¹ (extractable) | +0.5 g kg⁻¹ (reactive Fe(III)) | fails; mechanism not reproduced |
-| Gong 2026 | CH₄ change at 36 t ha⁻¹ | −18% (p ≈ 0.1) | −23% (−10% without Si feedback) | overpredicted ~1.3× (used in Si calibration); control 85 vs 52 kg ha⁻¹ |
-| Park 2026 | CH₄ change at 10 / 20 wt% | ~−25 / −37% | −20 / −34% | good (no plant pathway) |
-| Uchibayashi 2025 | Na / Mg release at 100 t ha⁻¹ (mmol m⁻² d⁻¹) | 4.6 / 6.5 | 4.8 / 12.1 | Na good; Mg ~2× too fast |
-| Wang 2024 | inorganic C gain, 0–20 cm (t CO₂ ha⁻¹) | 1.20 ± 0.03 | 0.31–0.48 (q 1.1–0.25 m yr⁻¹) | underpredicted ~2.5–4× |
+| Test | Metric | Observed | Model | Assessment | Role in calibration |
+|---|---|---|---|---|---|
+| Wang 2014 | CH₄ emission change at 2 / 4 / 8 t ha⁻¹ | −27 / −43 / −49% | −35 / −43 / −52% | good (2 t ha⁻¹ used in Si calibration) | calibration-informed at 2 t ha⁻¹; prediction at 4, 8 t ha⁻¹ |
+| Wang 2014 | CH₄ production change | −16 / −33 / −41% | −27 / −33 / −38% | good | prediction |
+| Wang 2014 | CH₄ oxidation | ~constant | −24 / −29 / −33% | oxidation does not rise, as observed; absolute fraction too high | prediction |
+| Wang 2014 | ferric Fe gain at 8 t ha⁻¹ | +5.6 g kg⁻¹ (extractable) | +0.5 g kg⁻¹ (reactive Fe(III)) | fails; mechanism not reproduced | prediction |
+| Gong 2026 | CH₄ change at 36 t ha⁻¹ | −18% (p ≈ 0.1) | −23% (−10% without Si feedback) | overpredicted ~1.3× (used in Si calibration); control 85 vs 52 kg ha⁻¹ | calibration-informed |
+| Park 2026 | CH₄ change at 10 / 20 wt% | ~−25 / −37% | −20 / −34% | good (no plant pathway) | prediction |
+| Uchibayashi 2025 | Na / Mg release at 100 t ha⁻¹ (mmol m⁻² d⁻¹) | 4.6 / 6.5 | 4.8 / 12.1 | Na good; Mg ~2× too fast | calibration-informed |
+| Wang 2024 | inorganic C gain, 0–20 cm (t CO₂ ha⁻¹) | 1.20 ± 0.03 | 0.31–0.48 (q 1.1–0.25 m yr⁻¹) | underpredicted ~2.5–4× | prediction |
 
 **Table 4.** Reproducibility of the evaluation runs. All runs use executable `scepter_paddy_v22` (commit 162913a) with `krxn_calibrated` constants (methanogenesis vmax 1860 yr⁻¹) and the Si feedback `--rtsi=2e-3:2.7e-4:0.2`. Each run restarts from its site's settled state (3-yr drained spin-up + 7-yr settle).
 
