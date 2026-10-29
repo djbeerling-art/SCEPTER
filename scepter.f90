@@ -4829,8 +4829,11 @@ do while (it<nt)
             ! msldsupp(isps,:) = rainpowder*rfrc_sld(isps)*exp(-z/zsupp)/zsupp &
                 ! & + rainpowder_2nd*rfrc_sld_2nd(isps)*exp(-z/zsupp)/zsupp
             ! modify to homogeneously distribute (04-10-2023)
-            msldsupp(isps,:) = rainpowder*rfrc_sld(isps)/sum(dz(:)) &
-                & + rainpowder_2nd*rfrc_sld_2nd(isps)/sum(dz(:))
+            ! paddy: only over the dust mixing depth zml_dust (overlap of each cell with 0-zml_dust), not the whole column,
+            ! so rock is not placed below the plough layer in a deep (pan) column
+            msldsupp(isps,:) = (rainpowder*rfrc_sld(isps) + rainpowder_2nd*rfrc_sld_2nd(isps)) &
+                & *max(0d0,min(z(:)+0.5d0*dz(:),zml_dust)-max(z(:)-0.5d0*dz(:),0d0))/dz(:) &
+                & /sum(max(0d0,min(z(:)+0.5d0*dz(:),zml_dust)-max(z(:)-0.5d0*dz(:),0d0)))
         else 
             msldsupp(isps,1) = rainpowder*rfrc_sld(isps)/dz(1)  &
                 & + rainpowder_2nd*rfrc_sld_2nd(isps)/dz(1)
