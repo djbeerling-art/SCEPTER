@@ -90,7 +90,7 @@ A second limitation is the oxidised fraction. The model oxidises about 75% of pr
 - The authors also reported large soil carbonate formation, about 11.3 t CO₂ ha⁻¹.
 
 **Model configuration.**
-- 0.3 m pot column without a pan, with basalt mixed through the column.
+- 0.3 m pot column without a pan. Basalt is mixed into the top 0.086 m, the same fraction of the column (10/35) as the upper 10 kg of the 35 kg pot.
 - Calcareous soil (0.5 wt% calcite).
 - Intermittent drainage (AWD) and 240 kg N ha⁻¹.
 - 131 d season.
@@ -98,13 +98,13 @@ A second limitation is the oxidised fraction. The model oxidises about 75% of pr
 
 **Observed versus simulated.**
 - The simulated control emitted 85 kg CH₄ ha⁻¹ (observed 52), about 60% too high.
-- Basalt lowered CH₄ by 25% (85 to 64 kg ha⁻¹; observed −18%).
+- Basalt lowered CH₄ by 23% (85 to 65 kg ha⁻¹; observed −18%). Mixing the same dose through the whole column instead gave −25%, so amendment placement changes the result by only 2 points.
 - With the Si feedback switched off, the change was −10%.
 - Simulated calcite gain was 1.1 t CO₂ ha⁻¹, from rock cation release equivalent to 3.5 t CO₂ ha⁻¹.
 
 **Mechanistic interpretation and limitations.**
 
-The model overpredicts the relative CH₄ decrease by about 40% (−25% against −18%), and the control emission by about 60%. We state this explicitly, because together they make Gong et al. the weakest CH₄ comparison in the evaluation set. Gong et al. and the 2 t ha⁻¹ slag treatment of Wang et al. (2014) reach similar simulated porewater Si (~1.3 mM), yet the observed CH₄ cut is about twice as large for the slag. No single Si-response curve fits both. The adopted constants (K_Si 2 mM, w 0.2) minimise the joint misfit.
+The model overpredicts the relative CH₄ decrease by about 30% (−23% against −18%), and the control emission by about 60%. We state this explicitly, because together they make Gong et al. the weakest CH₄ comparison in the evaluation set. Gong et al. and the 2 t ha⁻¹ slag treatment of Wang et al. (2014) reach similar simulated porewater Si (~1.3 mM), yet the observed CH₄ cut is about twice as large for the slag. No single Si-response curve fits both. The adopted constants (K_Si 2 mM, w 0.2) minimise the joint misfit.
 
 Possible reasons for the gap:
 
@@ -137,7 +137,7 @@ Gong et al. report a carbonate gain of 11.3 ± 3.1 t CO₂ ha⁻¹. That is thre
 
 **Mechanistic interpretation and limitations.**
 
-Park et al. is the one test in which the Si root feedback is absent by construction. It isolates the soil geochemistry: rock Fe(III) acting as an electron acceptor, the higher pH, and cation supply. The model reproduces both the size and the dose scaling of the decrease. This shows that the geochemical pathway is represented realistically at very high doses.
+Park et al. is the one test in which the Si root feedback is absent by construction. It isolates the soil geochemistry: rock Fe(III) acting as an electron acceptor, the higher pH, and cation supply. The model reproduces both the size and the dose scaling of the decrease. In the model's electron budget, basalt raises Fe(III) reduction by 0.54 and 0.94 mol C m⁻² at 10 and 20 wt%, while methanogenesis falls by 1.57 and 2.67 mol C m⁻². Electron-acceptor competition from rock Fe(III) therefore accounts directly for only about a third of the decrease. The rest is lower total organic-matter mineralisation, which in the model arises because Fe(III) inhibits methanogenesis without fully replacing it as an electron sink. Both terms depend on the rock's reactive Fe(III), which was assumed (3% of rock Fe), not measured. We therefore treat the mechanism as uncertain and do not claim that basalt-derived Fe(III) is the established cause of the observed suppression.
 
 At field doses, the same geochemistry gives a small effect (Sections 3.2 and 3.3). The large field responses therefore need the plant pathway. The test is limited in three ways:
 
@@ -169,7 +169,7 @@ At field doses, the same geochemistry gives a small effect (Sections 3.2 and 3.3
 
 Na comes almost entirely from plagioclase. Its agreement shows that the plagioclase rate, scaled ×0.25 from laboratory rates, is consistent with these pots. Mg is released about twice too fast even with the mafic minerals scaled ×0.45.
 
-The excess comes mainly from olivine. Olivine makes up only 4 wt% of the rock, but its laboratory dissolution rate is two to three orders of magnitude faster than pyroxene's, so in the model it supplies most of the Mg. Possible explanations:
+The mineral-by-mineral dissolution fluxes locate the excess. Olivine supplies 11.4 of the 12.1 mmol Mg m⁻² d⁻¹ (94%), and augite the remaining 0.65. About 19% of the olivine dissolves in 99 days, against 16% of the bytownite and under 2% of the labradorite and augite. Olivine makes up only 4 wt% of the rock, but its rate law is two to three orders of magnitude faster than pyroxene's. With dissolution close to linear at this extent, an olivine rate about half the current value (≈0.5×, applied to olivine alone) would bring Mg release to the observed 6.5 mmol m⁻² d⁻¹ without changing Na. The olivine explanation is therefore quantitatively sufficient. We do not adopt that adjustment in the reference parameterisation. Possible explanations:
 
 - The rock's olivine may be partly altered (iddingsite, serpentine) and less reactive than fresh olivine.
 - Released Mg may be retained in secondary smectite or on exchange sites, and so be missed by the mass balance.
@@ -226,7 +226,17 @@ We therefore treat carbonate stock as an observable and report CDR separately, a
 | Wang 2014 | CH₄ production change | −16 / −33 / −41% | −27 / −33 / −38% | good |
 | Wang 2014 | CH₄ oxidation | ~constant | −24 / −29 / −33% | oxidation does not rise, as observed; absolute fraction too high |
 | Wang 2014 | ferric Fe gain at 8 t ha⁻¹ | +5.6 g kg⁻¹ (extractable) | +0.5 g kg⁻¹ (reactive Fe(III)) | fails; mechanism not reproduced |
-| Gong 2026 | CH₄ change at 36 t ha⁻¹ | −18% (p ≈ 0.1) | −25% (−10% without Si feedback) | overpredicted ~1.4× (used in Si calibration); control 85 vs 52 kg ha⁻¹ |
+| Gong 2026 | CH₄ change at 36 t ha⁻¹ | −18% (p ≈ 0.1) | −23% (−10% without Si feedback) | overpredicted ~1.3× (used in Si calibration); control 85 vs 52 kg ha⁻¹ |
 | Park 2026 | CH₄ change at 10 / 20 wt% | ~−25 / −37% | −20 / −34% | good (no plant pathway) |
 | Uchibayashi 2025 | Na / Mg release at 100 t ha⁻¹ (mmol m⁻² d⁻¹) | 4.6 / 6.5 | 4.8 / 12.1 | Na good; Mg ~2× too fast |
 | Wang 2024 | inorganic C gain, 0–20 cm (t CO₂ ha⁻¹) | 1.20 ± 0.03 | 0.31–0.48 (q 1.1–0.25 m yr⁻¹) | underpredicted ~2.5–4× |
+
+**Table 4.** Reproducibility of the evaluation runs. All runs use executable `scepter_paddy_v22` (commit 162913a) with `krxn_calibrated` constants (methanogenesis vmax 1860 yr⁻¹) and the Si feedback `--rtsi=2e-3:2.7e-4:0.2`. Each run restarts from its site's settled state (3-yr drained spin-up + 7-yr settle).
+
+| Test | Settled state | Runs (control / treatments) | Site options |
+|---|---|---|---|
+| Wang 2014 | field column with pan, irrigation alkalinity 2 meq L⁻¹ | z14_0 / z14_2, z14_4, z14_8 | 113 d, continuous flooding, 14-d pre-harvest drain, slag PSD `psdrain_wangslag.in` |
+| Gong 2026 | 0.3 m column, 0.5 wt% calcite (vc_r03c05) | pgongc_0 / pgongd_36 (top 0.086 m); pgongc_36 (whole column) | 131 d, AWD, 240 kg N ha⁻¹ |
+| Park 2026 | 0.3 m column, 2 meq L⁻¹ (vc_r03i10) | pparka_0 / pparka_390, pparka_780 | 100 d, no plant processes, q 10⁻⁴ m yr⁻¹, rock Fe(III) 3% |
+| Uchibayashi 2025 | 0.3 m column, 0.8 meq L⁻¹ (vc_r03i4) | puchia_0 / puchia_100 | 99 d, continuous flooding, Akita PSD |
+| Wang 2024 | field column with pan, 0.5 wt% calcite | z24_0 / z24_5 (q 1.1); z24q05_*, z24q025_* | 153 d, AWD, wollastonite tilled to 0.15 m |
