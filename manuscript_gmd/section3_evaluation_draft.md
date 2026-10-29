@@ -176,6 +176,19 @@ The mineral-by-mineral dissolution fluxes locate the excess. Olivine supplies 11
 - Released Mg may be retained in secondary smectite or on exchange sites, and so be missed by the mass balance.
 - The model's single scaling factor for all mafic minerals cannot treat olivine and pyroxene separately.
 
+**Comparing like with like.** Uchibayashi et al. do not measure dissolution directly. They infer release as the treatment-minus-control change in NH₄OAc-exchangeable cations (after harvest minus before planting) plus plant uptake, in pots sealed against leaching. The observation-equivalent model quantity is the change in exchangeable plus porewater Mg; the model has no Mg-bearing secondary phase and no plant Mg uptake, so plant uptake stays in the soil pools. In the reference run this is 11.5 mmol Mg m⁻² d⁻¹, against 12.1 dissolved. The 0.55 difference is leaching through the column base, which the sealed pots prevented. For Na the same comparison gives 3.8 against 4.8 dissolved, because more Na leaches. In a sealed pot the two quantities would be nearly identical. The Mg discrepancy is therefore not an artefact of comparing different quantities.
+
+**Olivine sensitivity (labelled sensitivity; reference unchanged).** Only the olivine rate constant was scaled; plagioclase and pyroxene were left as in the reference.
+
+| Olivine rate | Olivine dissolved in 99 d | Mg release: olivine / augite / total (mmol m⁻² d⁻¹) | Mg, observation-equivalent | Na release |
+|---|---|---|---|---|
+| 1.0 × (reference) | 18% | 11.4 / 0.65 / 12.1 | 11.5 | 4.8 |
+| 0.5 × | 10% | 6.3 / 0.67 / 6.9 | 6.6 | 4.8 |
+| 0.25 × | 5% | 3.3 / 0.68 / 4.0 | 3.8 | 4.8 |
+| Observed | | 6.5 | | 4.6 |
+
+Halving the olivine rate reproduces the observed Mg release with Na unchanged, and quartering it under-predicts. We do not adopt the 0.5× rate. No independent mineralogical evidence for it has been established. Possible justifications are olivine partly altered to iddingsite or serpentine, an Fe-rich olivine composition, or armouring of grains, and none of these was characterised for the Akita basalt. Uptake of released Mg into secondary smectite, which the model does not represent, would produce the same apparent shortfall without any change in olivine kinetics.
+
 Because the scaling factors were set against these data, the case shows internal consistency rather than independent skill. It also shows that a single mafic factor is too coarse for olivine-bearing rocks.
 
 ### 3.6 Wang et al. (2024): carbonate accumulation under wollastonite
@@ -243,7 +256,7 @@ We therefore treat carbonate stock as an observable and report CDR separately, a
 | Wang 2014 | ferric Fe gain at 8 t ha⁻¹ | +5.6 g kg⁻¹ (extractable) | +0.5 g kg⁻¹ (reactive Fe(III)) | fails; mechanism not reproduced | prediction |
 | Gong 2026 | CH₄ change at 36 t ha⁻¹ | −18% (p ≈ 0.1) | −23% (−10% without Si feedback) | overpredicted ~1.3× (used in Si calibration); control 85 vs 52 kg ha⁻¹ | calibration-informed |
 | Park 2026 | CH₄ change at 10 / 20 wt% | ~−25 / −37% | −20 / −34% | good (no plant pathway) | prediction |
-| Uchibayashi 2025 | Na / Mg release at 100 t ha⁻¹ (mmol m⁻² d⁻¹) | 4.6 / 6.5 | 4.8 / 12.1 | Na good; Mg ~2× too fast | calibration-informed |
+| Uchibayashi 2025 | Na / Mg release at 100 t ha⁻¹ (mmol m⁻² d⁻¹) | 4.6 / 6.5 | 4.8 / 12.1 | Na good; Mg ~2× too fast (olivine; 0.5× olivine rate gives 6.9, not adopted) | calibration-informed |
 | Wang 2024 | inorganic C gain, 0–20 cm (t CO₂ ha⁻¹) | 1.20 ± 0.03 | 0.31–0.48 (q 1.1–0.25 m yr⁻¹) | underpredicted ~2.5–4× | prediction |
 
 **Table 4.** Reproducibility of the evaluation runs. All runs use executable `scepter_paddy_v22` (commit 162913a) with `krxn_calibrated` constants (methanogenesis vmax 1860 yr⁻¹) and the Si feedback `--rtsi=2e-3:2.7e-4:0.2`. Each run restarts from its site's settled state (3-yr drained spin-up + 7-yr settle).
