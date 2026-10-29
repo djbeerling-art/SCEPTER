@@ -72,9 +72,8 @@ Fe(III) reduction and Fe(II) re-oxidation therefore both *fall* in the treatment
 
 We tested that pathway explicitly by raising the catalysed Fe(II) oxygenation rate by six to seven orders of magnitude while conserving the root O₂ supply. This was a labelled sensitivity, not a change to the reference. It failed all four diagnostic tests (Fe(III) gain, Fe(III) reduction, production and oxidation). The reason is that the root O₂ increase (+0.75 mol O₂ m⁻²) could oxidise at most 3 mol Fe m⁻², about 1 g kg⁻¹ over 15 cm, an order of magnitude less than the observed ferric-Fe gain.
 
-The observed ferric-Fe rise therefore remains unexplained. Candidate explanations:
+The observed ferric-Fe rise therefore remains unexplained. It cannot come from the slag itself. The slag's Fe (4.8 wt% Fe₂O₃; 33.6 g Fe kg⁻¹, or 269 kg Fe ha⁻¹ at 8 t ha⁻¹, as reported by Wang et al.) is included in the model as reactive ferrihydrite. Spread through the 0–30 cm sampled layer (bulk density ~1.0 g cm⁻³, ~3000 t soil ha⁻¹), it adds only ~0.09 g Fe kg⁻¹. The observed increases are about 50 times larger: +5.6 g kg⁻¹ ferric Fe and +4.4 g kg⁻¹ 1 M HCl-extractable total Fe, equivalent to ~13–17 t Fe ha⁻¹. They therefore reflect a change in how much native soil Fe the extraction recovers, or sampling variability, not an Fe input. Candidate explanations:
 
-- Fe supplied by the slag itself (4.8 wt% Fe₂O₃, plus metallic and ferrous Fe not reported).
 - Changes in Fe(II) speciation or extractability at higher pH and Ca.
 - Mn oxides.
 - The extraction method. Extractable "ferric Fe" is not equivalent to the model's microbially reducible Fe(III) pool.
