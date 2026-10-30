@@ -38,7 +38,8 @@ for y in $(seq 1 $ny); do
     echo "$tf rc $rc" >> "$st"; [ $rc = 0 ] || exit 1
   fi
   # keep only what ghg_budget.py reads (a season run is ~50 MB unpruned); the latest fallow keeps its restart state
-  paddy/prune_run.sh season $SCEPTER_OUT/paddy/flood_$ts
+  # NOPRUNE=1 (environment) keeps every output of the latest year (verification, process figures)
+  [ -n "${NOPRUNE:-}" ] && [ $y = $ny ] || paddy/prune_run.sh season $SCEPTER_OUT/paddy/flood_$ts
   [ $y -gt 1 ] && paddy/prune_run.sh season $SCEPTER_OUT/paddy/flood_${name}_y$((y-1))f
   prev=$tf
 done
