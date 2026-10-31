@@ -11,4 +11,4 @@ export CDSAPI_KEY=$(awk '/^key:/{print $2}' ~/.cdsapirc)
 OUT=${OUT:-/mnt/parscratch/users/$USER/riceland_inputs/era5land}
 mkdir -p $OUT logs
 python3 paddy/global/forcing/era5land_baseline.py data/global/cells.csv paddy/global/forcing/era5_soil_type.nc $OUT ${NPAR:-4}
-ls -l $OUT/era5land_clim_cells.csv
+ls -l $OUT/era5land_clim_cells.csv*
