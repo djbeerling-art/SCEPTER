@@ -88,6 +88,15 @@
 #   -9.98, Bourrie et al. 1999): the pH-stat sets porewater Fe2+ = 10^(log K + 2 pH).
 # --kaol=<wt fraction> puts kaolinite in the soil (spin-ups only; restarts inherit it). Without it secondary Al phases
 #   must nucleate from a 1e-20 seed, so porewater Al builds up and stalls plagioclase dissolution for weeks.
+# --clim=<csv> monthly climate forcing (one archetype or cell: 12 rows, header with month,tsoil_C and optionally wsat,
+#   p_mm,et_mm or q_m_yr): soil temperature follows the monthly values in season and fallow alike (piecewise linear
+#   between mid-month points, periodic over the year). In fallow and spin-up (--fallow) runs, wsat (volumetric water /
+#   porosity) also sets the surface saturation (in place of --fsat, clipped to --wsatmin..1, default 0.2) and the water
+#   flux q follows max(P - ET, --qmin) (m/yr, default 0.05) or q_m_yr. Flooded and AWD seasons keep their water schedule
+#   and --q (managed water). Fallow runs with --clim switch SCEPTER's seasonal forcing on (T_temp/q_temp/Wet_temp.in);
+#   the water table (--fzw) is unchanged. Without --clim nothing changes.
+# --plant=<day of year> rice planting day (crop calendar) that places each run on the --clim year: a season run starts
+#   on that day, a fallow or spin-up run on the day the 113-d season ends (--t0=<day> overrides the start day directly).
 # Output goes to $SCEPTER_OUT (default ./scepter_output/) under paddy/flood_<tag>.
 import os,sys,shutil
 sys.path.insert(0,os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -145,6 +154,33 @@ amsiwt = 0.01 if ref else 0            # amorphous (phytolith) silica, wt fracti
 urea_frac = nfert/10*60.056/28.014/0.31/omin
 
 phd = float(opt.get('phd',0))   # pre-harvest drain: days before the end of the 113-day season
+
+# --clim / --plant: monthly forcing placed on the run's own time axis (each run starts at t = 0)
+clim = None
+if 'clim' in opt:
+    import csv
+    rows = sorted(csv.DictReader(open(opt['clim'])), key=lambda r: int(r['month']))
+    assert len(rows) == 12, f"--clim needs 12 monthly rows, got {len(rows)}"
+    plant = float(opt.get('plant', 0))
+    t0 = float(opt['t0']) if 't0' in opt else (plant if season else plant + 113) % 365
+    mid = [(15.2 + 30.42*m - t0) % 365 / 365 for m in range(12)]        # mid-month, run time in yr
+    def periodic(vals):
+        # sort by run time and add the value interpolated at t = 0 (SCEPTER wraps the last point to the first)
+        pts = sorted(zip(mid, vals))
+        (ta, va), (tb, vb) = pts[-1], pts[0]
+        v0 = va + (vb - va) * (1 - ta) / (1 - ta + tb) if tb > 0 else vb
+        if tb > 0: pts = [(0.0, v0)] + pts
+        return [[round(t, 6) for t, _ in pts], [round(v, 6) for _, v in pts]]
+    clim = {'T': periodic([float(r['tsoil_C']) for r in rows])}
+    if fallow:
+        if 'wsat' in rows[0]:
+            wmin = float(opt.get('wsatmin', 0.2))
+            clim['W'] = periodic([min(max(float(r['wsat']), wmin), 1.0) for r in rows])
+        qmin = float(opt.get('qmin', 0.05))
+        if 'q_m_yr' in rows[0]:
+            clim['q'] = periodic([max(float(r['q_m_yr']), qmin) for r in rows])
+        elif 'p_mm' in rows[0] and 'et_mm' in rows[0]:
+            clim['q'] = periodic([max((float(r['p_mm']) - float(r['et_mm']))*12/1e3, qmin) for r in rows])
 
 def awd_schedule(t_flood=0.08,t_drain=0.02,t_reflood=0.04,t_end=0.5,s_dry=sdry,ramp=0.003):
     # surface saturation through the year (linear interpolation between points, repeated every year)
@@ -251,12 +287,12 @@ if 'noprec' in opt:
 spinup.run_a_scepter_run(
     f'paddy/flood_{tag}',outdir,
     # ---- frame.in ----
-    ztot=float(opt.get('ztot','0.3')),nz=int(opt.get('nz','30')),ttot=ttot,temp=tsoil,omrain=omin,zom=0.15,poro=0.5,
+    ztot=float(opt.get('ztot','0.3')),nz=int(opt.get('nz','30')),ttot=ttot,temp=clim['T'][1][0] if clim else tsoil,omrain=omin,zom=0.15,poro=0.5,
     moistsrf=float(opt.get('fsat',0.5)) if fallow else 1.0,  # water saturation 1 throughout: flooded
     zwater=zdry if (awd or phd > 0) else (float(opt.get('fzw',0.5)) if fallow else 1000),w=0,q=float(opt.get('q','0.5')),p=float(opt.get('prad','1e-5')),nstep=int(opt.get('nstep',10)),rstrt=os.path.join(outdir,'paddy','flood_'+opt['rstrt']) if 'rstrt' in opt else 'self',
     restart='true' if 'rstrt' in opt else 'false',
     # ---- switches.in ----
-    act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if season else 'false',
+    act_ON='false',cec_on='true' if fe2buf else 'false',display=1,report=1,season='true' if (season or clim) else 'false',
     psd_bulk='true' if psd else 'false',psd_full='true' if psd else 'false',
     srcfile_psdrain=psd,sld_varlist_psdpr=[(float(opt.get('prad','1e-5')),0.2,1)] if psd else [],sld_varlist_nopsd=[(m,'false' if m in rock_min else 'true') for m in sld_list] if psd else [],
     # ---- tracers ----
@@ -281,7 +317,9 @@ spinup.run_a_scepter_run(
     srcfile_2ndslds=src2nd,
     use_local_storage=False,exename_src=opt.get('exe','scepter_paddy'),show_runtime_res=False,
     # ---- seasonal forcing (only read when season is on) ----
-    moist_temp=awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),T_temp=[[0.0,0.99],[tsoil,tsoil]],q_temp=[[0.0,0.99],[float(opt.get('q','0.5'))]*2],
+    moist_temp=(clim['W'] if 'W' in clim else [[0.0,0.99],[float(opt.get('fsat',0.5))]*2]) if (fallow and clim) else awd_schedule(t_end=(113-phd)/365 if phd > 0 else 0.5),
+    T_temp=clim['T'] if clim else [[0.0,0.99],[tsoil,tsoil]],
+    q_temp=clim['q'] if clim and 'q' in clim else [[0.0,0.99],[float(opt.get('q','0.5'))]*2],
     dust_temp=[[0.0,t_app,t_app+1e-4,0.99],[fdust,fdust,0,0]],
     # non-seasonal runs (fallow spin-ups) get no basalt
     sld_varlist_dust=list(bas_min.items()) if bas else [],zdust=float(opt.get('zmix','0.15')),
