@@ -2,7 +2,11 @@
 # One Slurm array task per archetype. Submit from the repo root:
 #   mkdir -p logs status    # once (build.sh does it): Slurm will not create logs/ and the task dies without a log
 #   sbatch --array=1-201%100 stanage_handoff/slurm/arch_array.sbatch stanage_handoff/arch/archetypes_v22.csv
-# STATUS_DIR (default status) and SCEPTER_OUT can be overridden with --export for test runs kept apart from production.
+# DOSES, YEARS, STATUS_DIR (default status) and SCEPTER_OUT can be overridden for test runs kept apart from production,
+# but ONLY via --export=ALL,...: Stanage sets SBATCH_EXPORT=HOME,PATH,TERM, so inline VAR=x sbatch ... is silently dropped
+# and the task runs with production defaults. Example (1-yr build check of irr061 = row 4 of pilot10.csv):
+#   sbatch --export=ALL,DOSES="0 20",YEARS=1,STATUS_DIR=status_check,SCEPTER_OUT=/mnt/parscratch/users/$USER/scepter_check/ \
+#          --array=4 --time=04:00:00 stanage_handoff/slurm/arch_array.sbatch stanage_handoff/arch/pilot10.csv
 # 10-yr chains at 0/10/20 t/ha: ~8-9 core-hours per archetype in the cloud container (basalt years slow to ~25 min
 # after year 5), so 24 h wall time leaves margin; the script resumes if resubmitted.
 #SBATCH --job-name=rice23
