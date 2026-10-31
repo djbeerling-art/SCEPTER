@@ -37,7 +37,7 @@ The v22 notes below are kept for provenance.
   test archetypes, Slurm plumbing) can go ahead on v22 now, and switching is one variable (`EXE`).
 
 ## 3. Inputs (in /mnt/project-files/riceland-scepter/global/, see its README.md)
-- `cells.csv`: 109,319 rice cells (5 arcmin), 72.4 Mha within 250 km of GLiM basic volcanics (lower bound; 0.5 deg
+- `cells.csv` (also in repo at data/global/): 109,319 rice cells (5 arcmin), 72.4 Mha within 250 km of GLiM basic volcanics (lower bound; 0.5 deg
   raster). Columns include area_irr, area_rf, ph, cec, soc, clay, temp, rock (glb00-glb11 recipes, data/dust_glbNN.in).
 - `cells_all.csv`: all 265,876 MapSPAM 2010 cells, 160.7 Mha (rock = Hillhouse placeholder).
 - `arch/archetypes.csv` + `cell_map.csv`: 201 archetypes (116 irrigated, 85 rainfed) from `paddy/global/archetypes.py`.
@@ -92,6 +92,21 @@ restart states (run_chain.sh already prunes).
 2. (done) archetypes regenerated with the v22 soil rule; collect_chains.py written (untested until pilot output exists).
 3. Submit a 10-archetype pilot array (`sbatch --array=1-10 stanage_handoff/slurm/arch_array.sbatch stanage_handoff/arch/pilot10.csv`:
    the six GMD archetypes plus the four largest others, 7.1 Mha), check timing and disk, then the full array once David picks v22/v23.
+
+### Build check reference (irr061, year 1)
+Inputs for collection are in the repo: `data/global/cells.csv` (109,319 cells, 72.4 Mha), `cells_all.csv`.
+irr061 year-1 reference (v22; flooded --phd=14; 3-yr spin-up + 7-yr settle; args `--rock=glb04 --irralk=1.6 --cec=16.9
+--temp=28.7 --om=506 --fe3=0.0112`; full numbers `paddy/v22/irr061_y1_v22.json`):
+
+| run | CH4 kg/ha | N2O kg N/ha | PDA t CO2/ha | calcite t CO2/ha | cation release |
+|---|---|---|---|---|---|
+| 0 t season | 197.5 | 0.347 | 0.397 | -0.031 | |
+| 0 t fallow | 4.54 | 1.005 | 0.180 | | |
+| 20 t season | 137.7 | 0.326 | 0.392 | +0.623 | 2.330 |
+| 20 t fallow | 6.86 | 1.114 | 0.192 | -0.608 | 0.321 |
+
+The model is not bit-reproducible (~0.1% run to run): within ~1% is a pass. v23 reference numbers to follow from the
+GMD thread; compare the v23 build against those (v23 should shift CO2 terms slightly, CH4/N2O little).
 
 GMD archetype args used for the v22 runs (for the step-1 check; irr061 year-1 control and 20 t results are in the
 GMD thread):
