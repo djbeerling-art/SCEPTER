@@ -108,7 +108,9 @@ irr061 year-1 reference (v22; flooded --phd=14; 3-yr spin-up + 7-yr settle; args
 | 20 t fallow | 6.86 | 1.114 | 0.192 | -0.608 | 0.321 |
 
 The model is not bit-reproducible (~0.1% run to run): within ~1% is a pass. v23 reference numbers to follow from the
-GMD thread; compare the v23 build against those (v23 should shift CO2 terms slightly, CH4/N2O little).
+GMD thread: now in `paddy/v23/irr061_y1_v23.json` (flooded f and AWD a, season/fallow). The check job
+`sbatch stanage_handoff/slurm/check_irr061.sbatch` runs the full protocol for irr061 (1 yr, 0/20 t) and
+`stanage_handoff/compare_ref.py` prints PASS/FAIL against it (1% on CH4/N2O/CO2/cations, 0.1 t on calcite/PDA).
 
 GMD archetype args used for the v22 runs (for the step-1 check; irr061 year-1 control and 20 t results are in the
 GMD thread):
