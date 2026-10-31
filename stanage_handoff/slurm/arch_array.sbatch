@@ -7,6 +7,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2G
 #SBATCH --time=24:00:00
+#SBATCH --partition=sheffield
+#SBATCH --account=default
 #SBATCH --output=logs/rice22_%A_%a.out
 module load GCC OpenBLAS 2>/dev/null
 source stanage_handoff/v22_options.env

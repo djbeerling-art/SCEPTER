@@ -8,8 +8,13 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
 - A Remote Control session on David's university PC (UOSD4A2CD73110B, Windows 11, folder
   `C:\Users\bo1djb\Documents\Claude Oct 2026`) can run `ssh bo1djb@stanage.shef.ac.uk` with no password or MFA,
   using the key `C:\Users\bo1djb\.ssh\id_ed25519` (no passphrase). It needs David's FortiClient VPN to be connected.
-- Login node: logina.stanage.hpc.shef.ac.uk. Scheduler: Slurm. Use `/mnt/parscratch/users/bo1djb` (or whatever the
-  Stanage survey finds) for run output; home quota is small.
+- Login node: logina.stanage.hpc.shef.ac.uk. Slurm account `default`; partition `sheffield` (4-day limit) for
+  production, `interactive` (8 h) for tests. Storage: 50 GB backed-up home; scratch `/mnt/parscratch/users/bo1djb`
+  (linked as `~/fastdata`, not backed up) for run output. Modules include GCC, Python 3.11-3.13, netCDF, GDAL;
+  no conda (OpenBLAS module not yet checked). Survey done 31 Oct from the PC session; a parallel starter kit
+  (HANDOFF.md, PowerShell copy/test scripts, generic Slurm driver) is on the PC in
+  `C:\Users\bo1djb\Documents\Claude Oct 2026\riceland-stanage\`. Its open questions (code, rice map, inputs,
+  scenarios) are answered by this package; reuse its PowerShell transfer scripts.
 - The cloud container cannot reach Stanage directly. Code moves via GitHub (`git clone` on Stanage); results move back
   via the PC session (scp to the PC) or by pushing small summary files to GitHub.
 
