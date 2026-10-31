@@ -14,7 +14,7 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
   via the PC session (scp to the PC) or by pushing small summary files to GitHub.
 
 ## 2. Model version
-- Repository: github.com/djbeerling-art/SCEPTER, branch `claude/project-thread-pip6bj-pan` (commit 6e71f12 or later).
+- Repository: github.com/djbeerling-art/SCEPTER, branch `claude/project-thread-pip6bj-pan` (commit bb3f29f or later; this package is in `stanage_handoff/`).
 - Executable: `scepter_paddy_v22` (source = commit 162913a, unchanged up to 6e71f12), built from `makefile_paddy`:
   `make --file=makefile_paddy PROGRAM=scepter_paddy_v22 OBJS=scepter_paddy_v22.o` (gfortran + OpenBLAS; see
   `slurm/build.sh`). Python: numpy, scipy, pandas, scikit-learn, SALib.
