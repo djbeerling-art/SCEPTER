@@ -1857,6 +1857,15 @@ do isps = 1, nsp_sld
     endif 
 enddo 
 
+! Carbon closure: the oxalate and acetate released by g2 decay (oxa2c_g2, ac2c_g2) vanish when oxa/ac are not
+! tracked aqueous species; return their carbon to CO2 so that g2 decay conserves carbon.
+if (any(chrsld == 'g2') .and. any(chrgas == 'pco2')) then 
+    if (.not. any(chraq == 'oxa')) stgas(findloc(chrsld,'g2',dim=1),findloc(chrgas,'pco2',dim=1)) = &
+        & stgas(findloc(chrsld,'g2',dim=1),findloc(chrgas,'pco2',dim=1)) + 2d0*oxa2c_g2
+    if (.not. any(chraq == 'ac')) stgas(findloc(chrsld,'g2',dim=1),findloc(chrgas,'pco2',dim=1)) = &
+        & stgas(findloc(chrsld,'g2',dim=1),findloc(chrgas,'pco2',dim=1)) + 2d0*ac2c_g2
+endif 
+
 ! external reactions
 staq_ext_all = 0d0
 stgas_ext_all = 0d0
