@@ -10,32 +10,32 @@
 # part (--awd as a stand-in for intermittent flooding). Within each (regime, rock) group, cells are clustered by
 # k-means on standardised (ph, cec, soc, temp[, fe3]), weighted by rice area; archetypes are allotted to groups in
 # proportion to area (at least one each). Archetype values are area-weighted means of member cells.
-# Usage: python3 archetypes.py cells.csv outdir [--n=200]
+# Usage: python3 archetypes.py cells.csv outdir [--n=200]   (or <archetypes.csv> --reargs <out.csv>, see below)
 #   -> outdir/archetypes.csv (one row per archetype, with driver settings) and outdir/cell_map.csv
 import sys, os
 import numpy as np, pandas as pd
 from sklearn.cluster import KMeans
 
 FEAT = ['ph', 'cec', 'soc', 'temp']
-# spin-up topsoil pH (3-yr fallow, 0-15 cm median) of the reference soil against irrigation alkalinity and soil calcite
-PH_IRRALK = [(0.0, 4.95), (0.5, 6.38), (1.0, 6.57), (2.0, 6.72)]
-PH_SOILCC = [(0.0, 6.72), (0.027, 7.45)]           # with irralk 2
+# Soil-conditioning rule of the v22 GMD archetype runs (29 Oct 2026): dry-soil pH >= 6.8 -> calcareous soil
+# (--soilcc=0.005 --irralk=10); otherwise irrigation alkalinity interpolated on pH [5.0, 6.0, 6.2, 6.5] -> [0, 1, 4, 10].
+# (Replaces the v5 15-cell spin-up lookup.) Reproduces the GMD args, e.g. irr061 pH 6.04 -> 1.6, rf189 pH 6.34 -> 6.8.
+PH_IRRALK = [(5.0, 0.), (6.0, 1.), (6.2, 4.), (6.5, 10.)]   # (pH, irralk)
+PH_CALC, SOILCC_CALC, IRRALK_CALC = 6.8, 0.005, 10.
 SOC_REF, OM_REF = 1.5, 450.                         # wt % SOC of the reference soil; its OM input (g C/m2/yr)
 FE3_REF, CLAY_REF = 0.012, 30.                      # reference soil reducible Fe(III) (wt fraction) and assumed clay %
 
 def ph_to_soil(ph):
-    """Target pH -> (irralk, soilcc) by linear interpolation of the spin-up lookup; clamped at both ends."""
-    if ph <= PH_IRRALK[-1][1]:
-        x, y = zip(*PH_IRRALK)
-        return float(np.interp(ph, y, x)), 0.
-    x, y = zip(*PH_SOILCC)
-    return PH_IRRALK[-1][0], float(np.interp(ph, y, x))
+    """Dry-soil pH -> (irralk, soilcc), v22 rule; clamped at both ends."""
+    if ph >= PH_CALC: return IRRALK_CALC, SOILCC_CALC
+    y, x = zip(*PH_IRRALK)
+    return float(np.interp(ph, y, x)), 0.
 
 def driver_args(r):
     irralk, soilcc = ph_to_soil(r.ph)
     om = OM_REF*float(np.clip(r.soc/SOC_REF, 0.5, 2.0))
-    a = f'--rock={r.rock} --irralk={irralk:.3f} --cec={r.cec:.1f} --temp={r.temp:.1f} --om={om:.0f} --fe3={r.fe3:.4f}'
-    if soilcc > 0: a += f' --soilcc={soilcc:.4f}'
+    a = f'--rock={r.rock} --irralk={irralk:.2f} --cec={r.cec:.1f} --temp={r.temp:.1f} --om={om:.0f} --fe3={r.fe3:.4f}'
+    if soilcc > 0: a += f' --soilcc={soilcc:.3f}'
     return a
 
 def build(cells, n):
@@ -64,6 +64,12 @@ def build(cells, n):
     a = pd.DataFrame(arch)
     a['args'] = [driver_args(r) for r in a.itertuples()]
     return a, pd.DataFrame(cmap, columns=['cell', 'regime', 'arch', 'area'])
+
+if __name__ == '__main__' and '--reargs' in sys.argv:
+    # Recompute only the driver args of an existing archetypes.csv (keeps archetype ids/membership):
+    #   python3 archetypes.py <archetypes.csv in> --reargs <archetypes.csv out>
+    a = pd.read_csv(sys.argv[1]); a['args'] = [driver_args(r) for r in a.itertuples()]
+    a.to_csv(sys.argv[3], index=False); print(f'{len(a)} archetypes: args recomputed'); sys.exit()
 
 if __name__ == '__main__':
     cells = pd.read_csv(sys.argv[1]); out = sys.argv[2]

@@ -19,7 +19,7 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
   via the PC session (scp to the PC) or by pushing small summary files to GitHub.
 
 ## 2. Model version
-- Repository: github.com/djbeerling-art/SCEPTER, branch `claude/project-thread-pip6bj-pan` (commit bb3f29f or later; this package is in `stanage_handoff/`).
+- Repository: github.com/djbeerling-art/SCEPTER, branch `claude/project-thread-lst1mi` (the global-run thread; = `claude/project-thread-pip6bj-pan` + archetypes_v22, pilot list, collect_chains.py; this package is in `stanage_handoff/`).
 - Executable: `scepter_paddy_v22` (source = commit 162913a, unchanged up to 6e71f12), built from `makefile_paddy`:
   `make --file=makefile_paddy PROGRAM=scepter_paddy_v22 OBJS=scepter_paddy_v22.o` (gfortran + OpenBLAS; see
   `slurm/build.sh`). Python: numpy, scipy, pandas, scikit-learn, SALib.
@@ -43,8 +43,11 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
 built on the v5 15-cell column (Oct 25). The v22 runs (GMD archetypes, runR.sh, 29 Oct) used a different site rule:
 - dry-soil pH >= 6.8: `--soilcc=0.005 --irralk=10`;
 - otherwise `--irralk = interp(pH; [5.0, 6.0, 6.2, 6.5] -> [0, 1, 4, 10])`.
-Regenerate `archetypes.csv` with this rule (and check the resulting settled porewater pH on a few archetypes)
-before the production run. Rainfed archetypes get `--awd` (the 14-day pre-harvest drain applies to both regimes).
+DONE (31 Oct): `stanage_handoff/arch/archetypes_v22.csv` = the same 201 archetypes (ids and membership unchanged,
+`cell_map.csv` copied alongside) with args recomputed by `python3 paddy/global/archetypes.py <old csv> --reargs <new csv>`
+(rule now in `ph_to_soil`; 45 archetypes, 21% of area, are calcareous). It reproduces the GMD args to rounding
+(irr061 pH 6.045 gives irralk 1.67 vs 1.6 used in the GMD run, rf189 6.8 exactly). Still to check: settled porewater
+pH on a few archetypes (pilot). Rainfed archetypes get `--awd` (the 14-day pre-harvest drain applies to both regimes).
 
 ## 4. Run protocol (identical to the GMD v22 archetype runs)
 Per archetype (`run_arch_v22.sh`):
@@ -54,7 +57,8 @@ Per archetype (`run_arch_v22.sh`):
    start + 252-d drained fallow). Treatment minus the dose-0 chain (year-matched) gives the effect.
 4. Budgets: `paddy/ghg_budget.py` per year (season + fallow), with PDA (= ALK - 2Fe(II) - 2NH4+) export and calcite
    capped at cations not exported; GWP100 (CH4 27, N2O 273). For the GMD archetypes this was `fig8_arch_v22.py` /
-   `figcdr22`; `paddy/global/collect.py` still assumes the old one-season layout and needs updating to the chain tags.
+   `figcdr22`; `paddy/global/collect.py` is the old one-season version; for chains use `paddy/global/collect_chains.py`
+   (same budget as figcdr22, PDA by default; writes arch_years/arch_cum/cell_cum/nation_cum CSVs, small enough to push).
 
 Cost (cloud container, 1 core): spin-up ~3 min; settle ~35 min; a 10-yr chain 1.5 h (control) to ~3.5 h (20 t/ha;
 basalt years slow to ~25 min after year 5). About 8-9 core-hours per archetype for 0/10/20 t over 10 yr, so 201
@@ -80,8 +84,9 @@ restart states (run_chain.sh already prunes).
 1. On Stanage: clone the repo, run `slurm/build.sh` (confirm module names), and run one archetype for 1 year at
    dose 0 and 20 to check the build reproduces the cloud numbers (the GMD irr061 archetype: `rf/irr` args in
    `archR.txt` below).
-2. Regenerate archetypes.csv with the v22 soil rule; update collect.py for chain outputs.
-3. Submit a 10-archetype pilot array, check timing and disk, then the full array once David picks v22/v23.
+2. (done) archetypes regenerated with the v22 soil rule; collect_chains.py written (untested until pilot output exists).
+3. Submit a 10-archetype pilot array (`sbatch --array=1-10 stanage_handoff/slurm/arch_array.sbatch stanage_handoff/arch/pilot10.csv`:
+   the six GMD archetypes plus the four largest others, 7.1 Mha), check timing and disk, then the full array once David picks v22/v23.
 
 GMD archetype args used for the v22 runs (for the step-1 check; irr061 year-1 control and 20 t results are in the
 GMD thread):

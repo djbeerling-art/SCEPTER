@@ -1,6 +1,6 @@
 #!/bin/bash
 # One Slurm array task per archetype. Submit from the repo root:
-#   sbatch --array=1-201%100 stanage_handoff/slurm/arch_array.sbatch arch/archetypes.csv
+#   sbatch --array=1-201%100 stanage_handoff/slurm/arch_array.sbatch stanage_handoff/arch/archetypes_v22.csv
 # 10-yr chains at 0/10/20 t/ha: ~8-9 core-hours per archetype in the cloud container (basalt years slow to ~25 min
 # after year 5), so 24 h wall time leaves margin; the script resumes if resubmitted.
 #SBATCH --job-name=rice22
