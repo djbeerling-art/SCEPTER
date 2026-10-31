@@ -19,7 +19,8 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
   via the PC session (scp to the PC) or by pushing small summary files to GitHub.
 
 ## 2. Model version
-**DECIDED (David, 31 Oct 07:24 UTC): v23 replaces v22.** Executable `scepter_paddy_v23` from commit 267a856
+**DECIDED (David, 31 Oct 07:24 UTC): v23 replaces v22.** Executable `scepter_paddy_v23` from commit 267a856, built with **`makefile_paddy_fast`** (NOT makefile_paddy, ~15x slower;
+-march=native, so compile on a compute node: build.sh uses srun)
 (v22 + carbon-closure fix, 9 lines in scepter.f90); options and `krxn_calibrated_v22.in` unchanged; `v22_options.env`
 now sets `EXE=scepter_paddy_v23`; `slurm/build.sh` builds it. Recalibrate only if the GMD thread reports a material shift.
 The v22 notes below are kept for provenance.

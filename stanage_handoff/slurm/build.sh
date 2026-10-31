@@ -11,7 +11,12 @@ git show 267a856:scepter.f90 > scepter.f90.v23
 cmp -s scepter.f90 scepter.f90.v23 || echo "NOTE: branch scepter.f90 differs from v23 (267a856); building v23"
 cp scepter.f90 scepter.f90.head && cp scepter.f90.v23 scepter.f90
 # restore the branch's scepter.f90 even if make fails, so the next git checkout/pull is not blocked
-make --file=makefile_paddy PROGRAM=scepter_paddy_v23 OBJS=scepter_paddy_v23.o || { mv scepter.f90.head scepter.f90; exit 1; }
+# makefile_paddy_fast (banded solver, speciation cache, no -fcheck) is the production build: the plain makefile_paddy is
+# ~15x slower. It uses -march=native, so compile ON A COMPUTE NODE of the partition the jobs run on (srun below), not
+# on the login node. Run build.sh itself on the login node (git and pip need its network access).
+srun --partition=sheffield --account=default --cpus-per-task=1 --mem=4G --time=00:30:00 \
+  bash -c "source stanage_handoff/slurm/modules.sh && make --file=makefile_paddy_fast PROGRAM=scepter_paddy_v23 OBJS=scepter_paddy_v23.o" \
+  || { mv scepter.f90.head scepter.f90; exit 1; }
 mv scepter.f90.head scepter.f90
 python3 -m pip install --user numpy scipy pandas scikit-learn SALib matplotlib
 # Slurm does not create the --output directory: a job whose logs/ is missing fails at once with no log at all.
