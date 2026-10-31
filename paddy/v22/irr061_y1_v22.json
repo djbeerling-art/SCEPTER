@@ -1,0 +1,46 @@
+{
+ "note": "v22, archetype irr061 (flooded, --phd=14), year 1 after 3-yr spin-up + 7-yr settle; runs r22_irr061_{0,20}_y1{s,f}; ghg_budget.py --alk=pda",
+ "args": "--rock=glb04 --irralk=1.6 --cec=16.9 --temp=28.7 --om=506 --fe3=0.0112",
+ "results": {
+  "0t_season": {
+   "CH4 (kg/ha)": 197.5236,
+   "N2O (kg N/ha)": 0.3474,
+   "CO2 degassing (t/ha)": 9.5606,
+   "ALK export (t CO2/ha)": 0.3965,
+   "potentially durable ALK (t CO2/ha)": 0.3965,
+   "calcite (t CO2/ha)": -0.0312,
+   "basalt dissolved (mol/m2)": 0.0,
+   "cation release (t CO2/ha)": 0.0
+  },
+  "0t_fallow": {
+   "CH4 (kg/ha)": 4.5429,
+   "N2O (kg N/ha)": 1.0047,
+   "CO2 degassing (t/ha)": 17.6449,
+   "ALK export (t CO2/ha)": 0.1797,
+   "potentially durable ALK (t CO2/ha)": 0.1797,
+   "calcite (t CO2/ha)": -0.0,
+   "basalt dissolved (mol/m2)": 0.0,
+   "cation release (t CO2/ha)": 0.0
+  },
+  "20t_season": {
+   "CH4 (kg/ha)": 137.7094,
+   "N2O (kg N/ha)": 0.3262,
+   "CO2 degassing (t/ha)": 9.8705,
+   "ALK export (t CO2/ha)": 0.3918,
+   "potentially durable ALK (t CO2/ha)": 0.3918,
+   "calcite (t CO2/ha)": 0.6233,
+   "basalt dissolved (mol/m2)": 2.3712,
+   "cation release (t CO2/ha)": 2.3298
+  },
+  "20t_fallow": {
+   "CH4 (kg/ha)": 6.8614,
+   "N2O (kg N/ha)": 1.1144,
+   "CO2 degassing (t/ha)": 17.149,
+   "ALK export (t CO2/ha)": 0.1921,
+   "potentially durable ALK (t CO2/ha)": 0.192,
+   "calcite (t CO2/ha)": -0.6075,
+   "basalt dissolved (mol/m2)": 0.3199,
+   "cation release (t CO2/ha)": 0.3211
+  }
+ }
+}
