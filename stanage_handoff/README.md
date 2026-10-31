@@ -19,6 +19,11 @@ global paper (Nature Geoscience target), not the GMD paper, which has no global 
   via the PC session (scp to the PC) or by pushing small summary files to GitHub.
 
 ## 2. Model version
+**DECIDED (David, 31 Oct 07:24 UTC): v23 replaces v22.** Executable `scepter_paddy_v23` from commit 267a856
+(v22 + carbon-closure fix, 9 lines in scepter.f90); options and `krxn_calibrated_v22.in` unchanged; `v22_options.env`
+now sets `EXE=scepter_paddy_v23`; `slurm/build.sh` builds it. Recalibrate only if the GMD thread reports a material shift.
+The v22 notes below are kept for provenance.
+
 - Repository: github.com/djbeerling-art/SCEPTER, branch `claude/project-thread-lst1mi` (the global-run thread; = `claude/project-thread-pip6bj-pan` + archetypes_v22, pilot list, collect_chains.py; this package is in `stanage_handoff/`).
 - Executable: `scepter_paddy_v22` (source = commit 162913a, unchanged up to 6e71f12), built from `makefile_paddy`:
   `make --file=makefile_paddy PROGRAM=scepter_paddy_v22 OBJS=scepter_paddy_v22.o` (gfortran + OpenBLAS; see
