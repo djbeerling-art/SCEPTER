@@ -1,5 +1,6 @@
 # Fig 6a (v22): Morris screen, 11 factors, r = 8 (96 points), 1 year after a 7-yr settle, basalt run minus year-matched control.
 # Baseline CH4 (control) ranked separately from the basalt-induced change. Data: morris22/ (paddy/screen/morris22.py analyse)
+import sys as _s; _s.path.insert(0,"/mnt/project-files/riceland-scepter/v22/figs"); import bigfont
 import os,pandas as pd,numpy as np,matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
 from matplotlib.patches import Patch; from matplotlib.lines import Line2D
 D=os.path.dirname(os.path.abspath(__file__)); M=f'{D}/morris22'
@@ -9,7 +10,7 @@ L={'soilfe3':'Soil ferrihydrite (0.4–3 wt%)','om':'OM input (250–900 g C m�
    'awd':'Water: flooded vs AWD','siw':'Si feedback strength w (0.1–0.4)','q':'Percolation (0.25–1.1 m yr⁻¹)'}
 TR={'basfe3','rock','dose'}
 P=[('base_ch4','a1  Baseline: control CH$_4$ (kg ha$^{-1}$ season$^{-1}$)'),('ch4_pct','a2  Basalt effect: season CH$_4$ change (%)'),('net','a3  Basalt effect: 1-yr net GHG (t CO$_2$e ha$^{-1}$)')]
-fig,ax=plt.subplots(1,3,figsize=(15,4.6),dpi=170)
+fig,ax=plt.subplots(3,1,figsize=(7,10.5))
 for a,(m,t) in zip(ax,P):
     s=pd.read_csv(f'{M}/morris_{m}.csv')
     if m=='base_ch4': s=s[~s.names.isin(TR)]
@@ -22,6 +23,6 @@ ax[0].annotate('Dose, rock type and rock Fe(III)\ndo not enter the control runs'
 r=pd.read_csv(f'{M}/results.csv')
 ax[2].annotate(f'CH$_4$ fell in {(r.ch4_pct<0).sum()}/{len(r)} runs (median {r.ch4_pct.median():.0f}%);\nnet negative in {(r.net<0).sum()}/{len(r)} (median {r.net.median():.2f})',(0.98,0.04),xycoords='axes fraction',ha='right',fontsize=7,color='#52514e')
 fig.legend([Patch(color='#eb6834'),Patch(color='#2a78d6'),Line2D([],[],marker='o',ls='',mfc='none',mec='#222')],['raises the metric (μ > 0)','lowers the metric (μ < 0)','σ: interactions / non-linearity'],
-           frameon=False,fontsize=7.5,ncol=3,loc='lower center',bbox_to_anchor=(0.5,0))
+           frameon=False,fontsize=7.5,ncol=3,loc='lower center',bbox_to_anchor=(0.5,0),columnspacing=1.0,handlelength=1.2)
 fig.suptitle('Model version: scepter_paddy_v22 (frozen; K$_{Si}$ 2 mM)',x=0.99,ha='right',fontsize=7.5,color='#52514e')
-fig.tight_layout(rect=(0,0.05,1,0.97)); fig.savefig(f'{D}/fig6a_morris_v22.png')
+fig.tight_layout(rect=(0,0.03,1,0.98)); fig.savefig(f'{D}/fig6a_morris_v22.png')

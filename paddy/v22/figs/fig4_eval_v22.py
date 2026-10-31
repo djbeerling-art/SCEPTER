@@ -1,11 +1,12 @@
 # Fig 4 (v22): evaluation against observations (numbers from Section 3, Table 3; AWD ratios from fig47_v22.json).
 # a: CH4 responses, calibration-informed comparisons separated from predictions; oxidation partitioning flagged.
 # b: model/observed for baselines, water-management response, cation release, soil carbonate and Fe(III); misfits flagged.
+import sys as _s; _s.path.insert(0,"/mnt/project-files/riceland-scepter/v22/figs"); import bigfont
 import json,matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt, numpy as np
 from matplotlib.lines import Line2D as L
 plt.rcParams.update({'font.size':10,'axes.spines.top':False,'axes.spines.right':False})
 B,S,K,F='#2a78d6','#e8622a','0.45','#c0392b'
-fig,(a,b)=plt.subplots(1,2,figsize=(13,5.6),gridspec_kw={'width_ratios':[1,1.15]})
+fig,(a,b)=plt.subplots(2,1,figsize=(7.4,10.5),gridspec_kw={'height_ratios':[1.15,1]})
 # (label, obs, model, colour, calibration-informed, kind) kind: e emission, p production, o oxidation
 P=[('Wang 2014 2 t/ha',-27,-35,S,1,'e'),('Wang 2014 4 t/ha',-43,-43,S,0,'e'),('Wang 2014 8 t/ha',-49,-52,S,0,'e'),
    ('Gong 36 t/ha',-18,-23,B,1,'e'),('Park 10 wt%',-25,-20,B,0,'e'),('Park 20 wt%',-37,-34,B,0,'e'),
@@ -49,6 +50,6 @@ b.axvline(1,ls='--',c='0.55',lw=1); b.set_xscale('log'); b.set_xlim(0.05,8); b.s
 b.set_xticks([0.1,0.25,0.5,1,2,4]); b.set_xticklabels(['0.1','0.25','0.5','1','2','4'])
 b.set_yticks(y); b.set_yticklabels([r[1] for r in R],fontsize=8.5); b.set_xlabel('Model / observed (log scale)')
 b.legend(handles=[L([],[],marker='o',ls='',c=B,label='prediction'),L([],[],marker='s',ls='',c=K,label='calibration-informed'),L([],[],marker='o',ls='',c=F,label='disagreement (development target)')],
-    loc='upper center',bbox_to_anchor=(0.45,-0.11),ncol=3,frameon=False,fontsize=8.5)
-b.set_title('b  Baselines, water management, cation release, carbonate and Fe(III)',loc='left'); b.grid(c='0.93',axis='x')
+    loc='upper center',bbox_to_anchor=(0.3,-0.13),ncol=2,frameon=False,fontsize=8.5)
+b.set_title('b  Baselines, water, cations, carbonate and Fe(III)',loc='left'); b.grid(c='0.93',axis='x')
 fig.tight_layout(rect=(0,0.03,1,1)); fig.savefig('fig4_eval_v22.png',dpi=200)
