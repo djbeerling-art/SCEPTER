@@ -1,0 +1,66 @@
+{
+ "f0_s": {
+  "CH4 (kg/ha)": 197.4671,
+  "N2O (kg N/ha)": 0.3474,
+  "CO2 degassing (t/ha)": 9.499,
+  "potentially durable ALK (t CO2/ha)": 0.3958,
+  "calcite (t CO2/ha)": 0.0568,
+  "cation release (t CO2/ha)": 0.0
+ },
+ "f0_f": {
+  "CH4 (kg/ha)": 4.5102,
+  "N2O (kg N/ha)": 1.0052,
+  "CO2 degassing (t/ha)": 17.7339,
+  "potentially durable ALK (t CO2/ha)": 0.1793,
+  "calcite (t CO2/ha)": -0.0,
+  "cation release (t CO2/ha)": 0.0
+ },
+ "f20_s": {
+  "CH4 (kg/ha)": 137.7082,
+  "N2O (kg N/ha)": 0.3262,
+  "CO2 degassing (t/ha)": 9.8766,
+  "potentially durable ALK (t CO2/ha)": 0.3918,
+  "calcite (t CO2/ha)": 0.6227,
+  "cation release (t CO2/ha)": 2.3298
+ },
+ "f20_f": {
+  "CH4 (kg/ha)": 6.861,
+  "N2O (kg N/ha)": 1.1146,
+  "CO2 degassing (t/ha)": 17.2267,
+  "potentially durable ALK (t CO2/ha)": 0.1923,
+  "calcite (t CO2/ha)": -0.6077,
+  "cation release (t CO2/ha)": 0.3211
+ },
+ "a0_s": {
+  "CH4 (kg/ha)": 134.971,
+  "N2O (kg N/ha)": 0.4377,
+  "CO2 degassing (t/ha)": 11.7693,
+  "potentially durable ALK (t CO2/ha)": 0.3615,
+  "calcite (t CO2/ha)": 0.0391,
+  "cation release (t CO2/ha)": 0.0
+ },
+ "a0_f": {
+  "CH4 (kg/ha)": 5.7044,
+  "N2O (kg N/ha)": 1.0277,
+  "CO2 degassing (t/ha)": 16.1471,
+  "potentially durable ALK (t CO2/ha)": 0.1656,
+  "calcite (t CO2/ha)": -0.0,
+  "cation release (t CO2/ha)": 0.0
+ },
+ "a20_s": {
+  "CH4 (kg/ha)": 90.4038,
+  "N2O (kg N/ha)": 0.4154,
+  "CO2 degassing (t/ha)": 11.4608,
+  "potentially durable ALK (t CO2/ha)": 0.3589,
+  "calcite (t CO2/ha)": 0.4008,
+  "cation release (t CO2/ha)": 2.3444
+ },
+ "a20_f": {
+  "CH4 (kg/ha)": 6.7373,
+  "N2O (kg N/ha)": 1.15,
+  "CO2 degassing (t/ha)": 16.1727,
+  "potentially durable ALK (t CO2/ha)": 0.1719,
+  "calcite (t CO2/ha)": -0.1771,
+  "cation release (t CO2/ha)": 0.3088
+ }
+}
