@@ -17,6 +17,8 @@
 #SBATCH --account=default
 #SBATCH --output=logs/rice23_%A_%a.out
 source stanage_handoff/slurm/modules.sh
+# SCEPTER is serial: keep OpenBLAS/OpenMP to the one allocated core (no thread oversubscription)
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 source stanage_handoff/v22_options.env
 export SCEPTER_OUT=${SCEPTER_OUT:-/mnt/parscratch/users/$USER/scepter/}
 STATUS_DIR=${STATUS_DIR:-status}
