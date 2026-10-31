@@ -11,7 +11,7 @@ for a,dose in zip(ax[:2],(10,20)):
     pda=np.maximum(pda,0); cc=np.maximum(cc,0); ret=cat-pda-cc
     a.stackplot(y,pda,cc,ret,colors=[C['pda'],C['cc'],C['ret']],edgecolor='white',lw=.6)
     a.plot(y,cat,c=C['cat'],lw=1.6)
-    a.annotate(f"{cat[-1]:.0f}: cation release\n(CDR potential, not removal)",(y[-1],cat[-1]),xytext=(-6,-2),textcoords='offset points',ha='right',va='top',fontsize=8)
+    a.text(0.02,0.97,f"dark line: cation release, {cat[-1]:.0f} t CO$_2$ ha$^{{-1}}$ by year 10\n(CDR potential, not removal)",transform=a.transAxes,ha='left',va='top',fontsize=8)
     for v,b,l in ((pda[-1],0,'PDA'),(cc[-1],pda[-1],'calcite'),(ret[-1],pda[-1]+cc[-1],'retained')):
         a.annotate(f'{l} {v:.1f}',(y[-1],b+v/2),xytext=(6,0),textcoords='offset points',va='center',fontsize=8)
     a.set_xlim(1,11.6); a.set_xticks(range(1,11)); a.set_xlabel('Year'); a.grid(c='#ecebe7',lw=.6); a.set_axisbelow(True)
@@ -20,7 +20,7 @@ for a,dose in zip(ax[:2],(10,20)):
     ax[2].plot(y,[r['cc'] for r in R],marker='o',ms=3,c=C['cc'],ls='-' if dose==20 else '--',label=f'calcite change, {dose} t')
 [x.set_ylabel('t CO$_2$ ha$^{-1}$') for x in ax[:2]]
 ax[2].axhline(0,c='#888',lw=.8); ax[2].set_xticks(range(1,11)); ax[2].set_xlabel('Year'); ax[2].grid(c='#ecebe7',lw=.6)
-ax[2].set_title('c  Annual inorganic C terms (t CO$_2$ ha$^{-1}$ yr$^{-1}$)',loc='left',fontsize=9); ax[2].legend(frameon=False,fontsize=8,ncol=2,loc='upper left')
+ax[2].set_title('c  Annual inorganic C terms (t CO$_2$ ha$^{-1}$ yr$^{-1}$)',loc='left',fontsize=9); ax[2].legend(frameon=False,fontsize=8,ncol=2,loc='upper left'); ax[2].set_ylim(top=ax[2].get_ylim()[1]*1.4)
 from matplotlib.patches import Patch
 fig.legend([Patch(color=C[k]) for k in ('pda','cc','ret')],['Potentially durable alkalinity exported at the base (PDA = ALK − 2Fe(II) − 2NH$_4^+$)',
   'Soil carbonate (calcite; counted only up to cations not exported)','Retained cations (exchange sites, porewater): potential only'],loc='lower center',ncol=1,frameon=False,fontsize=8)

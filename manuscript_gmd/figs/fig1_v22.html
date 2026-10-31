@@ -3,7 +3,7 @@
 <style>
 body{margin:0;background:#fff}
 svg{font-family:Inter,sans-serif;fill:#2b2a27}
-.t{font-size:15.5px}.s{font-size:14px;fill:#52514e}.h{font-size:17px;font-weight:600}.p{font-size:18px;font-weight:700}
+.t{font-size:18px}.s{font-size:16.5px;fill:#52514e}.h{font-size:19.5px;font-weight:600}.p{font-size:20.5px;font-weight:700}
 .box{fill:#fbfaf8;stroke:#cfcdc6;stroke-width:1.2}
 .ar{stroke:#52514e;stroke-width:1.8;fill:none;marker-end:url(#a)}
 .ch4{stroke:#d6542a;stroke-width:2.6;fill:none;marker-end:url(#ar)}
@@ -12,7 +12,7 @@ svg{font-family:Inter,sans-serif;fill:#2b2a27}
 .grn{stroke:#1b9a6b;stroke-width:2.2;fill:none;marker-end:url(#ag)}
 .ox{stroke:#d69a1e;stroke-width:2;fill:none;stroke-dasharray:5 4;marker-end:url(#ao)}
 </style></head><body>
-<svg id="fig" width="1000" height="1325" viewBox="0 0 1000 1325" xmlns="http://www.w3.org/2000/svg">
+<svg id="fig" width="1000" height="1336" viewBox="0 0 1000 1336" xmlns="http://www.w3.org/2000/svg">
 <defs>
  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#52514e"/></marker>
  <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#d6542a"/></marker>
@@ -23,28 +23,28 @@ svg{font-family:Inter,sans-serif;fill:#2b2a27}
  <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#f4efe6"/><line x1="0" y1="0" x2="0" y2="8" stroke="#cdb89a" stroke-width="3"/></pattern>
 </defs>
 
-<!-- ===================== a: soil column (0.5 m, 25 cells, plough pan); 900 units per m ===================== -->
-<text class="p" x="8" y="24">(a)</text><text class="h" x="42" y="24">Paddy column (0.5 m, 25 cells) with plough pan</text>
+<!-- ===================== a: soil column; 900 units per m ===================== -->
+<text class="p" x="6" y="24">(a)</text><text class="h" x="44" y="24">Paddy column (0.5 m, 25 cells) with plough pan</text>
 <rect x="60" y="125" width="935" height="50" fill="#dcebf7"/>
-<text class="s" x="66" y="146">floodwater (season):</text><text class="s" x="66" y="164">gas exchange (Eq. 10)</text>
+<text class="s" x="66" y="146">floodwater:</text><text class="s" x="66" y="166">gas exchange</text>
 <rect x="60" y="175" width="935" height="6" fill="#f2dcb3"/>
 <rect x="60" y="181" width="935" height="174" fill="#cbb594"/>
 <rect x="60" y="355" width="935" height="36" fill="#8f7b5f"/>
 <rect x="60" y="391" width="935" height="234" fill="#b29e80"/>
-<text class="s" x="66" y="198" style="font-size:13px;fill:#6b5a3e">oxic surface layer (mm)</text>
-<text class="t" x="66" y="324" style="fill:#3d3222;font-weight:600">puddled plough layer, 0–0.2 m</text>
-<text class="s" x="66" y="342" style="fill:#3d3222">mixed before each season (tillage)</text>
-<text class="t" x="420" y="379" style="fill:#fff">plough pan, 0.20–0.24 m</text>
-<text class="s" x="625" y="379" style="fill:#f4efe6">aqueous and gas diffusivity × 0.1</text>
-<text class="t" x="66" y="416" style="fill:#2f2619;font-weight:600">subsoil</text>
-<text class="s" x="66" y="435" style="fill:#2f2619">saturation ≤ 0.8 below the pan;</text>
-<text class="s" x="66" y="453" style="fill:#2f2619">base open to air (pO₂ 0.21 atm)</text>
-<g class="s" style="font-size:13px"><line x1="54" y1="175" x2="54" y2="625" stroke="#9a9992"/>
-<text x="49" y="180" text-anchor="end">0</text><text x="49" y="270" text-anchor="end">0.1</text><text x="49" y="360" text-anchor="end">0.2</text><text x="49" y="450" text-anchor="end">0.3</text><text x="49" y="540" text-anchor="end">0.4</text><text x="49" y="625" text-anchor="end">0.5</text><text x="49" y="642" text-anchor="end">m</text></g>
+<text class="s" x="66" y="200" style="font-size:15px;fill:#6b5a3e">oxic surface layer (mm)</text>
+<text class="t" x="66" y="326" style="fill:#3d3222;font-weight:600">plough layer, 0–0.2 m</text>
+<text class="s" x="66" y="346" style="fill:#3d3222">puddled; mixed each season</text>
+<text class="t" x="390" y="380" style="fill:#fff">plough pan, 0.20–0.24 m</text>
+<text class="s" x="640" y="380" style="fill:#f4efe6">diffusivity × 0.1</text>
+<text class="t" x="66" y="418" style="fill:#2f2619;font-weight:600">subsoil</text>
+<text class="s" x="66" y="439" style="fill:#2f2619">saturation ≤ 0.8;</text>
+<text class="s" x="66" y="459" style="fill:#2f2619">base open to air</text>
+<g class="s" style="font-size:15px"><line x1="54" y1="175" x2="54" y2="625" stroke="#9a9992"/>
+<text x="49" y="181" text-anchor="end">0</text><text x="49" y="270" text-anchor="end">0.1</text><text x="49" y="360" text-anchor="end">0.2</text><text x="49" y="450" text-anchor="end">0.3</text><text x="49" y="540" text-anchor="end">0.4</text><text x="49" y="625" text-anchor="end">0.5</text><text x="49" y="644" text-anchor="end">m</text></g>
 <!-- Fe redistribution -->
-<path class="ar" d="M600,395 L600,482" style="stroke:#9b4a14"/>
-<text class="s" x="590" y="440" text-anchor="end" style="fill:#7a3a10">Fe²⁺ leached through the pan;</text>
-<text class="s" x="590" y="458" text-anchor="end" style="fill:#7a3a10">re-oxidised in the subsoil</text>
+<path class="ar" d="M600,395 L600,490" style="stroke:#9b4a14"/>
+<text class="s" x="590" y="444" text-anchor="end" style="fill:#7a3a10">Fe²⁺ leached through pan,</text>
+<text class="s" x="590" y="464" text-anchor="end" style="fill:#7a3a10">re-oxidised in subsoil</text>
 <!-- rice plant -->
 <g stroke="#3c8d3a" stroke-width="3" fill="none" stroke-linecap="round">
  <path d="M277,175 C275,125 268,95 255,58"/><path d="M283,175 C285,125 289,90 300,55"/><path d="M280,175 C280,135 280,95 279,50"/>
@@ -52,132 +52,128 @@ svg{font-family:Inter,sans-serif;fill:#2b2a27}
 </g>
 <g stroke="#8a6d3b" stroke-width="1.6" fill="none">
  <path d="M280,181 C272,220 262,250 250,280"/><path d="M280,181 C287,225 295,255 305,285"/><path d="M280,181 C280,230 279,260 278,292"/>
- <path d="M280,195 C255,215 240,235 228,258"/><path d="M280,195 C305,215 320,235 332,258"/>
+ <path d="M280,195 C255,215 240,235 230,262"/><path d="M280,195 C305,215 320,235 332,258"/>
 </g>
 <g stroke="#d69a1e" stroke-width="1.6" stroke-dasharray="3 3" fill="none">
- <circle cx="250" cy="280" r="11"/><circle cx="305" cy="285" r="11"/><circle cx="278" cy="292" r="11"/><circle cx="228" cy="258" r="9"/><circle cx="332" cy="258" r="9"/>
+ <circle cx="250" cy="280" r="11"/><circle cx="305" cy="285" r="11"/><circle cx="278" cy="292" r="11"/><circle cx="230" cy="262" r="8"/><circle cx="332" cy="258" r="9"/>
 </g>
-<text class="s" x="66" y="240">root respiration,</text><text class="s" x="66" y="258">NH₄⁺ and Si uptake</text>
+<text class="s" x="66" y="238">root respiration,</text><text class="s" x="66" y="258">NH₄⁺, Si uptake</text>
 <!-- empirical switchable Si term -->
-<rect x="66" y="512" width="370" height="92" rx="6" fill="#fff8e6" stroke="#d69a1e" stroke-width="1.6" stroke-dasharray="6 4"/>
-<text class="s" x="78" y="533" style="fill:#9b6b0a;font-weight:600">EMPIRICAL, SWITCHABLE (--rtsi)</text>
-<text class="s" x="78" y="552" style="fill:#7a5208">root O₂ loss raised by porewater Si (Eq. 11)</text>
-<text class="s" x="78" y="571" style="fill:#7a5208">v22: K_Si = 2 mmol L⁻¹, w = 0.2</text>
-<text class="s" x="78" y="590" style="fill:#7a5208">w = 0 switches it off (Fig. 6b)</text>
+<rect x="66" y="512" width="400" height="84" rx="6" fill="#fff8e6" stroke="#d69a1e" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text class="s" x="78" y="534" style="fill:#9b6b0a;font-weight:600">EMPIRICAL, SWITCHABLE (--rtsi)</text>
+<text class="s" x="78" y="556" style="fill:#7a5208">root O₂ loss rises with porewater Si</text>
+<text class="s" x="78" y="578" style="fill:#7a5208">(Eq. 11); w = 0 switches it off</text>
 <path class="ox" d="M345,510 C345,450 322,380 307,300"/>
 <!-- CH4 -->
-<ellipse cx="440" cy="272" rx="64" ry="28" fill="#f7d9cc" stroke="#d6542a" stroke-width="1.2"/>
-<text class="t" x="440" y="268" text-anchor="middle" style="fill:#a83a14">CH₄</text><text class="s" x="440" y="285" text-anchor="middle">methanogenesis</text>
-<path class="ch4" d="M376,272 C340,268 300,250 287,220 C283,190 283,120 285,52"/>
-<text class="t" x="345" y="62" style="fill:#a83a14">plant transport</text>
-<text class="s" x="345" y="80">30–90% oxidised in rhizosphere</text>
+<ellipse cx="445" cy="270" rx="74" ry="30" fill="#f7d9cc" stroke="#d6542a" stroke-width="1.2"/>
+<text class="t" x="445" y="266" text-anchor="middle" style="fill:#a83a14">CH₄</text><text class="s" x="445" y="285" text-anchor="middle">methanogenesis</text>
+<path class="ch4" d="M371,270 C340,266 300,250 287,220 C283,190 283,120 285,52"/>
+<text class="t" x="345" y="64" style="fill:#a83a14">plant transport</text>
+<text class="s" x="345" y="84">30–90% oxidised</text>
 <g fill="none" stroke="#d6542a" stroke-width="1.6"><circle cx="600" cy="285" r="6"/><circle cx="604" cy="250" r="7"/><circle cx="598" cy="218" r="6"/><circle cx="603" cy="192" r="5"/></g>
 <path class="ch4" d="M600,182 L600,52"/>
-<text class="t" x="610" y="62" style="fill:#a83a14">ebullition</text><text class="s" x="610" y="80">above 0.4 atm CH₄</text>
+<text class="t" x="610" y="64" style="fill:#a83a14">ebullition</text><text class="s" x="610" y="84">above 0.4 atm</text>
 <path class="ch4" d="M770,320 L770,52" style="stroke-dasharray:7 4"/>
-<text class="t" x="780" y="62" style="fill:#a83a14">diffusion</text><text class="s" x="780" y="80">partly oxidised at surface</text>
+<text class="t" x="780" y="64" style="fill:#a83a14">diffusion</text><text class="s" x="780" y="84">partly oxidised</text>
 <path class="n2o" d="M988,175 L988,52"/>
 <text class="t" x="995" y="44" text-anchor="end" style="fill:#6a3fb0">N₂O, CO₂</text>
 <!-- inputs -->
-<path class="ar" d="M430,128 L430,188"/><text class="s" x="440" y="150">OM + Fe(III) input</text>
-<path class="ar" d="M880,128 L880,188"/><text class="s" x="870" y="150" text-anchor="end">urea N</text>
+<path class="ar" d="M430,128 L430,188"/><text class="s" x="440" y="152">OM, Fe(III)</text>
+<path class="ar" d="M880,128 L880,188"/><text class="s" x="870" y="152" text-anchor="end">urea N</text>
 <!-- basalt grains in 0-0.15 m -->
 <g fill="#3e3b36">
  <path d="M640,205 l9,-4 l6,7 l-5,8 l-10,-2z"/><path d="M680,240 l8,-5 l8,6 l-4,9 l-9,0z"/><path d="M650,275 l7,-3 l7,5 l-3,7 l-9,-1z"/>
  <path d="M705,200 l9,-2 l4,8 l-7,6 l-8,-4z"/><path d="M725,265 l8,-6 l7,5 l-2,8 l-10,1z"/><path d="M740,225 l8,-4 l7,7 l-6,7 l-8,-3z"/>
  <path d="M700,298 l7,-3 l7,6 l-4,7 l-9,-2z"/><path d="M640,305 l8,-3 l6,7 l-6,6 l-8,-3z"/>
 </g>
-<rect x="800" y="218" width="188" height="70" rx="5" fill="#fbfaf8" stroke="#cfcdc6"/>
-<text class="t" x="810" y="239">basalt (0–0.15 m)</text>
-<text class="s" x="810" y="258">cations, Fe²⁺,</text>
-<text class="s" x="810" y="276">Si(OH)₄, alkalinity</text>
+<rect x="796" y="214" width="192" height="76" rx="5" fill="#fbfaf8" stroke="#cfcdc6"/>
+<text class="t" x="806" y="236">basalt (0–0.15 m)</text>
+<text class="s" x="806" y="258">cations, Fe²⁺,</text>
+<text class="s" x="806" y="279">Si, alkalinity</text>
 <path class="grn" d="M640,318 C600,338 470,345 420,330 C380,318 350,300 338,272"/>
-<text class="s" x="652" y="336" style="fill:#1b7a55">Si to roots</text>
+<text class="s" x="652" y="338" style="fill:#1b7a55">Si to roots</text>
 <!-- three separate fates of rock cations -->
-<rect x="610" y="408" width="378" height="46" rx="5" fill="#fbfaf8" stroke="#cfcdc6"/>
-<text class="t" x="620" y="427">retained cations (exchange, porewater)</text>
-<text class="s" x="620" y="445">potential CDR only; not counted as removal</text>
-<rect x="610" y="460" width="378" height="46" rx="5" fill="#f4ecfb" stroke="#9b59d0"/>
-<text class="t" x="620" y="479" style="fill:#6a2fa0">soil carbonate (calcite)</text>
-<text class="s" x="620" y="497">counted only up to cations not exported</text>
-<rect x="610" y="512" width="378" height="46" rx="5" fill="#e6f6ef" stroke="#1baf7a"/>
-<text class="t" x="620" y="531" style="fill:#13774f">alkalinity export at the base (PDA)</text>
-<text class="s" x="620" y="549">PDA = ALK − 2Fe(II) − 2NH₄⁺</text>
-<path class="ar" d="M900,288 L900,406"/>
-<path class="grn" d="M800,558 L800,662"/><path class="blu" d="M470,625 L470,662"/><path class="blu" d="M300,625 L300,662"/>
-<text class="s" x="485" y="656" style="fill:#2a78d6">percolation 0.5 m yr⁻¹ (1.4 mm d⁻¹)</text>
+<rect x="610" y="406" width="378" height="48" rx="5" fill="#fbfaf8" stroke="#cfcdc6"/>
+<text class="t" x="620" y="426">retained cations</text>
+<text class="s" x="620" y="446">potential CDR only, not removal</text>
+<rect x="610" y="460" width="378" height="48" rx="5" fill="#f4ecfb" stroke="#9b59d0"/>
+<text class="t" x="620" y="480" style="fill:#6a2fa0">soil carbonate (calcite)</text>
+<text class="s" x="620" y="500">only up to cations not exported</text>
+<rect x="610" y="514" width="378" height="48" rx="5" fill="#e6f6ef" stroke="#1baf7a"/>
+<text class="t" x="620" y="534" style="fill:#13774f">alkalinity export (PDA)</text>
+<text class="s" x="620" y="554">PDA = ALK − 2Fe(II) − 2NH₄⁺</text>
+<path class="ar" d="M900,290 L900,404"/>
+<path class="grn" d="M800,562 L800,664"/><path class="blu" d="M470,625 L470,664"/><path class="blu" d="M300,625 L300,664"/>
+<text class="s" x="485" y="657" style="fill:#2a78d6">percolation 1.4 mm d⁻¹</text>
 
 <!-- ===================== b: redox network ===================== -->
-<g transform="translate(0,10)">
-<text class="p" x="8" y="700">(b)</text><text class="h" x="42" y="700">Microbial redox and Fe cycle</text>
-<rect x="150" y="714" width="210" height="32" rx="6" fill="#efe7d8" stroke="#b29e80"/>
-<text class="t" x="255" y="735" text-anchor="middle">organic matter (CH₂O)</text>
-<path class="ar" d="M255,746 L255,770"/>
-<text class="s" x="268" y="764">Monod in OM and acceptor (Eq. 3)</text>
+<g transform="translate(0,12)">
+<text class="p" x="6" y="700">(b)</text><text class="h" x="44" y="700">Microbial redox and Fe cycle</text>
+<rect x="140" y="714" width="232" height="34" rx="6" fill="#efe7d8" stroke="#b29e80"/>
+<text class="t" x="256" y="737" text-anchor="middle">organic matter (CH₂O)</text>
+<path class="ar" d="M256,748 L256,772"/>
+<text class="s" x="268" y="766">Monod kinetics (Eq. 3)</text>
 <g>
- <rect class="box" x="10" y="772" width="480" height="46" rx="6"/>
- <text class="t" x="22" y="791">① O₂ → CO₂</text><text class="s" x="22" y="810">aerobic respiration; O₂ inhibits ②–⑤</text>
- <rect class="box" x="10" y="824" width="480" height="64" rx="6"/>
- <text class="t" x="22" y="843" style="fill:#6a3fb0">② NO₃⁻ → N₂O → N₂</text><text class="s" x="22" y="862">denitrification; pH-dependent N₂O yield (Eq. 7)</text>
- <text class="s" x="22" y="880">urea → NH₄⁺ → nitrification → NO₃⁻</text>
- <rect class="box" x="10" y="894" width="480" height="64" rx="6"/>
- <text class="t" x="22" y="913" style="fill:#9b4a14">③ Fe(III) → Fe²⁺</text><text class="s" x="22" y="932">ferrihydrite, green rust; goethite ~30× slower</text>
- <text class="s" x="22" y="950">NO₃⁻ inhibits ③–⑤</text>
- <rect class="box" x="10" y="964" width="480" height="46" rx="6"/>
- <text class="t" x="22" y="983">④ SO₄²⁻ → HS⁻ → FeS</text><text class="s" x="22" y="1002">sulfate reduction</text>
- <rect class="box" x="10" y="1016" width="480" height="46" rx="6"/>
- <text class="t" x="22" y="1035" style="fill:#a83a14">⑤ CH₂O → CH₄ + CO₂</text><text class="s" x="22" y="1054">inhibited by Fe(III) and SO₄²⁻ (Eq. 4); Q10 = 3</text>
+ <rect class="box" x="6" y="774" width="486" height="50" rx="6"/>
+ <text class="t" x="18" y="795">① O₂ → CO₂</text><text class="s" x="18" y="816">aerobic respiration; O₂ inhibits ②–⑤</text>
+ <rect class="box" x="6" y="830" width="486" height="50" rx="6"/>
+ <text class="t" x="18" y="851" style="fill:#6a3fb0">② NO₃⁻ → N₂O → N₂</text><text class="s" x="18" y="872">denitrification; pH-dependent N₂O yield</text>
+ <rect class="box" x="6" y="886" width="486" height="50" rx="6"/>
+ <text class="t" x="18" y="907" style="fill:#9b4a14">③ Fe(III) → Fe²⁺</text><text class="s" x="18" y="928">ferrihydrite, green rust; goethite slower</text>
+ <rect class="box" x="6" y="942" width="486" height="50" rx="6"/>
+ <text class="t" x="18" y="963">④ SO₄²⁻ → HS⁻ → FeS</text><text class="s" x="18" y="984">sulfate reduction</text>
+ <rect class="box" x="6" y="998" width="486" height="50" rx="6"/>
+ <text class="t" x="18" y="1019" style="fill:#a83a14">⑤ CH₂O → CH₄ + CO₂</text><text class="s" x="18" y="1040">inhibited by Fe(III) and SO₄²⁻ (Eq. 4)</text>
 </g>
 <!-- Fe cycle -->
-<rect x="510" y="714" width="485" height="348" rx="8" fill="#fbf3ea" stroke="#e2c7a6"/>
-<text class="t" x="524" y="738" style="font-weight:600">Fe²⁺ fate and re-oxidation</text>
-<rect x="524" y="762" width="128" height="34" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="588" y="784" text-anchor="middle">ferrihydrite</text>
-<rect x="704" y="762" width="96" height="34" rx="17" fill="#fff" stroke="#9b4a14"/><text class="t" x="752" y="784" text-anchor="middle">Fe²⁺</text>
-<rect x="846" y="752" width="138" height="52" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="915" y="774" text-anchor="middle">green rust</text><text class="s" x="915" y="793" text-anchor="middle">pH-stat (Eq. 5)</text>
-<rect x="846" y="822" width="138" height="34" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="915" y="844" text-anchor="middle">siderite, FeS</text>
-<rect x="704" y="832" width="96" height="34" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="752" y="854" text-anchor="middle">exchange</text>
-<path class="ar" d="M654,779 L702,779"/><text class="s" x="678" y="756" text-anchor="middle" style="font-size:13px">reduction</text>
-<path class="ar" d="M802,779 L844,779" style="marker-start:url(#a)"/>
-<path class="ar" d="M790,798 C815,830 825,839 844,839"/>
-<path class="ar" d="M752,798 L752,830" style="marker-start:url(#a)"/>
-<path class="ox" d="M915,858 C915,905 600,905 590,800"/>
-<text class="s" x="524" y="930" style="fill:#9b6b0a">O₂ on drainage and in fallow (Eq. 6): Fe²⁺,</text>
-<text class="s" x="524" y="948" style="fill:#9b6b0a">green rust, siderite and FeS return to ferrihydrite</text>
-<line x1="524" y1="968" x2="981" y2="968" stroke="#e2c7a6"/>
-<text class="s" x="524" y="990">pH from charge balance at each Newton step;</text>
-<text class="s" x="524" y="1008">reactions carry no H⁺ explicitly.</text>
-<text class="s" x="524" y="1032">Microbial rates: Q10 = 2 (CH₄: 3) from 25 °C (Eq. 2).</text>
+<rect x="508" y="714" width="487" height="334" rx="8" fill="#fbf3ea" stroke="#e2c7a6"/>
+<text class="t" x="522" y="740" style="font-weight:600">Fe²⁺ fate and re-oxidation</text>
+<rect x="522" y="768" width="130" height="36" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="587" y="792" text-anchor="middle">ferrihydrite</text>
+<rect x="708" y="768" width="92" height="36" rx="18" fill="#fff" stroke="#9b4a14"/><text class="t" x="754" y="792" text-anchor="middle">Fe²⁺</text>
+<rect x="846" y="768" width="138" height="36" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="915" y="792" text-anchor="middle">green rust</text>
+<rect x="846" y="830" width="138" height="36" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="915" y="854" text-anchor="middle">siderite, FeS</text>
+<rect x="708" y="840" width="92" height="36" rx="5" fill="#fff" stroke="#cfcdc6"/><text class="s" x="754" y="864" text-anchor="middle">exchange</text>
+<path class="ar" d="M654,786 L706,786"/><text class="s" x="680" y="762" text-anchor="middle" style="font-size:15px">reduction</text>
+<path class="ar" d="M802,786 L844,786" style="marker-start:url(#a)"/>
+<path class="ar" d="M790,806 C815,838 825,848 844,848"/>
+<path class="ar" d="M754,806 L754,838" style="marker-start:url(#a)"/>
+<path class="ox" d="M915,868 C915,915 600,915 587,806"/>
+<text class="s" x="522" y="944" style="fill:#9b6b0a">O₂ on drainage and in fallow returns Fe²⁺,</text>
+<text class="s" x="522" y="965" style="fill:#9b6b0a">green rust, siderite, FeS to ferrihydrite</text>
+<line x1="522" y1="982" x2="981" y2="982" stroke="#e2c7a6"/>
+<text class="s" x="522" y="1006">pH from charge balance at each Newton step</text>
+<text class="s" x="522" y="1030">rates: Q10 = 2 (CH₄: 3) from 25 °C</text>
 </g>
 
 <!-- ===================== c: water regime; 365 d -> 860 units from x=130 ===================== -->
-<g transform="translate(0,10)">
-<text class="p" x="8" y="1098">(c)</text><text class="h" x="42" y="1098">One model year: season and fallow run as a chain of restarts</text>
-<text class="s" x="10" y="1128">Flooded</text>
+<g transform="translate(0,14)">
+<text class="p" x="6" y="1092">(c)</text><text class="h" x="44" y="1092">One model year: season and fallow as a chain of restarts</text>
+<text class="s" x="6" y="1128">Flooded</text>
 <g transform="translate(130,0)">
- <rect x="0" y="1110" width="233" height="28" fill="#2a78d6" opacity="0.85"/>
- <rect x="233" y="1110" width="33" height="28" fill="url(#hatch)" stroke="#cdb89a"/>
- <rect x="266" y="1110" width="594" height="28" fill="#efe7d8" stroke="#d9ccb5"/>
+ <rect x="0" y="1108" width="233" height="30" fill="#2a78d6" opacity="0.85"/>
+ <rect x="233" y="1108" width="33" height="30" fill="url(#hatch)" stroke="#cdb89a"/>
+ <rect x="266" y="1108" width="594" height="30" fill="#efe7d8" stroke="#d9ccb5"/>
  <text class="s" x="116" y="1129" text-anchor="middle" style="fill:#fff">flooded, rice growing</text>
- <text class="s" x="563" y="1129" text-anchor="middle">fallow: drained, water table 0.5 m, no plants (252 d)</text>
- <text class="s" x="-120" y="1172">AWD</text>
- <rect x="0" y="1154" width="70" height="28" fill="#2a78d6" opacity="0.85"/>
+ <text class="s" x="563" y="1129" text-anchor="middle">fallow: drained, no plants (252 d)</text>
+ <text class="s" x="-124" y="1173">AWD</text>
+ <rect x="0" y="1152" width="70" height="30" fill="#2a78d6" opacity="0.85"/>
  <g fill="url(#hatch)" stroke="#cdb89a">
-  <rect x="70" y="1154" width="18" height="28"/><rect x="126" y="1154" width="18" height="28"/><rect x="182" y="1154" width="17" height="28"/>
+  <rect x="70" y="1152" width="18" height="30"/><rect x="126" y="1152" width="18" height="30"/><rect x="182" y="1152" width="17" height="30"/>
  </g>
- <rect x="88" y="1154" width="38" height="28" fill="#2a78d6" opacity="0.85"/><rect x="144" y="1154" width="38" height="28" fill="#2a78d6" opacity="0.85"/><rect x="199" y="1154" width="34" height="28" fill="#2a78d6" opacity="0.85"/>
- <rect x="233" y="1154" width="33" height="28" fill="url(#hatch)" stroke="#cdb89a"/>
- <rect x="266" y="1154" width="594" height="28" fill="#efe7d8" stroke="#d9ccb5"/>
- <text class="s" x="0" y="1201">drains to 0.15 m after the first month</text>
- <text class="s" x="250" y="1220">pre-harvest drain (14 d)</text>
+ <rect x="88" y="1152" width="38" height="30" fill="#2a78d6" opacity="0.85"/><rect x="144" y="1152" width="38" height="30" fill="#2a78d6" opacity="0.85"/><rect x="199" y="1152" width="34" height="30" fill="#2a78d6" opacity="0.85"/>
+ <rect x="233" y="1152" width="33" height="30" fill="url(#hatch)" stroke="#cdb89a"/>
+ <rect x="266" y="1152" width="594" height="30" fill="#efe7d8" stroke="#d9ccb5"/>
+ <text class="s" x="0" y="1203">drains to 0.15 m after the first month</text>
+ <text class="s" x="250" y="1224">pre-harvest drain (14 d)</text>
  <!-- axis -->
- <line x1="0" y1="1234" x2="860" y2="1234" stroke="#9a9992"/>
+ <line x1="0" y1="1238" x2="860" y2="1238" stroke="#9a9992"/>
  <g class="s" text-anchor="middle">
-  <text x="0" y="1252">0</text><text x="266" y="1252">113 d (harvest)</text><text x="860" y="1252" text-anchor="end">365 d</text>
+  <text x="0" y="1258">0</text><text x="266" y="1258">113 d (harvest)</text><text x="860" y="1258" text-anchor="end">365 d</text>
  </g>
  <!-- events -->
- <path class="ar" d="M0,1290 L0,1258"/><text class="s" x="10" y="1280">tillage (mix 0–0.2 m); basalt, OM, Fe(III) and urea applied</text>
+ <path class="ar" d="M0,1290 L0,1264"/><text class="s" x="10" y="1286">tillage and basalt at day 0; OM, Fe(III) and urea added through the season</text>
 </g>
-<text class="s" x="10" y="1306">Season: 113 d with plant reactions. Fallow restarts from the season end state; multi-year runs repeat the pair.</text>
+<text class="s" x="6" y="1312">The fallow restarts from the season end state; multi-year runs repeat the pair.</text>
 </g>
 </svg>
 </body></html>

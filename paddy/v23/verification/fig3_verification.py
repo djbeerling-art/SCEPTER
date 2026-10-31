@@ -11,7 +11,7 @@ from matplotlib.lines import Line2D
 D=os.path.dirname(os.path.abspath(__file__))
 ex=json.load(open(f'{D}/ex11.json')); ph=json.load(open(f'{D}/phreeqc_respeciation.json')); mb=json.load(open(f'{D}/mass_balance.json'))
 INK='#52514e'; GRID='#ecebe7'; REF='#9a9992'
-fig,ax=plt.subplots(2,2,figsize=(10.5,8.4),dpi=170)
+fig,ax=plt.subplots(2,2,figsize=(8.6,9.6),dpi=170); fig.font_boost=1.15
 
 # a: ex11
 a=ax[0,0]; C={'na':'#2a78d6','k':'#eb6834','ca':'#1baf7a','cl':'#8a5cd0'}; N={'na':'Na','k':'K','ca':'Ca','cl':'Cl'}
@@ -23,8 +23,8 @@ a.set_xlim(0,2.6); a.set_xlabel('Pore volumes',fontsize=8); a.set_ylabel('Outlet
 pvg=np.linspace(0.3,2.5,100); rm=max(np.sqrt(np.mean((np.interp(pvg,ex['pv_s'],ex['s'][n])-np.interp(pvg,ex['pv_p'],ex['p'][n]))**2)) for n in C)
 a.set_title('(a) Cation exchange (PHREEQC ex. 11)',fontsize=9,loc='left')
 h=[Line2D([],[],color=C[n],lw=2) for n in C]+[Line2D([],[],color=INK,lw=2),Line2D([],[],marker='o',ls='',mfc='none',mec=INK)]
-a.legend(h,[N[n] for n in C]+['SCEPTER','PHREEQC'],fontsize=7,frameon=False,ncol=2,loc='center right',bbox_to_anchor=(1.0,0.62),handlelength=1.2,columnspacing=0.8)
-a.annotate(f'RMSE ≤ {rm:.3f} mM',(0.03,0.95),xycoords='axes fraction',fontsize=7.5,color=INK,va='top')
+a.legend(h,[N[n] for n in C]+['SCEPTER','PHREEQC'],fontsize=7,frameon=False,ncol=3,loc='upper right',handlelength=1.2,columnspacing=0.8); a.set_ylim(-0.05,1.6)
+a.annotate(f'RMSE ≤ {rm:.3f} mM',(0.03,0.80),xycoords='axes fraction',fontsize=7.5,color=INK,va='top')
 
 # b, c: re-speciation
 G={'Flooded':['flood_ctrl','flood_b20','flood_b20_late'],'AWD, drained':['awd_drained'],'AWD, reflooded':['awd_reflooded'],'Fallow':['fallow_b20','fallow_ctrl_end']}
@@ -48,7 +48,7 @@ for (l,ks,kp,sh,mk),col in zip(M,MC):
 c.set_xlim(-4,2.5); c.set_ylim(-4,2.5); c.set_xlabel('Model log Ω',fontsize=8); c.set_ylabel('PHREEQC SI (ideal solution)',fontsize=8)
 c.set_title('(c) Mineral saturation',fontsize=9,loc='left'); c.legend(fontsize=7,frameon=False,loc='upper left')
 ac=[x['cc_p']-x['cc_pi'] for x in ph]
-c.annotate(f'Siderite shifted by the model\'s +1 log-unit\napparent solubility. With activity\ncorrections, calcite SI is {-max(ac):.2f}–{-min(ac):.2f} lower.',
+c.annotate(f'Siderite shifted by the\nmodel\'s +1 log-unit\napparent solubility.\nWith activity corrections,\ncalcite SI is {-max(ac):.2f}–{-min(ac):.2f} lower.',
            (0.97,0.04),xycoords='axes fraction',ha='right',fontsize=6.8,color=INK)
 
 # d: closure
@@ -57,11 +57,11 @@ rc=[max(abs(v['budget'][el]['internal'])/v['budget'][el]['gross'] for v in mb.va
 sc=[max(abs(v['storage'][el]['dinv']-v['storage'][el]['dtflx'])/v['budget'][el]['gross'] for v in mb.values()) for el in EL]
 e.bar(x-w/2-0.01,rc,w,color='#2a78d6',label='Reaction stoichiometry (internal terms)')
 e.bar(x+w/2+0.01,sc,w,color='#eb6834',label='Storage vs profile inventory')
-e.set_yscale('log'); e.set_ylim(1e-17,1e-1); e.set_xticks(x,EL,fontsize=8)
+e.set_yscale('log'); e.set_ylim(1e-17,1e1); e.set_xticks(x,EL,fontsize=8)
 e.set_ylabel('Worst relative imbalance (of gross flux)',fontsize=8)
 e.set_title('(d) Element mass balance (8 runs)',fontsize=9,loc='left'); e.legend(['Reaction terms','Storage vs inventory'],fontsize=7,frameon=False,loc='upper right',bbox_to_anchor=(1.0,1.0))
 if rc[0]>1e-6: e.annotate(f'C does not close exactly:\nresidual {100*rc[0]:.2g}% of gross C flux',(x[0]+0.25,rc[0]),fontsize=6.8,color='#c0392b',va='top')
-else: e.annotate('v22 C residual (0.35%)\nremoved in v23',(0.03,0.97),xycoords='axes fraction',fontsize=6.8,color='#52514e',va='top')
+else: e.annotate('v22 C residual (0.35%)\nremoved in v23',(0.03,0.80),xycoords='axes fraction',fontsize=6.8,color='#52514e',va='top')
 for ax_ in ax.flat:
     ax_.tick_params(labelsize=7.5); ax_.grid(color=GRID,lw=.6); ax_.set_axisbelow(True)
     for s in ['top','right']: ax_.spines[s].set_visible(False)

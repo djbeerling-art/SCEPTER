@@ -3,178 +3,143 @@
 <style>
 body{margin:0;background:#fff}
 svg{font-family:Inter,sans-serif;fill:#2b2a27}
-.t{font-size:15.5px}.s{font-size:14px;fill:#52514e}.m{font-family:'JetBrains Mono',monospace;font-size:13px;fill:#3d3c39}
-.h{font-size:17px;font-weight:600}.p{font-size:18px;font-weight:700}.b{font-weight:600}
-.pre{white-space:pre}
+.t{font-size:18px}.s{font-size:16.5px;fill:#52514e}.m{font-family:'JetBrains Mono',monospace;font-size:15px;fill:#3d3c39}
+.h{font-size:19.5px;font-weight:600}.p{font-size:20.5px;font-weight:700}.b{font-weight:600}
 .box{fill:#fbfaf8;stroke:#cfcdc6;stroke-width:1.2}
 .core{fill:#f1f0ec;stroke:#9a9992;stroke-width:1.4}
 .new{fill:#e7f4ee;stroke:#1b9a6b;stroke-width:1.6}
 .ar{stroke:#52514e;stroke-width:2;fill:none;marker-end:url(#a)}
 </style></head><body>
-<svg id="fig" width="1000" height="1404" viewBox="0 0 1000 1404" xmlns="http://www.w3.org/2000/svg">
+<svg id="fig" width="1000" height="1312" viewBox="0 0 1000 1312" xmlns="http://www.w3.org/2000/svg">
 <defs>
  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#52514e"/></marker>
 </defs>
 
-<text class="p" x="8" y="24">(a)</text><text class="h" x="42" y="24">One model run: inputs, driver, SCEPTER core with paddy extensions, outputs</text>
+<text class="p" x="6" y="24">(a)</text><text class="h" x="44" y="24">One model run: inputs, driver, SCEPTER core, outputs</text>
 
 <!-- inputs -->
-<text class="t b" x="10" y="54">Site and management inputs</text>
-<rect class="box" x="10" y="64" width="470" height="84" rx="6"/>
-<text class="t" x="22" y="84">Soil</text>
-<text class="s" x="22" y="103">CEC, reducible Fe(III), OM input, calcite, pH</text>
-<text class="s" x="22" y="121">(irrigation alkalinity), percolation q</text>
-<text class="s" x="22" y="139">(per test site or archetype)</text>
-<rect class="box" x="10" y="154" width="470" height="48" rx="6"/>
-<text class="t" x="22" y="174">Climate</text><text class="s" x="22" y="193">season soil temperature (Q10 rates)</text>
-<rect class="box" x="10" y="208" width="470" height="84" rx="6"/>
-<text class="t" x="22" y="228">Rock</text>
-<text class="s" x="22" y="247">whole-rock oxides → mineral recipe; 80–100 µm;</text>
-<text class="s" x="22" y="265">mixed 0–0.15 m; rate scaling mafic ×0.45,</text>
-<text class="s" x="22" y="283">feldspar ×0.25, amorphous silica ×30</text>
-<rect class="box" x="10" y="298" width="470" height="84" rx="6"/>
-<text class="t" x="22" y="318">Management</text>
-<text class="s" x="22" y="337">basalt dose, continuous flooding or AWD,</text>
-<text class="s" x="22" y="355">urea 120 kg N ha⁻¹, tillage depth 0.2 m,</text>
-<text class="s" x="22" y="373">OM 60% as residue in 0–0.2 m; Fe(III) 0.3 mol m⁻² yr⁻¹</text>
-<rect x="10" y="388" width="470" height="100" rx="6" fill="#fff8e6" stroke="#d69a1e" stroke-width="1.4"/>
-<text class="t b" x="22" y="408">Frozen v22 (all runs in this paper)</text>
-<text class="m" x="22" y="427">scepter_paddy_v22, commit 162913a</text>
-<text class="m" x="22" y="445">k_cal.in: CH₄ vmax 1860 yr⁻¹</text>
-<text class="m" x="22" y="463">--rtsi=2e-3:2.7e-4:0.2</text>
-<text class="s" x="22" y="481">no recalibration between sites</text>
+<text class="t b" x="6" y="56">Site and management inputs</text>
+<rect class="box" x="6" y="66" width="476" height="76" rx="6"/>
+<text class="t" x="18" y="88">Soil</text>
+<text class="s" x="18" y="110">CEC, reducible Fe(III), OM input, calcite,</text>
+<text class="s" x="18" y="131">pH (irrigation alkalinity), percolation q</text>
+<rect class="box" x="6" y="148" width="476" height="54" rx="6"/>
+<text class="t" x="18" y="170">Climate</text><text class="s" x="18" y="192">season soil temperature (Q10 rates)</text>
+<rect class="box" x="6" y="208" width="476" height="96" rx="6"/>
+<text class="t" x="18" y="230">Rock</text>
+<text class="s" x="18" y="252">whole-rock oxides → mineral recipe, 80–100 µm,</text>
+<text class="s" x="18" y="273">mixed 0–0.15 m; rate scaling mafic ×0.45,</text>
+<text class="s" x="18" y="294">feldspar ×0.25, amorphous silica ×30</text>
+<rect class="box" x="6" y="310" width="476" height="96" rx="6"/>
+<text class="t" x="18" y="332">Management</text>
+<text class="s" x="18" y="354">basalt dose; continuous flooding or AWD;</text>
+<text class="s" x="18" y="375">urea 120 kg N ha⁻¹; tillage 0.2 m;</text>
+<text class="s" x="18" y="396">OM 60% as residue; Fe(III) 0.3 mol m⁻² yr⁻¹</text>
 
 <!-- driver -->
-<path class="ar" d="M482,276 L518,276"/>
-<rect class="box" x="520" y="64" width="475" height="424" rx="6"/>
-<text class="t b" x="534" y="86">Python driver</text>
-<text class="m" x="534" y="106">paddy/run_flooded_column.py</text>
-<text class="s" x="534" y="130">writes the SCEPTER input files:</text>
-<g class="m">
- <text x="540" y="152">frame.in, switches.in</text>
- <text x="540" y="170">slds/solutes/gases.in</text>
- <text x="540" y="188">extrxns.in, krxn_ext.in</text>
- <text x="540" y="206">dust.in, psdrain.in</text>
- <text x="540" y="224">OM_rain.in, rain.in</text>
- <text x="540" y="242">Wet_temp.in</text>
- <text x="770" y="152">T_temp.in, q_temp.in</text>
- <text x="770" y="170">floodwater.in, pox.in</text>
- <text x="770" y="188">rtsi.in, n2oy.in</text>
- <text x="770" y="206">o2inh.in, cec.in</text>
- <text x="770" y="224">kinscale.in, pan.in</text>
- <text x="770" y="242">omalloc.in</text>
-</g>
-<text class="s" x="534" y="270">(dust/psdrain = basalt, rain = urea, Wet_temp = flood/drain)</text>
-<text class="s" x="534" y="300">--season / --fallow, --awd, --phd=14,</text>
-<text class="s" x="534" y="318">--basalt=dose, --rstrt=previous run</text>
-<text class="s" x="534" y="348">Each paddy term reads its own small input</text>
-<text class="s" x="534" y="366">file; absent file = term off, so the upland</text>
-<text class="s" x="534" y="384">SCEPTER setup is unchanged.</text>
-<path class="ar" d="M600,488 L600,518"/>
+<path class="ar" d="M484,236 L498,236"/>
+<rect class="box" x="500" y="66" width="495" height="350" rx="6"/>
+<text class="t b" x="514" y="88">Python driver</text>
+<text class="m" x="514" y="110">paddy/run_flooded_column.py</text>
+<text class="s" x="514" y="136">writes one SCEPTER input file per paddy</text>
+<text class="s" x="514" y="157">process (list in Appendix A); absent file</text>
+<text class="s" x="514" y="178">= process off, so the upland setup is</text>
+<text class="s" x="514" y="199">unchanged. Run flags: --season / --fallow,</text>
+<text class="s" x="514" y="220">--awd, --phd=14, --basalt=dose, --rstrt</text>
+<rect x="512" y="238" width="471" height="166" rx="6" fill="#fff8e6" stroke="#d69a1e" stroke-width="1.4"/>
+<text class="t b" x="524" y="262">Frozen v22 (all runs in this paper)</text>
+<text class="m" x="524" y="286">scepter_paddy_v22, commit 162913a</text>
+<text class="m" x="524" y="308">k_cal.in: CH₄ vmax 1860 yr⁻¹</text>
+<text class="m" x="524" y="330">--rtsi=2e-3:2.7e-4:0.2</text>
+<text class="s" x="524" y="356">no recalibration between sites</text>
+<text class="s" x="524" y="380">(Fig. 3 rerun on v23: carbon-closure fix)</text>
+<path class="ar" d="M600,416 L600,428"/>
 
 <!-- core -->
-<rect class="core" x="10" y="520" width="640" height="470" rx="8"/>
-<text class="t b" x="24" y="544">SCEPTER v1.0 core (Fortran 90)</text>
-<text class="s" x="24" y="563">Kanzaki et al. 2022, 2024; implicit Newton solver per time step</text>
+<rect class="core" x="6" y="430" width="644" height="456" rx="8"/>
+<text class="t b" x="20" y="454">SCEPTER v1.0 core (Fortran 90)</text>
+<text class="s" x="20" y="476">Kanzaki et al. 2022, 2024; implicit Newton solver</text>
 <g>
- <rect class="box" x="24" y="576" width="300" height="52" rx="5"/><text class="t" x="36" y="597">transport</text><text class="s" x="36" y="616">advection, diffusion (aq + gas)</text>
- <rect class="box" x="336" y="576" width="300" height="52" rx="5"/><text class="t" x="348" y="597">mineral kinetics</text><text class="s" x="348" y="616">rate laws, Ω, grain-size PSD</text>
- <rect class="box" x="24" y="636" width="300" height="52" rx="5"/><text class="t" x="36" y="657">cation exchange</text><text class="s" x="36" y="676">CEC, selectivities</text>
- <rect class="box" x="336" y="636" width="300" height="52" rx="5"/><text class="t" x="348" y="657">pH and speciation</text><text class="s" x="348" y="676">charge balance, ideal solution</text>
+ <rect class="box" x="20" y="490" width="304" height="56" rx="5"/><text class="t" x="32" y="512">transport</text><text class="s" x="32" y="534">advection, diffusion</text>
+ <rect class="box" x="332" y="490" width="304" height="56" rx="5"/><text class="t" x="344" y="512">mineral kinetics</text><text class="s" x="344" y="534">rate laws, Ω, grain size</text>
+ <rect class="box" x="20" y="552" width="304" height="56" rx="5"/><text class="t" x="32" y="574">cation exchange</text><text class="s" x="32" y="596">CEC, selectivities</text>
+ <rect class="box" x="332" y="552" width="304" height="56" rx="5"/><text class="t" x="344" y="574">pH and speciation</text><text class="s" x="344" y="596">charge balance</text>
 </g>
-<rect class="new" x="24" y="700" width="612" height="276" rx="8"/>
-<text class="t b" x="38" y="724" style="fill:#14704f">Paddy extensions (switchable; makefile_paddy)</text>
+<rect class="new" x="20" y="620" width="616" height="254" rx="8"/>
+<text class="t b" x="34" y="644" style="fill:#14704f">Paddy extensions (switchable)</text>
 <g class="s">
- <text x="38" y="748">• microbial redox: O₂, NO₃⁻, Fe(III), SO₄²⁻, CH₄; CH₄ oxidation</text>
- <text x="38" y="767">• Fe phases: green rust, goethite, siderite, FeS; O₂ re-oxidation</text>
- <text x="38" y="786">• N cycle: urea hydrolysis, nitrification, pH-dependent N₂O yield</text>
- <text x="38" y="805">• gas exits: plant transport + rhizosphere oxidation, ebullition,</text>
- <text x="50" y="824">floodwater exchange</text>
- <text x="38" y="843">• plant terms: root respiration, radial O₂ loss, NH₄⁺/Si uptake;</text>
- <text x="50" y="862" style="fill:#9b6b0a">Si feedback on root O₂ loss: empirical, switchable (--rtsi)</text>
- <text x="38" y="881">• water regime: saturation from surface schedule; plough pan</text>
- <text x="50" y="900">(diffusivity ×0.1, 0.20–0.24 m), base open to air (--pan)</text>
- <text x="38" y="919">• Q10 temperature factors; speciation cache (~25× faster)</text>
- <text x="38" y="938">• Fe(III) supply and OM allocation (--fe3in, --omalloc)</text>
- <text x="38" y="964" style="fill:#14704f">Equations 3–12; full list in Appendix A</text>
+ <text x="34" y="668">• microbial redox: O₂, NO₃⁻, Fe(III), SO₄²⁻, CH₄</text>
+ <text x="34" y="689">• Fe phases: green rust, goethite, siderite, FeS</text>
+ <text x="34" y="710">• N cycle: urea, nitrification, pH-dependent N₂O</text>
+ <text x="34" y="731">• gas exits: plant transport, ebullition, floodwater</text>
+ <text x="34" y="752">• plant terms: root respiration, O₂ loss, NH₄⁺/Si uptake</text>
+ <text x="48" y="773" style="fill:#9b6b0a">Si feedback on root O₂ loss: empirical (--rtsi)</text>
+ <text x="34" y="794">• plough pan, subsoil saturation, base open to air</text>
+ <text x="34" y="815">• Q10 temperature factors; speciation cache</text>
+ <text x="34" y="836">• Fe(III) supply and OM allocation</text>
+ <text x="34" y="862" style="fill:#14704f">Equations 3–12; full list in Appendix A</text>
 </g>
 
 <!-- outputs -->
-<path class="ar" d="M652,600 L668,600"/>
-<rect class="box" x="670" y="520" width="325" height="140" rx="6"/>
-<text class="t b" x="684" y="542">Model output</text>
-<text class="s" x="684" y="562">flx/: column-integrated fluxes of</text>
-<text class="s" x="684" y="580">every species by process</text>
-<text class="s" x="684" y="602">prof/: depth profiles of solids,</text>
-<text class="s" x="684" y="620">solutes, gases, pH, saturation</text>
-<text class="s" x="684" y="644">restart state for the next run</text>
-<path class="ar" d="M832,660 L832,678"/>
-<rect class="box" x="670" y="680" width="325" height="160" rx="6"/>
-<text class="t b" x="684" y="702">GHG budget</text><text class="m" x="684" y="722">paddy/ghg_budget.py</text>
-<text class="s" x="684" y="744">CH₄, N₂O, CO₂ degassing, alkalinity</text>
-<text class="s" x="684" y="762">export, calcite, cation release</text>
-<text class="s" x="684" y="786">net: ΔCH₄ + ΔN₂O − ΔPDA − Δcalcite</text>
-<text class="s" x="684" y="804">PDA = ALK − 2Fe(II) − 2NH₄⁺ at base</text>
-<text class="s" x="684" y="826">(t CO₂e ha⁻¹, GWP100)</text>
-<rect class="box" x="670" y="852" width="325" height="96" rx="6"/>
-<text class="t b" x="684" y="874">Verification</text><text class="m" x="684" y="894">paddy/verification/</text>
-<text class="s" x="684" y="916">PHREEQC re-speciation,</text><text class="s" x="684" y="934">element mass balance (Fig. 3)</text>
+<path class="ar" d="M652,500 L666,500"/>
+<rect class="box" x="668" y="430" width="327" height="122" rx="6"/>
+<text class="t b" x="682" y="452">Model output</text>
+<text class="s" x="682" y="474">flx/: fluxes of every species</text>
+<text class="s" x="682" y="495">by process (mol m⁻² yr⁻¹)</text>
+<text class="s" x="682" y="518">prof/: depth profiles</text>
+<text class="s" x="682" y="541">restart state for next run</text>
+<path class="ar" d="M831,552 L831,566"/>
+<rect class="box" x="668" y="568" width="327" height="168" rx="6"/>
+<text class="t b" x="682" y="590">GHG budget</text><text class="m" x="682" y="612">paddy/ghg_budget.py</text>
+<text class="s" x="682" y="635">CH₄, N₂O, CO₂ degassing,</text>
+<text class="s" x="682" y="656">alkalinity, calcite, cations</text>
+<text class="s" x="682" y="680">net = ΔCH₄ + ΔN₂O</text>
+<text class="s" x="682" y="701">  − ΔPDA − Δcalcite</text>
+<text class="s" x="682" y="724">(t CO₂e ha⁻¹, GWP100)</text>
+<rect class="box" x="668" y="750" width="327" height="136" rx="6"/>
+<text class="t b" x="682" y="772">Verification</text><text class="m" x="682" y="794">paddy/verification/</text>
+<text class="s" x="682" y="817">PHREEQC re-speciation;</text>
+<text class="s" x="682" y="838">element mass balance</text>
+<text class="s" x="682" y="859">(Fig. 3)</text>
 
 <!-- ===================== b: protocol ===================== -->
-<text class="p" x="8" y="1022">(b)</text><text class="h" x="42" y="1022">Simulation protocol and post-processing</text>
-<text class="m" x="10" y="1044">paddy/multiyear/run_chain.sh (resumable; one status line per season and fallow)</text>
-<rect class="box" x="10" y="1066" width="205" height="74" rx="6"/>
-<text class="t" x="22" y="1088">spin-up</text><text class="s" x="22" y="1108">3 yr drained, no rock;</text><text class="s" x="22" y="1126">fills OM and Fe pools</text>
-<path class="ar" d="M217,1103 L243,1103"/>
-<rect class="box" x="245" y="1066" width="205" height="74" rx="6"/>
-<text class="t" x="257" y="1088">settle</text><text class="s" x="257" y="1108">7 yr season + fallow,</text><text class="s" x="257" y="1126">no rock (settled state)</text>
-<path class="ar" d="M452,1103 L478,1103"/>
-<rect x="480" y="1056" width="515" height="146" rx="10" fill="#f4f8fd" stroke="#2a78d6" stroke-width="1.4"/>
-<text class="s" x="492" y="1076" style="fill:#2a78d6">years 1–10: control and basalt chains, same settled start</text>
-<rect class="box" x="492" y="1088" width="118" height="72" rx="5"/><text class="t" x="504" y="1110">tillage</text><text class="m" x="504" y="1130">till.py</text><text class="m" x="504" y="1148">0.2 m</text>
-<path class="ar" d="M612,1123 L630,1123"/>
-<rect class="box" x="632" y="1088" width="190" height="72" rx="5"/><text class="t" x="644" y="1110">season 113 d</text><text class="s" x="644" y="1130">rock, urea, OM;</text><text class="s" x="644" y="1148">plants on</text>
-<path class="ar" d="M824,1123 L842,1123"/>
-<rect class="box" x="844" y="1088" width="140" height="72" rx="5"/><text class="t" x="856" y="1110">fallow 252 d</text><text class="s" x="856" y="1130">drained,</text><text class="s" x="856" y="1148">plants off</text>
-<path class="ar" d="M914,1160 C914,1180 551,1180 551,1163"/>
-<text class="s" x="600" y="1196">next year restarts from the fallow end state</text>
-<!-- budgets / evaluation / switches -->
-<rect class="box" x="10" y="1214" width="320" height="184" rx="6"/>
-<text class="t" x="22" y="1236">GHG and CDR budgets</text>
+<text class="p" x="6" y="922">(b)</text><text class="h" x="44" y="922">Simulation protocol and post-processing</text>
+<text class="m" x="6" y="946">paddy/multiyear/run_chain.sh (resumable)</text>
+<rect class="box" x="6" y="966" width="200" height="80" rx="6"/>
+<text class="t" x="18" y="990">spin-up</text><text class="s" x="18" y="1012">3 yr, drained,</text><text class="s" x="18" y="1033">no rock</text>
+<path class="ar" d="M208,1006 L232,1006"/>
+<rect class="box" x="234" y="966" width="200" height="80" rx="6"/>
+<text class="t" x="246" y="990">settle</text><text class="s" x="246" y="1012">7 yr season +</text><text class="s" x="246" y="1033">fallow, no rock</text>
+<path class="ar" d="M436,1006 L460,1006"/>
+<rect x="462" y="956" width="533" height="164" rx="10" fill="#f4f8fd" stroke="#2a78d6" stroke-width="1.4"/>
+<text class="s" x="474" y="978" style="fill:#2a78d6">years 1–10, control and basalt chains</text>
+<rect class="box" x="474" y="990" width="116" height="76" rx="5"/><text class="t" x="486" y="1012">tillage</text><text class="m" x="486" y="1034">0.2 m</text>
+<path class="ar" d="M592,1028 L610,1028"/>
+<rect class="box" x="612" y="990" width="188" height="76" rx="5"/><text class="t" x="624" y="1012">season 113 d</text><text class="s" x="624" y="1034">rock, urea, OM;</text><text class="s" x="624" y="1055">plants on</text>
+<path class="ar" d="M802,1028 L820,1028"/>
+<rect class="box" x="822" y="990" width="161" height="76" rx="5"/><text class="t" x="834" y="1012">fallow 252 d</text><text class="s" x="834" y="1034">drained,</text><text class="s" x="834" y="1055">plants off</text>
+<path class="ar" d="M902,1066 C902,1088 532,1088 532,1069"/>
+<text class="s" x="560" y="1110">next year restarts from fallow end</text>
+<!-- budgets / evaluation -->
+<rect class="box" x="6" y="1134" width="489" height="170" rx="6"/>
+<text class="t" x="18" y="1158">GHG and CDR budgets</text>
 <g class="s">
- <text x="22" y="1256">treatment − control, year by year;</text>
- <text x="22" y="1274">season + fallow; GWP100 (CH₄ 27,</text>
- <text x="22" y="1292">N₂O 273); PDA export at the base;</text>
- <text x="22" y="1310">calcite only up to cations not</text>
- <text x="22" y="1328">exported; retained = potential CDR</text>
- <text x="22" y="1346">CH₄ also with Δ fixed at year 1</text>
- <text x="22" y="1364">(sensitivity, not a bound)</text>
+ <text x="18" y="1180">treatment − control, year by year;</text>
+ <text x="18" y="1201">season + fallow; GWP100 (CH₄ 27, N₂O 273);</text>
+ <text x="18" y="1222">PDA exported at the base; calcite only up</text>
+ <text x="18" y="1243">to cations not exported; retained cations</text>
+ <text x="18" y="1264">= potential CDR; CH₄ also with Δ fixed at</text>
+ <text x="18" y="1285">year 1 (sensitivity, not a bound)</text>
 </g>
-<text class="m" x="22" y="1382">figcdr22.py --alk=pda</text>
-<rect class="box" x="340" y="1214" width="320" height="184" rx="6"/>
-<text class="t" x="352" y="1236">Evaluation runs (Sect. 3)</text>
+<rect class="box" x="505" y="1134" width="490" height="170" rx="6"/>
+<text class="t" x="517" y="1158">Evaluation runs (Sect. 3)</text>
 <g class="s">
- <text x="352" y="1256">site soil spun up and settled as</text>
- <text x="352" y="1274">above, then one field season or a</text>
- <text x="352" y="1292">pot/batch run in a 0.3 m column:</text>
- <text x="352" y="1310">Wang 2014, Gong, Park, Uchibayashi,</text>
- <text x="352" y="1328">Wang 2024; amendment mixed to the</text>
- <text x="352" y="1346">reported depth (Gong 0.086 m)</text>
- <text x="352" y="1368">Applications (Sect. 4): reference</text>
- <text x="352" y="1386">site + six area-weighted archetypes</text>
-</g>
-<rect class="box" x="670" y="1214" width="325" height="184" rx="6"/>
-<text class="t" x="682" y="1236">Model switches</text>
-<text class="s" x="682" y="1254">flag → input file; absent = process off</text>
-<g class="m pre">
- <text x="682" y="1274">--ch4 --n</text><text x="770" y="1274">CH₄ and N cycles</text>
- <text x="682" y="1290.5">--awd</text><text x="770" y="1290.5">AWD; --phd=14 drain</text>
- <text x="682" y="1307">--pan</text><text x="770" y="1307">plough pan, basal O₂</text>
- <text x="682" y="1323.5">--basalt</text><text x="770" y="1323.5">dose; --rock recipe</text>
- <text x="682" y="1340">--rtsi</text><text x="770" y="1340">Si root-O₂ feedback</text>
- <text x="682" y="1356.5">--fe3in</text><text x="770" y="1356.5">Fe(III) supply</text>
- <text x="682" y="1373">--omalloc</text><text x="770" y="1373">OM depth allocation</text>
- <text x="682" y="1389.5">--kscale</text><text x="770" y="1389.5">mineral rate scaling</text>
+ <text x="517" y="1180">site soil spun up and settled as above, then</text>
+ <text x="517" y="1201">one field season or a 0.3 m pot/batch column:</text>
+ <text x="517" y="1222">Wang 2014, Gong, Park, Uchibayashi, Wang 2024;</text>
+ <text x="517" y="1243">amendment at reported depth (Gong 0.086 m)</text>
+ <text x="517" y="1267">Applications (Sect. 4): reference site +</text>
+ <text x="517" y="1288">six area-weighted archetypes</text>
 </g>
 </svg>
 </body></html>
