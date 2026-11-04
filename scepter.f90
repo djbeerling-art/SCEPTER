@@ -20982,10 +20982,10 @@ pco2x   = mgasx_loc(findloc(chrgas_all,'pco2',dim=1),:)
 pnh3x   = mgasx_loc(findloc(chrgas_all,'pnh3',dim=1),:)
 pn2ox   = mgasx_loc(findloc(chrgas_all,'pn2o',dim=1),:)
 
-oxax    = maqx_loc(findloc(chraq_all,'oxa',dim=1),:)    *maqft_loc(findloc(chraq_all,'oxa',dim=1),:)
-fe2x    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe2',dim=1),:)
-fe3x    = maqx_loc(findloc(chraq_all,'fe3',dim=1),:)    *maqft_loc(findloc(chraq_all,'fe3',dim=1),:)
-no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:)    *maqft_loc(findloc(chraq_all,'no3',dim=1),:)
+oxax    = maqft_loc(findloc(chraq_all,'oxa',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
+fe2x    = maqft_loc(findloc(chraq_all,'fe2',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
+fe3x    = maqft_loc(findloc(chraq_all,'fe3',dim=1),:) ! total; maqft_loc is the total concentration, not a total/free ratio
+no3x    = maqx_loc(findloc(chraq_all,'no3',dim=1),:) ! maqft_loc for no3 is the total itself, not a total/free ratio
 fe2f    = maqx_loc(findloc(chraq_all,'fe2',dim=1),:)
 
 omx     = msldx_loc(findloc(chrsld_all,'om',dim=1),:)
@@ -21149,10 +21149,7 @@ select case(trim(adjustl(rxn_name)))
                         drxnext_dmsp = ( &
                             & poro*sat*1d3*po2x &
                             & * ( & 
-                            & + 1d0    & 
-                            & * maqft_loc(findloc(chraq_all,'fe2',dim=1),:)   &
-                            & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                            & * dmaqft_dmaqf_loc( &
+                            & + dmaqft_dmaqf_loc( &
                             &       findloc(chraq_all,'fe2',dim=1) &
                             &       ,findloc(chraq_all,'fe2',dim=1),:)   &
                             & ) & 
@@ -21165,8 +21162,7 @@ select case(trim(adjustl(rxn_name)))
                             drxnext_dmsp = ( &
                                 & poro*sat*1d3*po2x &
                                 & * ( & 
-                                & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                                & * dmaqft_dmaqf_loc( &
+                                & + dmaqft_dmaqf_loc( &
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
@@ -21177,8 +21173,7 @@ select case(trim(adjustl(rxn_name)))
                             drxnext_dmsp = ( &
                                 & poro*sat*1d3*po2x &
                                 & * ( & 
-                                & + maqx_loc(findloc(chraq_all,'fe2',dim=1),:)    & 
-                                & * dmaqft_dmgas_loc( &
+                                & + dmaqft_dmgas_loc( &
                                 &       findloc(chraq_all,'fe2',dim=1) &
                                 &       ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:)   &
                                 & ) & 
@@ -21633,250 +21628,47 @@ select case(trim(adjustl(rxn_name)))
         
         vmax_tmp = 0.0395d0 * kg2  / 1.5d0 * 0.85d0 * 0.25d0 / 0.9d0 / 0.45d0
         
-        rxn_ext = ( &
-            & + vmax_tmp * g2x  &
-            & *po2x/(mo2 + po2x)  &
-            & *km_tmp1  &
-            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
+        ! maqft_loc is the total concentration (not a total/free ratio): uptake
+        ! uses the total directly; earlier maqx*maqft squared it.
+        rxn_ext = vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 &
             & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-            & /( km_tmp2 &
-            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-            & ) &
-            & )
+            & /( km_tmp2 + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )
             
                 select case(trim(adjustl(sp_name)))
                     case('pro')
-                        drxnext_dmsp = ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dpro_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & ) &
-                            & +  ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *(-1d0)/( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & )**2d0 &
-                            & ) &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dpro_loc(findloc(chraq_all,sp_tmp,dim=1),:) 
+                        drxnext_dmsp = vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 *km_tmp2/( km_tmp2 &
+                        & + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )**2d0 &
+                            & *dmaqft_dpro_loc(findloc(chraq_all,sp_tmp,dim=1),:)
                     case('ios')
-                        drxnext_dmsp = ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dios_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & ) &
-                            & +  ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *(-1d0)/( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & )**2d0 &
-                            & ) &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dios_loc(findloc(chraq_all,sp_tmp,dim=1),:) 
+                        drxnext_dmsp = vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 *km_tmp2/( km_tmp2 &
+                        & + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )**2d0 &
+                            & *dmaqft_dios_loc(findloc(chraq_all,sp_tmp,dim=1),:)
                     case('g2')
-                        drxnext_dmsp = ( &
-                            & + vmax_tmp * 1d0   &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
+                        drxnext_dmsp = vmax_tmp *po2x/(mo2 + po2x) *km_tmp1 &
                             & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & )
+                            & /( km_tmp2 + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )
                     case('po2')
-                        drxnext_dmsp = ( &
-                            & + vmax_tmp * g2x  &
-                            & *1d0/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
+                        drxnext_dmsp = vmax_tmp * g2x *mo2/(mo2 + po2x)**2d0 *km_tmp1 &
                             & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & ) &
-                            & + ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x*(-1d0)/(mo2 + po2x)**2d0  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & ) &
-                            & + ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dmgas_loc( &
-                                & findloc(chraq_all,sp_tmp,dim=1) &
-                                & ,findloc(chrgas_all,'po2',dim=1),:) &
-                            & /( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & ) &
-                            & ) & 
-                            & + ( &
-                            & + vmax_tmp * g2x  &
-                            & *po2x/(mo2 + po2x)  &
-                            & *km_tmp1  &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *(-1d0)/( km_tmp2 &
-                            & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & )**2d0 &
-                            & ) &
-                            & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                            & *dmaqft_dmgas_loc( &
-                            & findloc(chraq_all,sp_tmp,dim=1) &
-                            & ,findloc(chrgas_all,'po2',dim=1),:) 
+                            & /( km_tmp2 + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) ) &
+                            & + vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 *km_tmp2/( km_tmp2 &
+                            & + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )**2d0 &
+                            & *dmaqft_dmgas_loc(findloc(chraq_all,sp_tmp,dim=1),findloc(chrgas_all,'po2',dim=1),:)
                     case default
                         if (any( trim(adjustl(sp_name)) == chraq ) ) then
-                            if ( sp_name == sp_tmp ) then 
-                                drxnext_dmsp = ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *dmaqft_dmaqf_loc( &
-                                        & findloc(chraq_all,sp_tmp,dim=1) &
-                                        & ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:) &
-                                    & /( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & ) &
-                                    & ) & 
-                                    & + ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *(-1d0)/( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & )**2d0 &
-                                    & ) &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *dmaqft_dmaqf_loc( &
-                                    & findloc(chraq_all,sp_tmp,dim=1) &
-                                    & ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:) &
-                                    & + ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *1d0 &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & /( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & ) &
-                                    & ) &
-                                    & + ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *(-1d0)/( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & )**2d0 &
-                                    & *1d0 &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & )
-                            else
-                                drxnext_dmsp = ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *dmaqft_dmaqf_loc( &
-                                        & findloc(chraq_all,sp_tmp,dim=1) &
-                                        & ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:) &
-                                    & /( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & ) &
-                                    & ) & 
-                                    & + ( &
-                                    & + vmax_tmp * g2x  &
-                                    & *po2x/(mo2 + po2x)  &
-                                    & *km_tmp1  &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *(-1d0)/( km_tmp2 &
-                                    & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & )**2d0 &
-                                    & ) &
-                                    & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                    & *dmaqft_dmaqf_loc( &
-                                    & findloc(chraq_all,sp_tmp,dim=1) &
-                                    & ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:)
-                            endif 
+                            drxnext_dmsp = vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 *km_tmp2/( km_tmp2 &
+                            & + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )**2d0 &
+                                & *dmaqft_dmaqf_loc(findloc(chraq_all,sp_tmp,dim=1) &
+                                & ,findloc(chraq_all,trim(adjustl(sp_name)),dim=1),:)
                         elseif (any( trim(adjustl(sp_name)) == chrgas ) ) then
-                            drxnext_dmsp = ( &
-                                & + vmax_tmp * g2x  &
-                                & *po2x/(mo2 + po2x)  &
-                                & *km_tmp1  &
-                                & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *dmaqft_dmgas_loc( &
-                                    & findloc(chraq_all,sp_tmp,dim=1) &
-                                    & ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:) &
-                                & /( km_tmp2 &
-                                & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & ) &
-                                & ) & 
-                                & + ( &
-                                & + vmax_tmp * g2x  &
-                                & *po2x/(mo2 + po2x)  &
-                                & *km_tmp1  &
-                                & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *(-1d0)/( km_tmp2 &
-                                & +maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & )**2d0 &
-                                & ) &
-                                & *maqx_loc(findloc(chraq_all,sp_tmp,dim=1),:) &
-                                & *dmaqft_dmgas_loc( &
-                                & findloc(chraq_all,sp_tmp,dim=1) &
-                                & ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:) 
+                            drxnext_dmsp = vmax_tmp * g2x *po2x/(mo2 + po2x) *km_tmp1 *km_tmp2/( km_tmp2 &
+                            & + maqft_loc(findloc(chraq_all,sp_tmp,dim=1),:) )**2d0 &
+                                & *dmaqft_dmgas_loc(findloc(chraq_all,sp_tmp,dim=1) &
+                                & ,findloc(chrgas_all,trim(adjustl(sp_name)),dim=1),:)
                         else
                             drxnext_dmsp = 0d0
                         endif 
-                endselect 
+                endselect
         
         
     case default 

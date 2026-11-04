@@ -1,0 +1,46 @@
+
+== Sabah (P2): CEC 6 cmol/kg, Fe oxide 3% (0.38 mol Fe/kg), control pH 5.5, NH4OAc Ni 2.34 mg/kg
+  reactive Fe fraction 0.03: reactive Ni 2.4 mg/kg, control split exch 0.98 sorbed 0.00 diss 0.013 (porewater 101 ug/L)
+    pH 5.50 Ca 0.5 mM: NH4OAc-like Ni  2.34 mg/kg (1.00x), sorbed 0.00, porewater  101.1 ug/L
+    pH 5.50 Ca 2.0 mM: NH4OAc-like Ni  2.31 mg/kg (0.99x), sorbed 0.02, porewater  393.6 ug/L
+    pH 5.75 Ca 0.5 mM: NH4OAc-like Ni  2.32 mg/kg (0.99x), sorbed 0.01, porewater  100.7 ug/L
+    pH 5.75 Ca 2.0 mM: NH4OAc-like Ni  2.23 mg/kg (0.95x), sorbed 0.05, porewater  381.6 ug/L
+    pH 6.00 Ca 0.5 mM: NH4OAc-like Ni  2.27 mg/kg (0.97x), sorbed 0.04, porewater   98.7 ug/L
+    pH 6.00 Ca 2.0 mM: NH4OAc-like Ni  2.06 mg/kg (0.88x), sorbed 0.12, porewater  352.9 ug/L
+  reactive Fe fraction 0.1: reactive Ni 2.4 mg/kg, control split exch 0.97 sorbed 0.02 diss 0.013 (porewater 101 ug/L)
+    pH 5.50 Ca 0.5 mM: NH4OAc-like Ni  2.34 mg/kg (1.00x), sorbed 0.02, porewater  101.1 ug/L
+    pH 5.50 Ca 2.0 mM: NH4OAc-like Ni  2.23 mg/kg (0.95x), sorbed 0.06, porewater  380.1 ug/L
+    pH 5.75 Ca 0.5 mM: NH4OAc-like Ni  2.28 mg/kg (0.97x), sorbed 0.04, porewater   98.4 ug/L
+    pH 5.75 Ca 2.0 mM: NH4OAc-like Ni  2.02 mg/kg (0.86x), sorbed 0.15, porewater  343.3 ug/L
+    pH 6.00 Ca 0.5 mM: NH4OAc-like Ni  2.11 mg/kg (0.90x), sorbed 0.11, porewater   90.8 ug/L
+    pH 6.00 Ca 2.0 mM: NH4OAc-like Ni  1.62 mg/kg (0.69x), sorbed 0.32, porewater  273.2 ug/L
+  reactive Fe fraction 0.3: reactive Ni 2.4 mg/kg, control split exch 0.94 sorbed 0.04 diss 0.012 (porewater 101 ug/L)
+    pH 5.50 Ca 0.5 mM: NH4OAc-like Ni  2.34 mg/kg (1.00x), sorbed 0.04, porewater  100.9 ug/L
+    pH 5.50 Ca 2.0 mM: NH4OAc-like Ni  2.05 mg/kg (0.88x), sorbed 0.16, porewater  347.4 ug/L
+    pH 5.75 Ca 0.5 mM: NH4OAc-like Ni  2.17 mg/kg (0.93x), sorbed 0.12, porewater   92.6 ug/L
+    pH 5.75 Ca 2.0 mM: NH4OAc-like Ni  1.61 mg/kg (0.69x), sorbed 0.34, porewater  269.3 ug/L
+    pH 6.00 Ca 0.5 mM: NH4OAc-like Ni  1.80 mg/kg (0.77x), sorbed 0.27, porewater   74.8 ug/L
+    pH 6.00 Ca 2.0 mM: NH4OAc-like Ni  1.02 mg/kg (0.43x), sorbed 0.59, porewater  167.6 ug/L
+
+== Corn Belt (T2): CEC 20 cmol/kg, Fe oxide 1.5% (0.19 mol Fe/kg), control pH 6.2, NH4OAc Ni 0.09 mg/kg
+  reactive Fe fraction 0.03: reactive Ni 0.1 mg/kg, control split exch 0.97 sorbed 0.02 diss 0.007 (porewater 2 ug/L)
+    pH 6.20 Ca 1.0 mM: NH4OAc-like Ni  0.09 mg/kg (1.00x), sorbed 0.02, porewater    2.1 ug/L
+    pH 6.20 Ca 3.0 mM: NH4OAc-like Ni  0.09 mg/kg (0.95x), sorbed 0.07, porewater    7.0 ug/L
+    pH 6.40 Ca 1.0 mM: NH4OAc-like Ni  0.09 mg/kg (0.97x), sorbed 0.05, porewater    2.1 ug/L
+    pH 6.40 Ca 3.0 mM: NH4OAc-like Ni  0.08 mg/kg (0.87x), sorbed 0.15, porewater    6.5 ug/L
+    pH 6.60 Ca 1.0 mM: NH4OAc-like Ni  0.08 mg/kg (0.91x), sorbed 0.11, porewater    2.0 ug/L
+    pH 6.60 Ca 3.0 mM: NH4OAc-like Ni  0.07 mg/kg (0.76x), sorbed 0.26, porewater    5.7 ug/L
+  reactive Fe fraction 0.1: reactive Ni 0.1 mg/kg, control split exch 0.92 sorbed 0.08 diss 0.007 (porewater 2 ug/L)
+    pH 6.20 Ca 1.0 mM: NH4OAc-like Ni  0.09 mg/kg (1.00x), sorbed 0.08, porewater    2.1 ug/L
+    pH 6.20 Ca 3.0 mM: NH4OAc-like Ni  0.08 mg/kg (0.86x), sorbed 0.21, porewater    6.2 ug/L
+    pH 6.40 Ca 1.0 mM: NH4OAc-like Ni  0.08 mg/kg (0.91x), sorbed 0.16, porewater    2.0 ug/L
+    pH 6.40 Ca 3.0 mM: NH4OAc-like Ni  0.06 mg/kg (0.69x), sorbed 0.36, porewater    5.0 ug/L
+    pH 6.60 Ca 1.0 mM: NH4OAc-like Ni  0.07 mg/kg (0.76x), sorbed 0.30, porewater    1.6 ug/L
+    pH 6.60 Ca 3.0 mM: NH4OAc-like Ni  0.04 mg/kg (0.50x), sorbed 0.54, porewater    3.7 ug/L
+  reactive Fe fraction 0.3: reactive Ni 0.1 mg/kg, control split exch 0.80 sorbed 0.19 diss 0.006 (porewater 2 ug/L)
+    pH 6.20 Ca 1.0 mM: NH4OAc-like Ni  0.09 mg/kg (1.00x), sorbed 0.19, porewater    2.1 ug/L
+    pH 6.20 Ca 3.0 mM: NH4OAc-like Ni  0.06 mg/kg (0.70x), sorbed 0.44, porewater    5.0 ug/L
+    pH 6.40 Ca 1.0 mM: NH4OAc-like Ni  0.07 mg/kg (0.80x), sorbed 0.35, porewater    1.7 ug/L
+    pH 6.40 Ca 3.0 mM: NH4OAc-like Ni  0.04 mg/kg (0.46x), sorbed 0.63, porewater    3.3 ug/L
+    pH 6.60 Ca 1.0 mM: NH4OAc-like Ni  0.05 mg/kg (0.56x), sorbed 0.55, porewater    1.2 ug/L
+    pH 6.60 Ca 3.0 mM: NH4OAc-like Ni  0.03 mg/kg (0.28x), sorbed 0.77, porewater    2.0 ug/L
