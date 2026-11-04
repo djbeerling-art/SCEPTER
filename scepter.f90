@@ -212,6 +212,8 @@ real(kind=8),parameter :: mvgr = 101.2d0 ! cm3/mol; hydroxy green rust Fe3(OH)8 
 real(kind=8),parameter :: mvfes = 20.4d0 ! cm3/mol; amorphous FeS / mackinawite from formula weight and a density of 4.3 g/cm3
 real(kind=8),parameter :: mvfe2ad = 26.4d0 ! cm3/mol; Fe(II) sorbed on Fe(III) oxide (as Fe(OH)2, density 3.4 g/cm3)
 real(kind=8),parameter :: mvurea = 60.056d0/1.32d0 ! cm3/mol; urea CO(NH2)2, density 1.32 g/cm3
+real(kind=8),parameter :: mvas3ad = 30d0 ! cm3/mol; As(III) sorbed on Fe(III) oxide (trace, nominal volume)
+real(kind=8),parameter :: mvas5ad = 30d0 ! cm3/mol; As(V) sorbed on Fe(III) oxide (trace, nominal volume)
 real(kind=8),parameter :: mvdlm = 64.34d0 ! cm3/mol; molar volume of dolomite; Robie et al. 1978
 real(kind=8),parameter :: mvhm = 30.274d0 ! cm3/mol; molar volume of hematite; Robie et al. 1978
 real(kind=8),parameter :: mvill = 139.35d0 ! cm3/mol; molar volume of illite (K0.6Mg0.25Al2.3Si3.5O10(OH)2); Wolery and Jove-Colon 2004
@@ -337,6 +339,8 @@ real(kind=8),parameter :: mwtgr = 303.59d0 ! g/mol; formula weight of hydroxy gr
 real(kind=8),parameter :: mwtfes = 87.911d0 ! g/mol; formula weight of FeS
 real(kind=8),parameter :: mwtfe2ad = 89.86d0 ! g/mol; Fe(II) sorbed on Fe(III) oxide, counted as Fe(OH)2
 real(kind=8),parameter :: mwturea = 60.056d0 ! g/mol; formula weight of urea
+real(kind=8),parameter :: mwtas3ad = 74.9216d0 ! g/mol; sorbed As(III), counted as As (so wt fractions are As contents)
+real(kind=8),parameter :: mwtas5ad = 74.9216d0 ! g/mol; sorbed As(V), counted as As
 real(kind=8),parameter :: mwtdlm = 184.403d0 ! g/mol; formula weight of dolomite
 real(kind=8),parameter :: mwthm = 159.692d0 ! g/mol; formula weight of hematite
 real(kind=8),parameter :: mwtill = 383.90053d0 ! g/mol; formula weight of Ill calculated from atmoic weight
@@ -426,6 +430,8 @@ real(kind=8),parameter :: mwtaqfe2  = 55.847d0
 real(kind=8),parameter :: mwtaqfe3  = 55.847d0  
 real(kind=8),parameter :: mwtaqti  	= 47.867d0  
 real(kind=8),parameter :: mwtaqhs  	= 32.064d0  + 1.008d0
+real(kind=8),parameter :: mwtaqas3 = 74.9216d0 ! as As
+real(kind=8),parameter :: mwtaqas5 = 74.9216d0 ! as As
 ! anions 
 real(kind=8),parameter :: mwtaqno3  = 14.0067d0 + 3*16.0d0
 real(kind=8),parameter :: mwtaqso4  = 32.064d0 + 4*16.0d0
@@ -773,11 +779,11 @@ integer nsp_sld_2 != 25
 ! integer,parameter::nsp_sld_2 = 20 ! removing all carbonate from secondary minerals
 ! integer,parameter::nsp_sld_2 = 11 ! removing all base-catio bearers from secondary minerals
 ! #endif 
-integer,parameter::nsp_sld_all = 91
+integer,parameter::nsp_sld_all = 93
 integer ::nsp_sld_cnst != nsp_sld_all - nsp_sld
 integer,intent(in)::nsp_aq != 5
 integer,parameter::nsp_aq_ph = 19
-integer,parameter::nsp_aq_all = 19
+integer,parameter::nsp_aq_all = 21
 integer ::nsp_aq_cnst != nsp_aq_all - nsp_aq
 integer,intent(in)::nsp_gas != 2
 integer,parameter::nsp_gas_ph = 3
@@ -785,7 +791,7 @@ integer,parameter::nsp_gas_all = 5
 integer ::nsp_gas_cnst != nsp_gas_all - nsp_gas
 integer ::nsp3 != nsp_sld + nsp_aq + nsp_gas
 integer,intent(in)::nrxn_ext != 1
-integer,parameter::nrxn_ext_all = 36
+integer,parameter::nrxn_ext_all = 43
 integer :: nflx ! = 5 + nrxn_ext + nsp_sld  
 integer,intent(in)::nsld_kinspc_in
 integer :: nsld_kinspc,nsld_kinspc_add
@@ -1152,14 +1158,15 @@ chrsld_all = (/'fo   ','ab   ','an   ','cc   ','ka   ','gb   ','py   ','ct   ','
     & ,'nasp ','mgsp ','fe2o ','mgo  ','k2o  ','cao  ','na2o ','al2o3','gbas ','cbas ','ep   ','clch ' &
     & ,'sdn  ','cdr  ','leu  ','amal ','amfe3','fbas ','olvn ','mgn  ','ilmn ','anat ','jrs  ' &
     & ,'g1   ','g2   ','g3   ','amnt ','kcl  ','gac  ','mesmh','ims  ','teas ','naoh ','naglp','cacl2' &
-    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ','urea ','fe2ad' &
+    & ,'nacl ','sio2 ','caso4','sid  ','gr   ','fes  ','urea ','fe2ad','as3ad','as5ad' &
     & ,'inrt '/)
 chraq_all  = (/'mg   ','si   ','na   ','ca   ','al   ','fe2  ','fe3  ','so4  ','k    ','no3  ','oxa  ' &
-    & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   '/)
+    & ,'cl   ','ac   ','mes  ','im   ','tea  ','glp  ','ti   ','hs   ','as3  ','as5  '/)
 chrgas_all = (/'pco2 ','po2  ','pnh3 ','pn2o ','pch4 '/)
 chrrxn_ext_all = (/'resp ','fe2o2','omomb','ombto','pyfe3','amo2o','g2n0 ','g2n21','g2n22','oxao2' &
     & ,'g2k  ','g2ca ','g2mg ','g2fe3','g2so4','g2ch4','ch4o2','fe2gr','ch4pl','ch4eb','fe2fs','fesox','g2n2p' &
-    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup ','sidox','ch4rx','fhage'/)
+    & ,'n2opl','g2gr ','g2gt ','fe2sp','rtco2','g2o2 ','nh4up','rtoxy','groxy','siup ','sidox','ch4rx','fhage' &
+    & ,'as3sp','as5sp','as5rd','as3ox','as3up','as5ra','as3oa'/)
 
 ! define the species and rxns explicitly simulated in the model in a fully coupled way
 ! should be chosen from definable species & rxn lists above 
@@ -1259,7 +1266,7 @@ mv_all = (/mvfo,mvab,mvan,mvcc,mvka,mvgb,mvpy,mvct,mvfa,mvgt,mvcabd,mvdp,mvhb,mv
     & ,mvfe2o,mvmgo,mvk2o,mvcao,mvna2o,mval2o3,mvgbas,mvcbas,mvep,mvclch,mvsdn,mvcdr,mvleu,mvamal,mvamfe3 &
 	& ,mvfbas,mvolvn,mvmgn,mvilmn,mvanat,mvjrs &
     & ,mvg1,mvg2,mvg3,mvamnt,mvkcl,mvgac,mvmesmh,mvims,mvteas,mvnaoh,mvnaglp,mvcacl2,mvnacl,mvsio2,mvcaso4,mvsid,mvgr,mvfes &
-    & ,mvurea,mvfe2ad &
+    & ,mvurea,mvfe2ad,mvas3ad,mvas5ad &
     & ,mvinrt/)
 mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,mwtdp,mwthb,mwtkfs,mwtom,mwtomb,mwtamsi &
     & ,mwtarg,mwtdlm,mwthm,mwtill,mwtanl,mwtnph,mwtqtz,mwtgps,mwttm,mwtla,mwtby,mwtolg,mwtand,mwtcpx,mwten,mwtfer,mwtopx &
@@ -1267,7 +1274,7 @@ mwt_all = (/mwtfo,mwtab,mwtan,mwtcc,mwtka,mwtgb,mwtpy,mwtct,mwtfa,mwtgt,mwtcabd,
     & ,mwtfe2o,mwtmgo,mwtk2o,mwtcao,mwtna2o,mwtal2o3,mwtgbas,mwtcbas,mwtep,mwtclch,mwtsdn,mwtcdr,mwtleu,mwtamal,mwtamfe3 &
 	& ,mwtfbas,mwtolvn,mwtmgn,mwtilmn,mwtanat,mwtjrs &
     & ,mwtg1,mwtg2,mwtg3,mwtamnt,mwtkcl,mwtgac,mwtmesmh,mwtims,mwtteas,mwtnaoh,mwtnaglp,mwtcacl2,mwtnacl,mwtsio2,mwtcaso4,mwtsid &
-    & ,mwtgr,mwtfes,mwturea,mwtfe2ad &
+    & ,mwtgr,mwtfes,mwturea,mwtfe2ad,mwtas3ad,mwtas5ad &
     & ,mwtinrt/)
 
 do isps = 1, nsp_sld 
@@ -1276,7 +1283,7 @@ do isps = 1, nsp_sld
 enddo 
 
 mwtaq_all = (/ mwtaqmg,mwtaqsi,mwtaqna,mwtaqca,mwtaqal,mwtaqfe2,mwtaqfe3,mwtaqso4,mwtaqk,mwtaqno3,mwtaqoxa  &
-    & ,mwtaqcl,mwtaqac,mwtaqmes,mwtaqim,mwtaqtea,mwtaqglp,mwtaqti,mwtaqhs /)
+    & ,mwtaqcl,mwtaqac,mwtaqmes,mwtaqim,mwtaqtea,mwtaqglp,mwtaqti,mwtaqhs,mwtaqas3,mwtaqas5 /)
     
 do ispa = 1, nsp_aq 
     mwtaq(ispa) = mwtaq_all(findloc(chraq_all,chraq(ispa),dim=1))
@@ -1689,6 +1696,8 @@ staq_all(findloc(chrsld_all,'gr',dim=1), findloc(chraq_all,'fe3',dim=1)) = 2d0
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'fes',dim=1), findloc(chraq_all,'hs',dim=1)) = 1d0
 staq_all(findloc(chrsld_all,'fe2ad',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
+staq_all(findloc(chrsld_all,'as3ad',dim=1), findloc(chraq_all,'as3',dim=1)) = 1d0
+staq_all(findloc(chrsld_all,'as5ad',dim=1), findloc(chraq_all,'as5',dim=1)) = 1d0
 ! urea hydrolysis (CO(NH2)2  +  H2O  ->  2 NH3  +  CO2); NH3/NH4+ is carried as pnh3 (paddy N fertiliser)
 stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pnh3',dim=1)) = 2d0
 stgas_all(findloc(chrsld_all,'urea',dim=1), findloc(chrgas_all,'pco2',dim=1)) = 1d0
@@ -1960,6 +1969,27 @@ stsld_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',dim
 ! Fe(II) sorption on Fe(III) oxide surface sites (alternative to green rust): Fe2+ + >FeOH + H2O = >FeOFeOH + 2 H+
 staq_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chraq_all,'fe2',dim=1)) = -1d0
 stsld_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',dim=1)) = 1d0
+! arsenic (Step 1 of the arsenic extension; trace species, no effect on charge balance or major-element chemistry)
+! sorption of As(III) and As(V) on ferrihydrite weak sites with Si competition (+ optional Si-insensitive sites)
+staq_ext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chraq_all,'as3',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chrsld_all,'as3ad',dim=1)) = 1d0
+staq_ext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chraq_all,'as5',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chrsld_all,'as5ad',dim=1)) = 1d0
+! microbial As(V) reduction (H3AsO4 -> H3AsO3), electron donor not tracked (trace)
+staq_ext_all(findloc(chrrxn_ext_all,'as5rd',dim=1), findloc(chraq_all,'as5',dim=1)) = -1d0
+staq_ext_all(findloc(chrrxn_ext_all,'as5rd',dim=1), findloc(chraq_all,'as3',dim=1)) = 1d0
+! As(III) oxidation by O2 (H3AsO3 + 0.5 O2 -> H3AsO4)
+staq_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1), findloc(chraq_all,'as3',dim=1)) = -1d0
+staq_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1), findloc(chraq_all,'as5',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1), findloc(chrgas_all,'po2',dim=1)) = -0.5d0
+! rice root uptake of As(III) through Lsi1 (competitive with H4SiO4)
+staq_ext_all(findloc(chrrxn_ext_all,'as3up',dim=1), findloc(chraq_all,'as3',dim=1)) = -1d0
+! reduction of sorbed As(V) (as5ra) and oxidation of sorbed As(III) (as3oa), with the constants of as5rd and as3ox
+stsld_ext_all(findloc(chrrxn_ext_all,'as5ra',dim=1), findloc(chrsld_all,'as5ad',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'as5ra',dim=1), findloc(chrsld_all,'as3ad',dim=1)) = 1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'as3oa',dim=1), findloc(chrsld_all,'as3ad',dim=1)) = -1d0
+stsld_ext_all(findloc(chrrxn_ext_all,'as3oa',dim=1), findloc(chrsld_all,'as5ad',dim=1)) = 1d0
+stgas_ext_all(findloc(chrrxn_ext_all,'as3oa',dim=1), findloc(chrgas_all,'po2',dim=1)) = -0.5d0
 ! plant (aerenchyma) CH4 transport to the atmosphere; a fraction is oxidised in the rhizosphere by root O2 
 ! (Pox = 0.5, Walter and Heimann 2000), so CH4 -> 0.5 CO2 in the soil and 0.5 CH4 emitted 
 stgas_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = -1d0
@@ -2098,6 +2128,26 @@ stsld_dext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1), findloc(chrsld_all,'gr',di
 staq_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chraq_all,'fe2',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
 stsld_dext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1), findloc(chrsld_all,'fe2ad',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chraq_all,'as3',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chrsld_all,'as3ad',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as3sp',dim=1), findloc(chrsld_all,'gt',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chraq_all,'as5',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chrsld_all,'amfe3',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chrsld_all,'as5ad',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as5sp',dim=1), findloc(chrsld_all,'gt',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as5rd',dim=1), findloc(chraq_all,'as5',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'as5rd',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as3ox',dim=1), findloc(chraq_all,'as3',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'as3ox',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as3up',dim=1), findloc(chraq_all,'as3',dim=1)) = 1d0
+staq_dext_all(findloc(chrrxn_ext_all,'as3up',dim=1), findloc(chraq_all,'si',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as5ra',dim=1), findloc(chrsld_all,'as5ad',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'as5ra',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
+stsld_dext_all(findloc(chrrxn_ext_all,'as3oa',dim=1), findloc(chrsld_all,'as3ad',dim=1)) = 1d0
+stgas_dext_all(findloc(chrrxn_ext_all,'as3oa',dim=1), findloc(chrgas_all,'po2',dim=1)) = 1d0
 ! plant transport and ebullition of CH4 
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
 stgas_dext_all(findloc(chrrxn_ext_all,'ch4rx',dim=1), findloc(chrgas_all,'pch4',dim=1)) = 1d0
@@ -9293,6 +9343,9 @@ daq_all(findloc(chraq_all,'glp',dim=1)) = 0.93d-5 * sec2yr *1d-4 ! sec2yr*1d-4 c
 
 ! other species that does not have any diffusion coefficient in the literature: so it is assumed 
 daq_all(findloc(chraq_all,'ti',dim=1)) = 1d-2 !  m2/yr
+! arsenic: As(III) (H3AsO3) as H4SiO4; As(V) as H2AsO4- (Li and Gregory 1974: 9.05e-6 cm2/s at 25 oC; activation as Si)
+daq_all(findloc(chraq_all,'as3',dim=1)) = k_arrhenius(2.682396d-2  , 15d0+tempk_0, tc+tempk_0, 22.71378d0 , rg)
+daq_all(findloc(chraq_all,'as5',dim=1)) = k_arrhenius(2.856d-2     , 25d0+tempk_0, tc+tempk_0, 22.71378d0 , rg)
 
 #ifdef AMD_benchmark
 daq_all=2.4d-9*sec2yr ! sec2yr converting m2/s to m2/yr
@@ -10136,6 +10189,18 @@ krxn2_ext_all(findloc(chrrxn_ext_all,'fe2gr',dim=1),:) = 1d0 ! half-saturation f
 ! >FeOH + Fe2+ + H2O = >FeOFeOH + 2 H+ from Appelo et al. 2002; rate linear in ln(omega) as fe2gr
 krxn1_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),:) = 1d4 ! rate per unit ln(omega), mol m^-3 yr^-1 
 krxn2_ext_all(findloc(chrrxn_ext_all,'fe2sp',dim=1),:) = -11.55d0 ! log K 
+! arsenic (Step 1; provisional rate constants). as3sp/as5sp relax sorbed As towards the Si-competitive equilibrium on
+! ferrihydrite fitted to the Dzombak and Morel (1990) DLM (see calc_rxn_ext_dev_3); krxn2 = Si-insensitive sites
+! (crystalline Fe oxides, clays, OM), mol sites m^-3, soil-specific, 0 by default
+krxn1_ext_all(findloc(chrrxn_ext_all,'as3sp',dim=1),:) = 1d3 ! yr^-1 (~8 h relaxation: near equilibrium)
+krxn2_ext_all(findloc(chrrxn_ext_all,'as3sp',dim=1),:) = 0d0 ! Si-insensitive sites, mol m^-3
+krxn1_ext_all(findloc(chrrxn_ext_all,'as5sp',dim=1),:) = 1d3 ! yr^-1
+krxn2_ext_all(findloc(chrrxn_ext_all,'as5sp',dim=1),:) = 0d0 ! Si-insensitive sites, mol m^-3 (set equal to as3sp's)
+krxn1_ext_all(findloc(chrrxn_ext_all,'as5rd',dim=1),:) = 50d0 ! yr^-1, dissolved As(V) reduction under anoxia (~5 d half-life)
+krxn1_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),:) = 1d3 ! yr^-1, dissolved As(III) oxidation at O2 saturation of the Monod term
+krxn2_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),:) = 2d-5 ! half-saturation for O2(aq), mol L-1
+krxn1_ext_all(findloc(chrrxn_ext_all,'as3up',dim=1),:) = 5d-3 ! maximum As(III) uptake, mol As m^-2 yr^-1 (placeholder, uncalibrated)
+krxn2_ext_all(findloc(chrrxn_ext_all,'as3up',dim=1),:) = 3d-5 ! half-saturation for H3AsO3, mol L-1 (Lsi1; placeholder)
 krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 50d0 ! plant transport rate constant at the surface, yr^-1 (provisional) 
 krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:) = 0.1d0 ! e-folding depth of root density, m (used in the main program) 
 ! rice root respiration into the soil, mol C m^-2 yr^-1 (15 = 0.5 g C m^-2 d^-1, lower end of mid-season rice root
@@ -10391,6 +10456,89 @@ x = (h50/prox)**nh
 r = rmin + (1d0 - rmin)/(1d0 + x)
 dr = (1d0 - rmin)*nh*x/prox/(1d0 + x)**2d0
 endsubroutine n2oy_f
+!**************************************************************************************************************************************
+function as_fsite_f() result(fs)
+! Fraction of ferrihydrite weak sites (0.2 mol per mol Fe, fresh 600 m2/g) available to As in as3sp/as5sp: 1, or the
+! value in ./as_sites.in (a header line, then the value), read once. Lower values stand for aged, P- or OM-coated oxide.
+implicit none
+real(kind=8)::fs
+real(kind=8),save::fs_save = 1d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v_tmp
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./as_sites.in',exist=exist_file)
+    if (exist_file) then 
+        open(983,file='./as_sites.in',status='old',action='read')
+        read(983,'()')
+        read(983,*,iostat=ios) v_tmp
+        close(983)
+        if (ios == 0) then 
+            fs_save = v_tmp
+            print *,'fraction of ferrihydrite sites available to As: ',fs_save
+        endif 
+    endif 
+endif 
+fs = fs_save
+endfunction as_fsite_f
+function as_kd_f(isp,k) result(v)
+! Sorption constants of as3sp (isp 1) and as5sp (isp 2): a, b, c, aS, bS, n (k 1-6). Defaults are the fit to the DLM
+! grid at 0.01 mM phosphate (paddy/arsenic/kd_constants.json); ./as_kd.in (a header line, then six values for As(III)
+! and six for As(V), one line each) replaces them, e.g. a refit at higher background phosphate. Read once.
+implicit none
+integer,intent(in)::isp,k
+real(kind=8)::v
+real(kind=8),save::c(2,6) = reshape((/5.1882d0,7.2189d0,-0.0224d0,-1.0735d0,-0.0171d0,-0.2022d0, &
+    & 3.8028d0,9.3859d0,0.0104d0,0.1815d0,0.8685d0,1.9115d0/),(/2,6/))
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios1,ios2
+real(kind=8)::t3(6),t5(6)
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./as_kd.in',exist=exist_file)
+    if (exist_file) then 
+        open(981,file='./as_kd.in',status='old',action='read')
+        read(981,'()')
+        read(981,*,iostat=ios1) t3
+        read(981,*,iostat=ios2) t5
+        close(981)
+        if (ios1 == 0 .and. ios2 == 0) then 
+            c(1,:) = t3; c(2,:) = t5
+            print *,'As sorption constants from as_kd.in: ',c(1,:),c(2,:)
+        endif 
+    endif 
+endif 
+v = c(isp,k)
+endfunction as_kd_f
+function as_fgt_f() result(fg)
+! As sorption sites per mol goethite Fe (Si-insensitive pool of as3sp/as5sp): 0.02 (~2.3 sites/nm2 at ~50 m2/g,
+! Dixit and Hering 2003), or the second value on the data line of ./as_sites.in, read once.
+implicit none
+real(kind=8)::fg
+real(kind=8),save::fg_save = 0.02d0
+logical,save::read_done = .false.
+logical::exist_file
+integer::ios
+real(kind=8)::v1,v2
+if (.not. read_done) then 
+    read_done = .true.
+    inquire(file='./as_sites.in',exist=exist_file)
+    if (exist_file) then 
+        open(982,file='./as_sites.in',status='old',action='read')
+        read(982,'()')
+        read(982,*,iostat=ios) v1,v2
+        close(982)
+        if (ios == 0) then 
+            fg_save = v2
+            print *,'As sites per mol goethite Fe: ',fg_save
+        endif 
+    endif 
+endif 
+fg = fg_save
+endfunction as_fgt_f
 !**************************************************************************************************************************************
 function o2inh_f() result(ki)
 ! O2 inhibition constant (mol L-1) of the anaerobic pathways (denitrification steps, Fe(III), SO42- reduction,
@@ -12400,7 +12548,7 @@ select case(trim(adjustl(mineral)))
         q10 = 2d0
         kin = k_q10(kref,tc,tc_ref,q10)
         dkin_dmsp = 0d0
-    case('inrt','fes','fe2ad')
+    case('inrt','fes','fe2ad','as3ad','as5ad')
         kin =0d0
         dkin_dmsp = 0d0
     case default 
@@ -13165,8 +13313,8 @@ select case(trim(adjustl(mineral)))
         therm = 1d0 ! reacting in any case
     case('inrt')
         therm = 1d0 ! not reacting in any case
-    case('fes','fe2ad')
-        therm = 1d0 ! FeS reacts only through the extra reactions fe2fs and fesox; sorbed Fe(II) only through fe2sp
+    case('fes','fe2ad','as3ad','as5ad')
+        therm = 1d0 ! FeS reacts only through the extra reactions fe2fs and fesox; sorbed Fe(II) only through fe2sp; sorbed As through as3sp/as5sp
     case default 
         therm = 0d0
 endselect 
@@ -17697,7 +17845,7 @@ select case(trim(adjustl(mineral)))
     case('gac','mesmh','ims','teas','naoh','naglp','urea') ! reacting in any case
         omega = 0d0
     
-    case('inrt','fes','fe2ad') ! not reacting in any case (fes, fe2ad: only through extra reactions)
+    case('inrt','fes','fe2ad','as3ad','as5ad') ! not reacting in any case (fes, fe2ad, as3ad, as5ad: only through extra reactions)
         ! omega = 1d0
         omega = 0d0
         
@@ -17742,7 +17890,7 @@ do ispa = 1, nsp_aq_all
             base_charge(ispa) = -2d0
         case('no3','oxa','cl','ac','mes','glp','hs')
             base_charge(ispa) = -1d0
-        case('si','im','tea','ti')
+        case('si','im','tea','ti','as3','as5') ! as3, as5: trace As(III), As(V); charge neglected
             base_charge(ispa) = 0d0
         case('na','k')
             base_charge(ispa) = 1d0
@@ -22076,6 +22224,8 @@ real(kind=8),dimension(nz):: po2x,vmax,mo2,fe2x,koxa,vmax2,mom2,komb,beta,omx,om
     & ,no3x,pn2ox,dv_dph_tmp,fe2f,dfe2f_dfe2,dfe2f_dpco2,dfe2f_dpro,dfe2f_dso4f,pco2x,hrpy,oxax &
     & ,vmax_tmp,z_dum,amfe3x,so4x,pch4x,f_g2,f_ea,f_o2,f_no3,f_so4,f_fe3,f_sat,grx,fe2fr,lnomg,f_gr,gtx,fe2adx,sfr,sad &
     & ,fesx,hsfr,f_ph,df_ph,six,f_si,df_si,f_cb,df_cb,f_rb,df_rb
+real(kind=8),dimension(nz):: asx,asadx,phx,dphc,logk_as,dlogk_as,ksi_as,sie_as,dsie_as,dsi_as,geq_as,sfh_as,sx_as 
+real(kind=8):: as_a,as_b,as_c,as_as,as_bs,as_n
 #ifdef cache_spec
 real(kind=8),dimension(:),allocatable,save::profte,dprofte_dpro,dprofte_dios,profti,dprofti_dpro,dprofti_dios
 #else
@@ -23495,6 +23645,166 @@ select case(trim(adjustl(rxn_name)))
                 drxnext_dmsp = v_tmp*f_sat*( f_fe3*(-1d0/sfr - 1d0/sad) &
                     & - lnomg*km_tmp1/(sfr + km_tmp1)**2d0*merge(1d0,0d0,lnomg > 0d0) &
                     & + lnomg*km_tmp1/(sad + km_tmp1)**2d0*merge(0d0,1d0,lnomg > 0d0) )
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as3sp','as5sp') 
+        ! Sorption of trace As(III) (as3sp) or As(V) (as5sp) on ferrihydrite weak sites (0.2 mol per mol amfe3 Fe) with
+        ! competition from H4SiO4, as a site-normalised distribution coefficient fitted to the Dzombak and Morel (1990)
+        ! DLM (USGS wateq4f.dat constants, Si from Swedlund and Webster 1999) over pH 5-8, Si 0.02-2 mM, As 2-200 uM, 
+        ! Fe(III) 0.02-0.23 mol/L porewater (paddy/docs/arsenic_step1.md; fit RMSE 3% As(III), 12% As(V)):
+        !   sorbed(eq) = c * K * ( 0.2 amfe3 / (1 + KSi si^n) + Sx )       [mol m^-3, c in mol L^-1]
+        !   log K = a + b (pH-7) + c (pH-7)^2 ;  log KSi = aS + bS (pH-7)
+        ! Sx = Si-insensitive sites (mol m^-3), given the Si-free affinity K: krxn2 (clays, OM; soil-specific) plus
+        ! f_gt sites per mol goethite Fe (gt; default 0.02, ~2.3 sites/nm2 at ~50 m2/g; second value in ./as_sites.in). pH and Si are clamped to
+        ! the fitted range. Rate = krxn1 * (sorbed(eq) - sorbed), so sorbed As follows amfe3 as it is reductively dissolved.
+        ! Si sorption itself is not taken out of solution (Si is set by the porewater balance). The weak-site density can be
+        ! scaled by the factor in ./as_sites.in (default 1: fresh ferrihydrite, 600 m2/g), for aged or organically coated oxide.
+        ! The six constants per species can be replaced by ./as_kd.in (a header line, then a, b, c, aS, bS, n for As(III)
+        ! on one line and for As(V) on the next), e.g. a refit at a higher fixed background phosphate (as_kd_f).
+        if (trim(adjustl(rxn_name))=='as3sp') then 
+            as_a = as_kd_f(1,1); as_b = as_kd_f(1,2); as_c = as_kd_f(1,3)
+            as_as = as_kd_f(1,4); as_bs = as_kd_f(1,5); as_n = as_kd_f(1,6)
+            asx   = max(maqx_loc(findloc(chraq_all,'as3',dim=1),:),0d0)
+            asadx = msldx_loc(findloc(chrsld_all,'as3ad',dim=1),:)
+        else 
+            as_a = as_kd_f(2,1); as_b = as_kd_f(2,2); as_c = as_kd_f(2,3)
+            as_as = as_kd_f(2,4); as_bs = as_kd_f(2,5); as_n = as_kd_f(2,6)
+            asx   = max(maqx_loc(findloc(chraq_all,'as5',dim=1),:),0d0)
+            asadx = msldx_loc(findloc(chrsld_all,'as5ad',dim=1),:)
+        endif 
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,rxn_name,dim=1),1) ! yr^-1 
+        ! Si-insensitive sites, mol m^-3: krxn2 (clays, OM) + sites on goethite (crystalline Fe(III) oxide, gt)
+        sx_as = krxn2_ext_all(findloc(chrrxn_ext_all,rxn_name,dim=1),1) + as_fgt_f()*max(gtx,0d0)
+        six = maqx_loc(findloc(chraq_all,'si',dim=1),:)
+        phx = -log10(prox) - 7d0
+        dphc = merge(1d0,0d0,(phx > -2d0) .and. (phx < 1d0)) ! pH clamped to 5-8
+        phx = min(max(phx,-2d0),1d0)
+        logk_as  = as_a + as_b*phx + as_c*phx**2d0
+        dlogk_as = (as_b + 2d0*as_c*phx)*dphc ! d log K / d pH 
+        ksi_as   = 10d0**(as_as + as_bs*phx)
+        sie_as   = min(max(six,2d-5),2d-3) ! Si clamped to 0.02-2 mM
+        dsi_as   = merge(1d0,0d0,(six > 2d-5) .and. (six < 2d-3))
+        dsie_as  = 1d0 + ksi_as*sie_as**as_n ! Si competition denominator
+        sfh_as   = 0.2d0*as_fsite_f()*max(amfe3x,0d0) ! ferrihydrite weak sites available to As, mol m^-3
+        geq_as   = asx*10d0**logk_as*( sfh_as/dsie_as + sx_as )
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*f_sat*( geq_as - asadx )
+        
+        select case(trim(adjustl(sp_name)))
+            case('as3','as5')
+                if ( (trim(adjustl(rxn_name))=='as3sp' .and. trim(adjustl(sp_name))=='as3') &
+                    & .or. (trim(adjustl(rxn_name))=='as5sp' .and. trim(adjustl(sp_name))=='as5') ) then 
+                    drxnext_dmsp = v_tmp*f_sat*10d0**logk_as*( sfh_as/dsie_as + sx_as )
+                else 
+                    drxnext_dmsp = 0d0
+                endif 
+            case('as3ad','as5ad')
+                if ( (trim(adjustl(rxn_name))=='as3sp' .and. trim(adjustl(sp_name))=='as3ad') &
+                    & .or. (trim(adjustl(rxn_name))=='as5sp' .and. trim(adjustl(sp_name))=='as5ad') ) then 
+                    drxnext_dmsp = -v_tmp*f_sat
+                else 
+                    drxnext_dmsp = 0d0
+                endif 
+            case('amfe3')
+                drxnext_dmsp = v_tmp*f_sat*asx*10d0**logk_as*0.2d0*as_fsite_f()/dsie_as*merge(1d0,0d0,amfe3x > 0d0)
+            case('gt')
+                drxnext_dmsp = v_tmp*f_sat*asx*10d0**logk_as*as_fgt_f()*merge(1d0,0d0,gtx > 0d0)
+            case('si')
+                drxnext_dmsp = -v_tmp*f_sat*asx*10d0**logk_as*sfh_as/dsie_as**2d0 &
+                    & *ksi_as*as_n*sie_as**(as_n-1d0)*dsi_as
+            case('pro')
+                ! d pH / d prox = -1/(prox ln10)
+                drxnext_dmsp = v_tmp*f_sat*( &
+                    & geq_as*log(10d0)*dlogk_as &
+                    & - asx*10d0**logk_as*sfh_as/dsie_as**2d0*ksi_as*sie_as**as_n*log(10d0)*as_bs*dphc &
+                    & )*(-1d0)/(prox*log(10d0))
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as5rd') 
+        ! microbial reduction of dissolved As(V) to As(III), first order, inhibited by O2 as g2fe3; wet soil only
+        asx = maqx_loc(findloc(chraq_all,'as5',dim=1),:)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'as5rd',dim=1),1) ! yr^-1 
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1
+        f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
+        rxn_ext = v_tmp*poro*sat*1d3*asx*f_o2
+        select case(trim(adjustl(sp_name)))
+            case('as5')
+                drxnext_dmsp = v_tmp*poro*sat*1d3*f_o2
+            case('po2')
+                drxnext_dmsp = v_tmp*poro*sat*1d3*asx*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as3ox') 
+        ! oxidation of dissolved As(III) by O2 (microbial and Mn-oxide mediated, lumped), first order in As(III), Monod in O2
+        asx = maqx_loc(findloc(chraq_all,'as3',dim=1),:)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),1) ! yr^-1 
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),1) ! mol L-1
+        f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
+        rxn_ext = v_tmp*poro*sat*1d3*asx*f_o2
+        select case(trim(adjustl(sp_name)))
+            case('as3')
+                drxnext_dmsp = v_tmp*poro*sat*1d3*f_o2
+            case('po2')
+                drxnext_dmsp = v_tmp*poro*sat*1d3*asx*ko2*km_tmp2/(ko2*po2x + km_tmp2 )**2d0
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as5ra') 
+        ! microbial reduction of sorbed As(V) to sorbed As(III), first order with the rate constant and O2 inhibition of as5rd
+        asadx = msldx_loc(findloc(chrsld_all,'as5ad',dim=1),:)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'as5rd',dim=1),1) ! yr^-1 
+        km_tmp3 = o2inh_f() ! O2 inhibition, mol L-1
+        f_o2  = km_tmp3/(po2x*ko2 + km_tmp3 )
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*asadx*f_o2*f_sat
+        select case(trim(adjustl(sp_name)))
+            case('as5ad')
+                drxnext_dmsp = v_tmp*f_o2*f_sat
+            case('po2')
+                drxnext_dmsp = v_tmp*asadx*km_tmp3*(-1d0)/(po2x*ko2 + km_tmp3 )**2d0*ko2*f_sat
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as3oa') 
+        ! oxidation of sorbed As(III) to sorbed As(V) by O2, with the rate constant and O2 Monod term of as3ox
+        asadx = msldx_loc(findloc(chrsld_all,'as3ad',dim=1),:)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),1) ! yr^-1 
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'as3ox',dim=1),1) ! mol L-1
+        f_o2  = ko2*po2x/(ko2*po2x + km_tmp2 )
+        rxn_ext = v_tmp*asadx*f_o2
+        select case(trim(adjustl(sp_name)))
+            case('as3ad')
+                drxnext_dmsp = v_tmp*f_o2
+            case('po2')
+                drxnext_dmsp = v_tmp*asadx*ko2*km_tmp2/(ko2*po2x + km_tmp2 )**2d0
+            case default
+                drxnext_dmsp = 0d0
+        endselect 
+        
+    case('as3up') 
+        ! rice root uptake of H3AsO3 through Lsi1, competitive with H4SiO4 (Ki = Km of siup), with the root profile of
+        ! siup/nh4up: rate = Vmax * as3 / (Km_As (1 + si/Km_Si) + as3); Vmax, Km_As placeholders (uncalibrated)
+        asx = max(maqx_loc(findloc(chraq_all,'as3',dim=1),:),0d0)
+        six = max(maqx_loc(findloc(chraq_all,'si',dim=1),:),0d0)
+        vmax = krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),:)/krxn1_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        v_tmp = krxn1_ext_all(findloc(chrrxn_ext_all,'as3up',dim=1),1)/krxn2_ext_all(findloc(chrrxn_ext_all,'ch4pl',dim=1),1)
+        km_tmp1 = krxn2_ext_all(findloc(chrrxn_ext_all,'as3up',dim=1),1)
+        km_tmp2 = krxn2_ext_all(findloc(chrrxn_ext_all,'siup ',dim=1),1)
+        f_sat = min(2d0*sat,1d0)
+        rxn_ext = v_tmp*vmax*f_sat*asx/(km_tmp1*(1d0 + six/km_tmp2) + asx)
+        select case(trim(adjustl(sp_name)))
+            case('as3')
+                drxnext_dmsp = v_tmp*vmax*f_sat*km_tmp1*(1d0 + six/km_tmp2)/(km_tmp1*(1d0 + six/km_tmp2) + asx)**2d0
+            case('si')
+                drxnext_dmsp = -v_tmp*vmax*f_sat*asx*km_tmp1/km_tmp2/(km_tmp1*(1d0 + six/km_tmp2) + asx)**2d0
             case default
                 drxnext_dmsp = 0d0
         endselect 
