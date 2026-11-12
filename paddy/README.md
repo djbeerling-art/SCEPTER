@@ -4,6 +4,9 @@ Work towards a riceland version of SCEPTER for enhanced weathering in rice paddi
 
 ## Added so far
 
+- Arsenic branch only (`claude/arsenic-sorption`, not part of v1.0): trace As(III)/As(V), Si-competitive sorption on
+  ferrihydrite fitted to the Dzombak and Morel DLM, As redox and Si-competitive As(III) uptake; `--as=` in
+  `run_flooded_column.py`. See `paddy/docs/arsenic_step1.md` and `paddy/arsenic/`.
 - `g2fe3` external reaction in `scepter.f90`: dissimilatory Fe(III) reduction coupled to OM oxidation,
   CH2O + 4 Fe(OH)3 + 8 H+ -> CO2 + 4 Fe2+ + 11 H2O, using the `g2` OM pool and amorphous Fe(OH)3 (`amfe3`).
   Rate = vmax * g2/(g2+Kg2) * amfe3/(amfe3+Kfe) * O2 inhibition * NO3- inhibition * min(2 sat, 1),

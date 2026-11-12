@@ -1,0 +1,16 @@
+study,treatment,si_ratio,as_ratio,as_basis,T_Ki300,uptake_ratio_Ki300,T_Ki150,uptake_ratio_Ki150,call,obs_grain_pct,obs_straw_pct,grain_sign_matches,straw_sign_matches
+Wang2022,husk,2.42,1.12,total As ug/L (Fig 2c),1.58,0.71,1.82,0.62,below threshold (uptake down),-31,,yes,
+Wang2022,Si-ash,3.42,0.88,total As ug/L (Fig 2c),1.99,0.45,2.4,0.37,below threshold (uptake down),-53,,yes,
+Li2009,Si gel,78.45,1.73,As(III) ug/L (Fig 3b),3.74,0.46,6.29,0.27,below threshold (uptake down),-59,-78,yes,yes
+Fleck2013,Si (3 soils pooled),7.23,1.23,total As ug/L (Fig 1C),3.12,0.39,4.17,0.29,below threshold (uptake down),-33,-50,yes,yes
+Limmer2020,silicate (yr 2 carryover),1.27,1.71,total As nM (text),1.05,1.63,1.08,1.58,above threshold (uptake up),44,,yes,
+Limmer2020,husk (yr 2 carryover),1.39,2.08,total As nM (text),1.07,1.94,1.12,1.85,above threshold (uptake up),22,,yes,
+Limmer2020,char (yr 2 carryover),1.45,0.66,total As nM (text),1.08,0.61,1.14,0.58,below threshold (uptake down),-33,,yes,
+SeyfferthFendorf2012,Hawi M206 Si-gel,25.2,2.15,As(III) uM (Fig 1A; near detection),4.46,0.48,7.05,0.3,below threshold (uptake down),-46,-34,yes,yes
+SeyfferthFendorf2012,Hawi M206 diatomite,1.0,0.45,As(III) uM (Fig 1A; near detection),1.0,0.45,1.0,0.45,below threshold (uptake down),-17,-10,yes,yes
+SeyfferthFendorf2012,Richvale M206 Si-gel,6.54,3.6,As(III) uM (Fig 1B),3.46,1.04,4.41,0.82,near threshold,-44,-64,no,no
+SeyfferthFendorf2012,Richvale M206 diatomite,1.15,0.63,As(III) uM (Fig 1B),1.06,0.59,1.09,0.58,below threshold (uptake down),23,-8,no,yes
+SeyfferthFendorf2012,Richvale IR66 Si-gel,6.56,3.38,As(III) uM (Fig 1C),3.34,1.01,4.29,0.79,near threshold,-26,-51,no,no
+SeyfferthFendorf2012,Richvale IR66 diatomite,1.26,1.13,As(III) uM (Fig 1C),1.11,1.02,1.15,0.98,near threshold,29,-25,yes,no
+He2020,steel slag 2 t/ha (field),1.53,1.39,total As ug/L (Fig 1; heading+mature mean),1.29,1.08,1.37,1.02,near threshold,12.5,13,yes,yes
+He2020,steel slag 4 t/ha (field),2.37,2.53,total As ug/L (Fig 1; heading+mature mean),1.75,1.45,1.97,1.29,above threshold (uptake up),12.5,25,yes,yes
