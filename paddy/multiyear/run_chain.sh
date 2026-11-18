@@ -7,13 +7,14 @@
 # The annual OM input (--om=, g C m-2 yr-1, default 450) is split between the phases: a fraction OMF (environment,
 # default 0.7: roots, exudates and residue incorporated at land preparation) during the season, the rest (stubble,
 # weeds) during the fallow; FOPT (environment) adds driver options to the fallow only (e.g. "--temp=18 --fsat=0.3"); each phase gets the matching rate (g C m-2 yr-1) for its length.
-# XRS (environment, e.g. ",fhage") appends extra reactions to the season and fallow reaction lists.
+# XRS (environment, e.g. ",fhage") appends extra reactions to the season and fallow reaction lists; XRSS to the season only
+# (e.g. ",as3up" for As(III) uptake by the crop).
 set -u
 name=$1; ny=$2; dose=$3; prev=$4; st=$5; shift 5
 om=$(printf '%s\n' "$@" | grep '^--om=' | tail -1 | cut -d= -f2); om=${om:-450}; OMF=${OMF:-0.7}
 oms=$(python3 -c "print(round($om*$OMF/0.31,2))"); omf=$(python3 -c "print(round($om*(1-$OMF)/0.69,2))")
 set -- $(printf '%s\n' "$@" | grep -v '^--om=')
-RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy,siup,sidox${XRS:-}
+RS=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4pl,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,n2opl,g2gt,rtco2,g2o2,nh4up,rtoxy,groxy,siup,sidox${XRS:-}${XRSS:-}
 RF=fe2o2,g2fe3,g2gr,g2so4,g2ch4,ch4o2,fe2gr,ch4eb,fe2fs,fesox,amo2o,g2n21,g2n2p,g2gt,g2o2,groxy,sidox${XRS:-}
 C="--ch4 --n --kaol=0.05 --refsoil --gt=0.02 --nz=15 --exe=scepter_paddy_fast --nucl=cc:0.001 --kscale=maf:0.45,fsp:0.25"
 ok(){ grep -q "^$1 rc 0" "$st" 2>/dev/null; }

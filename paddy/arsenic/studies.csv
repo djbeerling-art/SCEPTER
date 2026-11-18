@@ -1,0 +1,18 @@
+# Season-mean porewater Si (uM) and porewater As (study units) for control (0) and treatment (1), with observed grain change.
+# Values read from figures/tables; see README for sources and windows. obs_grain = % change in grain inorganic As (or As(III)); obs_straw = % change in straw total As.
+study,treatment,si0_uM,si1_uM,as0,as1,as_basis,obs_grain_pct,obs_straw_pct,grain_basis,window
+Wang2022,husk,206,498,371,416,total As ug/L (Fig 2c),-31,,white-rice iAs,wk 1-14
+Wang2022,Si-ash,206,705,371,328,total As ug/L (Fig 2c),-53,,white-rice iAs,wk 1-14
+Li2009,Si gel,11,863,29.5,51,As(III) ug/L (Fig 3b),-59,-78,brown-rice iAs (2 cultivars),days 45-121
+Fleck2013,Si (3 soils pooled),155,1121,88,108,total As ug/L (Fig 1C),-33,-50,polished-rice As(III),days 0-147
+Limmer2020,silicate (yr 2 carryover),66,84,90,154,total As nM (text),44,,polished-grain iAs (n.s.),days 6-96
+Limmer2020,husk (yr 2 carryover),66,92,90,187,total As nM (text),22,,polished-grain iAs (n.s.),days 6-96
+Limmer2020,char (yr 2 carryover),66,96,90,59,total As nM (text),-33,,polished-grain iAs (n.s.),days 6-96
+SeyfferthFendorf2012,Hawi M206 Si-gel,50,1260,0.20,0.43,As(III) uM (Fig 1A; near detection),-46,-34,grain total As,days 13-73
+SeyfferthFendorf2012,Hawi M206 diatomite,50,50,0.20,0.09,As(III) uM (Fig 1A; near detection),-17,-10,grain total As,days 13-73
+SeyfferthFendorf2012,Richvale M206 Si-gel,240,1570,3.0,10.8,As(III) uM (Fig 1B),-44,-64,grain total As,days 25-105
+SeyfferthFendorf2012,Richvale M206 diatomite,240,275,3.0,1.9,As(III) uM (Fig 1B),23,-8,grain total As,days 25-105
+SeyfferthFendorf2012,Richvale IR66 Si-gel,218,1430,3.4,11.5,As(III) uM (Fig 1C),-26,-51,grain total As,days 33-111
+SeyfferthFendorf2012,Richvale IR66 diatomite,218,275,3.4,3.85,As(III) uM (Fig 1C),29,-25,grain total As,days 33-111
+He2020,steel slag 2 t/ha (field),356,543,33,46,total As ug/L (Fig 1; heading+mature mean),12.5,13,brown-rice total As (n.s.),heading and maturity
+He2020,steel slag 4 t/ha (field),356,845,33,83.5,total As ug/L (Fig 1; heading+mature mean),12.5,25,brown-rice total As (n.s.),heading and maturity
