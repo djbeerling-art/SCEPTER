@@ -56,7 +56,7 @@ def run_a_scepter_run(
     # ---- boundary values ----    
     pr_list             = kwargs.get('pr_list',             [('inrt',1.0)])
     rain_list           = kwargs.get('rain_list',           [('ca',5.0e-6)])
-    atm_list            = kwargs.get('atm_list',            [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)])
+    atm_list            = kwargs.get('atm_list',            [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)])
     # ---- sopecify solid phase properties ----    
     sld_varlist_psdpr   = kwargs.get('sld_varlist_psdpr',   [])
     sld_varlist_dust    = kwargs.get('sld_varlist_dust',    [])
@@ -68,6 +68,8 @@ def run_a_scepter_run(
     sld_varlist_nopsd   = kwargs.get('sld_varlist_nopsd',   [])
     sld_varlist_2ndslds = kwargs.get('sld_varlist_2ndslds', [])
     srcfile_psdpr       = kwargs.get('srcfile_psdpr',       None)
+    sld_varlist_psdrain = kwargs.get('sld_varlist_psdrain', [])
+    srcfile_psdrain     = kwargs.get('srcfile_psdrain',     None)
     srcfile_dust        = kwargs.get('srcfile_dust',        None)
     srcfile_omrain      = kwargs.get('srcfile_omrain',      None)
     srcfile_cec         = kwargs.get('srcfile_cec',         None)
@@ -172,6 +174,7 @@ def run_a_scepter_run(
         
     sldvar_list_all = [
         ('psdpr.in',        srcfile_psdpr,      sld_varlist_psdpr),
+        ('psdrain.in',      srcfile_psdrain,    sld_varlist_psdrain),
         ('dust.in',         srcfile_dust,       sld_varlist_dust),
         ('cec.in',          srcfile_cec,        sld_varlist_cec),
         ('OM_rain.in',      srcfile_omrain,     sld_varlist_omrain),
@@ -357,7 +360,7 @@ def test_richards():
     # ---- boundary values ----    
     pr_list             = [('inrt',1.0)]
     rain_list           = [('ca',ca)]
-    atm_list            = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50)]
+    atm_list            = [('pco2',3.16e-4),('po2',0.21),('pnh3',1e-50),('pn2o',1e-50),('pch4',1.9e-6)]
     # ---- sopecify solid phase properties ----    
     sld_varlist_dust    = []
     sld_varlist_cec     = [('inrt', cec, logkhna, logkhk, logkhca, logkhmg, logkhal, alpha), ('g2', cec, logkhna, logkhk, logkhca, logkhmg, logkhal, alpha)]

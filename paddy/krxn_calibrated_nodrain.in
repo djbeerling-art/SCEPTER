@@ -1,0 +1,9 @@
+name krxn1 krxn2  (2026-10-24, no pre-harvest drain: Ki 6.5 with g2o2; superseded by krxn_calibrated.in)
+g2ch4 300 6.5
+g2fe3 300 -999
+g2so4 300 -999
+ch4pl 300 -999
+g2n21 300 -999
+g2n2p 300 -999
+g2gr -999 0.02
+rtco2 30 -999
